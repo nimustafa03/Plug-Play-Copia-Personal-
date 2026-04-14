@@ -7,10 +7,6 @@
 //              servidor KM acepta CPU (conexión 5, lado servidor)
 //              servidor KM acepta MS  (conexión 6, lado servidor)
 //    Santiago → servidor KM acepta SWAP (conexión 3, lado servidor)
-//
-//  Nico S: buscá los comentarios "NICO S" y completá
-//  Lo mío ya está implementado, no hace falta tocar nada
-//  Agregué algunas cositas extras, suerte!! 
 // =============================================================
 
 #include <stdio.h>
@@ -33,7 +29,7 @@ int swap_total_size = 0;
 int fd_kernel_scheduler = 0;
 
 // ── Variables de info de Memory Stick ──────────────────
-int fd_memory_stick = 0;
+int fd_memory_stick   = 0;
 int memory_stick_size = 0;
 
 // ── Variables de info de CPU ───────────────────────────
@@ -102,17 +98,14 @@ void* atender_cliente_km(void* arg) {
 
     switch (*codigo) {
 
-        // ── NICO S ──────────────────────────────────────
         case MSG_HANDSHAKE_KS:
             atender_kernel_scheduler(fd_cliente);
             break;
 
-        // ── NICO S ──────────────────────────────────────
         case MSG_HANDSHAKE_CPU:
             atender_cpu(fd_cliente);
             break;
 
-        // ── NICO S ──────────────────────────────────────
         case MSG_HANDSHAKE_MS:
             atender_memory_stick(fd_cliente);
             break;
