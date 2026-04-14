@@ -18,8 +18,8 @@
 #include <pthread.h>
 #include <commons/log.h>
 #include <commons/config.h>
-#include "conexiones.h"
-#include "mensajes.h"
+#include "../../utils/src/utils/conexiones.h"
+#include "../../utils/src/utils/mensajes.h"
 
 t_log*    logger;
 t_config* config;
@@ -28,7 +28,17 @@ t_config* config;
 int fd_swap         = -1;
 int swap_block_size = 0;
 int swap_total_size = 0;
-// ─────────────────────────────────────────────────────────────────
+
+// ── Variables de info del Kernel Scheduler ─────────────
+int fd_kernel_scheduler = 0;
+
+// ── Variables de info de Memory Stick ──────────────────
+int fd_memory_stick = 0;
+int memory_stick_size = 0;
+
+// ── Variables de info de CPU ───────────────────────────
+int fd_cpu = 0;
+int id_cpu = 0;
 
 // -----------------------------------------------------------------
 //  atender_swap  —  SANTIAGO
@@ -54,6 +64,30 @@ void atender_swap(int fd) {
     // Checkpoint 3: acá va el loop de lectura/escritura de bloques
 }
 
+void atender_kernel_scheduler(int fd_kernel_scheduler) {
+    log_info(logger, "## Kernel Scheduler Conectado - FD del socket: %d", fd_kernel_scheduler);
+}
+
+void atender_cpu(int fd_cpu) {
+    int size;
+    int* ptr_id_cpu = recibir_mensaje(fd_cpu, &size);
+    id_cpu = *ptr_id_cpu;
+
+    free(ptr_id_cpu);
+
+    log_info(logger, "## CPU %d Conectada", id_cpu);
+}
+
+void atender_memory_stick(int fd_memory_stick) {
+    int memory_stick_size;
+
+    int* ptr_memory_stick_size = recibir_mensaje(fd_memory_stick, &memory_stick_size);
+    memory_stick_size = *ptr_memory_stick_size;
+    free(ptr_memory_stick_size);
+    
+    log_info(logger, "## Memory Stick de %d bytes Conectada", memory_stick_size);
+}
+
 // -----------------------------------------------------------------
 //  atender_cliente_km
 //  Corre en un hilo por cada cliente que se conecta al servidor KM.
@@ -70,17 +104,17 @@ void* atender_cliente_km(void* arg) {
 
         // ── NICO S ──────────────────────────────────────
         case MSG_HANDSHAKE_KS:
-            // A implementar...
+            atender_kernel_scheduler(fd_cliente);
             break;
 
         // ── NICO S ──────────────────────────────────────
         case MSG_HANDSHAKE_CPU:
-            // A implementar...
+            atender_cpu(fd_cliente);
             break;
 
         // ── NICO S ──────────────────────────────────────
         case MSG_HANDSHAKE_MS:
-            // A implementar...
+            atender_memory_stick(fd_cliente);
             break;
 
         case MSG_HANDSHAKE_SWAP:
