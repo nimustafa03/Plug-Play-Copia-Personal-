@@ -3,10 +3,14 @@
     {
       "name": "Linux",
       "includePath": [
-        "${workspaceFolder}/src"
+        "${workspaceFolder}/src",
+        "/usr/lib/gcc/x86_64-linux-gnu/11/include",
+        "/usr/local/include",
+        "/usr/include/x86_64-linux-gnu",
+        "/usr/include"
       ],
       "defines": [],
-      "compilerPath": "/usr/bin/gcc",
+      "compilerPath": "/usr/bin/gcc-11",
       "cStandard": "gnu17",
       "cppStandard": "gnu++17",
       "intelliSenseMode": "linux-gcc-x64"

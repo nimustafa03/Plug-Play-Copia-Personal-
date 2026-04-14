@@ -1,0 +1,34 @@
+#ifndef MENSAJES_H
+#define MENSAJES_H
+
+// ============================================================
+//  mensajes.h
+//  Códigos de operación para identificar cada tipo de mensaje.
+//  Incluir en cualquier módulo con: #include "mensajes.h"
+// ============================================================
+
+// Cada vez que un módulo se conecta a otro, manda este código
+// para identificarse. El servidor lee el código y sabe quién se
+// conectó y qué hacer con esa conexión.
+//
+// IMPORTANTE: nunca cambiar los valores numéricos una vez que
+// el grupo empiece a probar, porque todos los módulos tienen
+// que estar de acuerdo en qué número significa qué.
+
+typedef enum {
+    // ── Handshakes de conexión ──────────────────────────────
+    MSG_HANDSHAKE_KS    = 1,  // Kernel Scheduler se conecta a KM
+    MSG_HANDSHAKE_CPU   = 2,  // CPU se conecta a KS, KM o MS
+    MSG_HANDSHAKE_IO    = 3,  // IO se conecta a KS
+    MSG_HANDSHAKE_MS    = 4,  // Memory Stick se conecta a KM
+    MSG_HANDSHAKE_SWAP  = 5,  // SWAP se conecta a KM
+
+    // ── Respuestas generales ─────────────────────────────────
+    MSG_OK              = 10, // Confirmación genérica de que todo salió bien
+    MSG_ERROR           = 11, // Algo salió mal
+
+    // ── (Acá van agregando los mensajes reales en CP2/CP3) ───
+
+} op_code;
+
+#endif // MENSAJES_H
