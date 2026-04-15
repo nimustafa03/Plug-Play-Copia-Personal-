@@ -1,12 +1,13 @@
 {
   "version": "0.2.0",
   "configurations": [
+
     {
       "name": "run",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
-      "args": [],
+      "args": ["memory_stick.config", "10"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],

@@ -14,6 +14,8 @@
 // IMPORTANTE: nunca cambiar los valores numéricos una vez que
 // el grupo empiece a probar, porque todos los módulos tienen
 // que estar de acuerdo en qué número significa qué.
+// NM: Al momento de mandar estos handshakes por mensaje, se requiere declarar una variable op_code y asociarla a alguno de estos. Si no se hace, el op_code no se pasa correctamente. NO olvidar el & en el argumento de enviar mensaje.
+// ============================================================
 
 typedef enum {
     // ── Handshakes de conexión ──────────────────────────────

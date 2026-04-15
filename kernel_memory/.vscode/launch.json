@@ -6,7 +6,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
-      "args": [],
+      "args": ["kernel_memory.config"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
