@@ -44,6 +44,11 @@ void* atender_cliente_ks(void* arg) {
         // ── PARTE DE BIANCA ──────────────────────────────────
         case MSG_HANDSHAKE_CPU:
             // Bianca completa esto
+            log_info(logger, "CPU conectado - FD: %d", fd_cliente);
+            // le contestamos que la conexión se estableció OK
+            op_code respuesta = MSG_OK;
+            enviar_mensaje(fd_cliente, &respuesta, sizeof(op_code));
+
             break;
  
         // ── PARTE DE SANTIAGO ────────────────────────────────
@@ -52,6 +57,9 @@ void* atender_cliente_ks(void* arg) {
             // Log obligatorio del enunciado (lo loguea el módulo IO,
             // acá guardamos el fd para usarlo después en CP2)
             log_info(logger, "IO conectada - FD: %d", fd_cliente);
+            // le contestamos que la conexión se estableció OK
+            op_code respuesta = MSG_OK;
+            enviar_mensaje(fd_cliente, &respuesta, sizeof(op_code));
  
             // TODO CP2: acá va la lógica de atención a IOs
             break;
@@ -67,7 +75,6 @@ void* atender_cliente_ks(void* arg) {
 }
  
 // -----------------------------------------------------------------
-//  main
 //  Bianca: conecta KS→KM y levanta el servidor
 //  Santiago: el servidor que levanta Bianca también acepta IOs,
 //            y atender_cliente_ks identifica quién es

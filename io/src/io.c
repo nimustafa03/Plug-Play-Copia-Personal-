@@ -39,5 +39,5 @@ int main(int argc, char* argv[]) {
     // pause(); por ahora alcanza para CP1
  
     // TODO CP2: implementar STDIN, STDOUT y SLEEP
- 
+}
     
