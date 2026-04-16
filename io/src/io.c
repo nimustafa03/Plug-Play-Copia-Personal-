@@ -18,8 +18,19 @@
 #include "conexiones.h"
 #include "mensajes.h"
  
-t_log*    logger;
-t_config* config;
+t_config* config = config_create(argv[1]);
+
+char* ip = config_get_string_value(config, "IP_KERNEL");
+char* puerto = config_get_string_value(config, "PUERTO_KERNEL");
+
+// 1. Primero leemos la palabra del archivo config
+char* nivel_de_log_texto = config_get_string_value(config, "LOG_LEVEL");
+// 2. La traducimos al "idioma" que entiende el Logger
+t_log_level nivel_traducido = log_level_from_string(nivel_de_log_texto);
+// 3. Usamos ese nivel traducido al crear el Logger
+logger = log_create("io.log", "IO", true, nivel_traducido);
+
+int fd_ks = crear_conexion(ip, puerto);
  
 int main(int argc, char* argv[]) {
  
