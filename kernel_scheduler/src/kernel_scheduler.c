@@ -38,6 +38,9 @@ void* atender_cliente_ks(void* arg) {
     // Leemos quién se conectó
     int size;
     op_code* codigo = recibir_mensaje(fd_cliente, &size);
+
+    // Declaro la respuesta acá arriba para no repetir código
+    op_code respuesta_ok = MSG_OK;
  
     switch (*codigo) {
  
@@ -46,8 +49,7 @@ void* atender_cliente_ks(void* arg) {
             // Bianca completa esto
             log_info(logger, "CPU conectado - FD: %d", fd_cliente);
             // le contestamos que la conexión se estableció OK
-            op_code respuesta = MSG_OK;
-            enviar_mensaje(fd_cliente, &respuesta, sizeof(op_code));
+            enviar_mensaje(fd_cliente, &respuesta_ok, sizeof(op_code));
 
             break;
  
@@ -58,8 +60,7 @@ void* atender_cliente_ks(void* arg) {
             // acá guardamos el fd para usarlo después en CP2)
             log_info(logger, "IO conectada - FD: %d", fd_cliente);
             // le contestamos que la conexión se estableció OK
-            op_code respuesta = MSG_OK;
-            enviar_mensaje(fd_cliente, &respuesta, sizeof(op_code));
+            enviar_mensaje(fd_cliente, &respuesta_ok, sizeof(op_code));
  
             // TODO CP2: acá va la lógica de atención a IOs
             break;
@@ -116,7 +117,16 @@ int main(int argc, char* argv[]) {
     op_code codigo = MSG_HANDSHAKE_KS;
     enviar_mensaje(fd_km, &codigo, sizeof(op_code));
     log_info(logger, "## Conectado a Kernel Memory");
- 
+
+    // 2. Esperar OK 
+    int size_resp;
+    op_code* respuesta = recibir_mensaje(fd_km, &size_resp);
+    
+    if (*respuesta == MSG_OK) {
+        log_info(logger, "## Conectado a Kernel Memory y aceptado");
+    }
+    free(respuesta); // Liberar la memoria del mensaje recibido
+
     // ── PARTE DE BIANCA: levantar servidor ───────────────────
     fd_servidor_ks = iniciar_servidor(ks_port);
     log_info(logger, "Servidor KS listo en puerto %s", ks_port);
