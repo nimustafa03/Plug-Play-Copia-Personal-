@@ -78,11 +78,16 @@ int main(int argc, char* argv[]) {
     enviar_mensaje(fd_km, &codigo, sizeof(op_code));
     enviar_mensaje(fd_km, &block_size, sizeof(int));
     enviar_mensaje(fd_km, &swap_size,  sizeof(int));
- 
+     
     // ---------------------------------------------------------
-    // 7. Log OBLIGATORIO del enunciado
+    // 7. Esperar OK de KM y loguear conexión exitosa (log obligatorio)
     // ---------------------------------------------------------
-    log_info(logger, "## Conectado a Kernel Memory");
+    int size_resp;
+    op_code* respuesta = recibir_mensaje(fd_km, &size_resp);
+    if (*respuesta == MSG_OK)
+        log_info(logger, "## Conectado a Kernel Memory");
+    free(respuesta);
+
  
     // ---------------------------------------------------------
     // 8. Esperar operaciones de KM

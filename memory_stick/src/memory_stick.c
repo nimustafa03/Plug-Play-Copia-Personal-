@@ -65,12 +65,20 @@ int main(int argc, char*argv[]) {
     // enviar handshake MSG_HANDSHAKE_MS.
     op_code handshake = MSG_HANDSHAKE_MS;
     enviar_mensaje(fd_km,&handshake,sizeof(MSG_HANDSHAKE_MS));
-
-    // Log obligatorio: log_info(logger, "## Conectado a Kernel Memory");
-    log_info(logger, "## Conectado a Kernel Memory.");
-
+    
     // enviar el tamaño para que KM lo registre
     enviar_mensaje(fd_km,&size,sizeof(int));
+
+    // Esperar OK de KM y loguear conexión exitosa (log obligatorio)
+    int size_resp;
+    op_code* respuesta = recibir_mensaje(fd_km, &size_resp);
+    if (*respuesta == MSG_OK)
+        log_info(logger, "## Conectado a Kernel Memory.");
+    free(respuesta);
+
+    // Borra cuando lo leas Nico: 
+    // agregué el recibir_mensaje para esperar el OK de KM antes de loguear
+    // el log obligatorio ahora está adentro del if, no lo muevas
 
     // TODO Nico M: levantar servidor para CPUs
     

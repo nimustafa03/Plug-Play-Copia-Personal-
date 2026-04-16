@@ -20,10 +20,6 @@
 t_log*    logger;
 t_config* config;
 
-// ── Variables de info del SWAP ─────────────────────────
-int fd_swap         = -1;
-int swap_block_size = 0;
-int swap_total_size = 0;
 
 // ── Variables de info del Kernel Scheduler ─────────────
 int fd_kernel_scheduler = 0;
@@ -35,6 +31,42 @@ int memory_stick_size = 0;
 // ── Variables de info de CPU ───────────────────────────
 int fd_cpu = 0;
 int id_cpu = 0;
+
+// ── Variables de info del SWAP ─────────────────────────
+int fd_swap         = -1;
+int swap_block_size = 0;
+int swap_total_size = 0;
+
+
+void atender_kernel_scheduler(int fd_kernel_scheduler) {
+    log_info(logger, "## Kernel Scheduler Conectado - FD del socket: %d", fd_kernel_scheduler);
+    op_code ok = MSG_OK;
+    enviar_mensaje(fd_kernel_scheduler, &ok, sizeof(op_code));
+}
+
+void atender_cpu(int fd_cpu) {
+    int size;
+    int* ptr_id_cpu = recibir_mensaje(fd_cpu, &size);
+    id_cpu = *ptr_id_cpu;
+
+    free(ptr_id_cpu);
+
+    log_info(logger, "## CPU %d Conectada", id_cpu);
+    op_code ok = MSG_OK;
+    enviar_mensaje(fd_cpu, &ok, sizeof(op_code));
+}
+
+void atender_memory_stick(int fd_memory_stick) {
+    int memory_stick_size;
+
+    int* ptr_memory_stick_size = recibir_mensaje(fd_memory_stick, &memory_stick_size);
+    memory_stick_size = *ptr_memory_stick_size;
+    free(ptr_memory_stick_size);
+    
+    log_info(logger, "## Memory Stick de %d bytes Conectada", memory_stick_size);
+    op_code ok = MSG_OK;
+    enviar_mensaje(fd_memory_stick, &ok, sizeof(op_code));
+}
 
 // -----------------------------------------------------------------
 //  atender_swap  —  SANTIAGO
@@ -56,33 +88,12 @@ void atender_swap(int fd) {
     log_info(logger,
              "SWAP conectado - Block size: %d bytes - Tamaño total: %d bytes",
              swap_block_size, swap_total_size);
+    op_code ok = MSG_OK;
+    enviar_mensaje(fd, &ok, sizeof(op_code));
 
     // Checkpoint 3: acá va el loop de lectura/escritura de bloques
 }
 
-void atender_kernel_scheduler(int fd_kernel_scheduler) {
-    log_info(logger, "## Kernel Scheduler Conectado - FD del socket: %d", fd_kernel_scheduler);
-}
-
-void atender_cpu(int fd_cpu) {
-    int size;
-    int* ptr_id_cpu = recibir_mensaje(fd_cpu, &size);
-    id_cpu = *ptr_id_cpu;
-
-    free(ptr_id_cpu);
-
-    log_info(logger, "## CPU %d Conectada", id_cpu);
-}
-
-void atender_memory_stick(int fd_memory_stick) {
-    int memory_stick_size;
-
-    int* ptr_memory_stick_size = recibir_mensaje(fd_memory_stick, &memory_stick_size);
-    memory_stick_size = *ptr_memory_stick_size;
-    free(ptr_memory_stick_size);
-    
-    log_info(logger, "## Memory Stick de %d bytes Conectada", memory_stick_size);
-}
 
 // -----------------------------------------------------------------
 //  atender_cliente_km
