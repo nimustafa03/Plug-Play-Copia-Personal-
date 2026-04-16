@@ -15,8 +15,8 @@
 #include <pthread.h>
 #include <commons/log.h>
 #include <commons/config.h>
-#include <../../utils/src/utils/conexiones.h>
-#include <../../utils/src/utils/mensajes.h>
+#include <utils/conexiones.h>
+#include <utils/mensajes.h>
  
 t_log*    logger;
 t_config* config;

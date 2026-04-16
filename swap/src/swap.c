@@ -12,8 +12,8 @@
 #include <stdlib.h>
 #include <commons/log.h>
 #include <commons/config.h>
-#include "conexiones.h"
-#include "mensajes.h"
+#include <utils/conexiones.h>
+#include <utils/mensajes.h>
  
 t_log*    logger;
 t_config* config;
