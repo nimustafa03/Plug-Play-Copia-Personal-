@@ -8,7 +8,6 @@
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
 #include <cpu.h>
-#include "funciones_cpu.c"
 
 
 void funcion_cpu(char *archivo_config, int id);

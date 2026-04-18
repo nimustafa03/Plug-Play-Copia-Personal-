@@ -13,7 +13,8 @@ void funcion_cpu(char *archivo_config, int id) {
 	    perror("Error al crear el archivo .log. La funcion log_create este devolviendo NULL");
 	    exit(EXIT_FAILURE);
     }
-    int identificador_cpu = id;
+    log_info(logger_cpu, "EJECUTANDO CPU %d, %s",id, archivo_config);
+
     // Tomo el .config pasado por argumento
     t_config* config = config_create(archivo_config);
     if (config == NULL) {
@@ -74,37 +75,43 @@ void funcion_cpu(char *archivo_config, int id) {
     enviar_mensaje(fd_ks, &handshake, sizeof(op_code));
     int size_resp_ks;
     respuesta = recibir_mensaje(fd_ks, &size_resp_ks);
-    if (respuesta == NULL)
+    if (respuesta == NULL){
         log_error(logger_cpu, "Error al recibir mensaje desde KS");
         exit(EXIT_FAILURE);
-    if (*respuesta == MSG_OK)
+        }
+    if (*respuesta == MSG_OK){
         log_info(logger_cpu, "Handshake con KS exitoso");
-        else if (*respuesta == MSG_ERROR)
+        }else if (*respuesta == MSG_ERROR){
             log_error(logger_cpu, "Handshake con KS FALLIDO");
+        }
     free(respuesta);
 
     enviar_mensaje(fd_km, &handshake, sizeof(op_code));
     int size_resp_km;
     respuesta = recibir_mensaje(fd_km, &size_resp_km);
-    if (respuesta == NULL)
+    if (respuesta == NULL){
         log_error(logger_cpu, "Error al recibir mensaje desde KM");
         exit(EXIT_FAILURE);
-    if (*respuesta == MSG_OK)
+        }
+    if (*respuesta == MSG_OK){
         log_info(logger_cpu, "Handshake con KM exitoso");
-        else if (*respuesta == MSG_ERROR)
+        }else if (*respuesta == MSG_ERROR){
             log_error(logger_cpu, "Handshake con KM FALLIDO");
+        }
     free(respuesta);
 
     enviar_mensaje(fd_ms, &handshake, sizeof(op_code));
     int size_resp_ms;
     respuesta = recibir_mensaje(fd_ms, &size_resp_ms);
-    if (respuesta == NULL)
+    if (respuesta == NULL){
         log_error(logger_cpu, "Error al recibir mensaje desde MS");
         exit(EXIT_FAILURE);
-    if (*respuesta == MSG_OK)
+        }
+    if (*respuesta == MSG_OK){
         log_info(logger_cpu, "Handshake con MS exitoso");
-        else if (*respuesta == MSG_ERROR)
+        }else if (*respuesta == MSG_ERROR){
             log_error(logger_cpu, "Handshake con MS FALLIDO");
+        }
     free(respuesta);
     
 /*--------------------------------------- CIERRE PROGRAMA ---------------------------------------*/
@@ -116,4 +123,4 @@ void funcion_cpu(char *archivo_config, int id) {
     close(fd_ms);
     log_info(logger_cpu, "FIN MAIN");
 
-}//FIN CPU MS
+}//FIN FUNCION
