@@ -45,11 +45,12 @@ void atender_kernel_scheduler(int fd_kernel_scheduler) {
 }
 
 void atender_cpu(int fd_cpu) {
-    int size;
+    /* int size;
+
     int* ptr_id_cpu = recibir_mensaje(fd_cpu, &size);
     id_cpu = *ptr_id_cpu;
 
-    free(ptr_id_cpu);
+    free(ptr_id_cpu); */
 
     log_info(logger, "## CPU %d Conectada", id_cpu);
     op_code ok = MSG_OK;
@@ -74,7 +75,7 @@ void atender_memory_stick(int fd_memory_stick) {
 // -----------------------------------------------------------------
 void atender_swap(int fd) {
     fd_swap = fd;
-
+    
     int size;
 
     int* block_size = recibir_mensaje(fd, &size);

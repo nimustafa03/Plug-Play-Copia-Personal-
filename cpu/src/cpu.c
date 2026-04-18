@@ -21,6 +21,84 @@
 #include <cpu.h>
 
 t_config* config;
+
+void conexionCPUKernelScheduler (t_log* logger_cpu, int id, const char* archivo_config) {
+    log_info(logger_cpu, "EJECUTANDO CPU %d, %s",id, archivo_config);
+    t_config* config = config_create(archivo_config);
+    char *ks_port = config_get_string_value(config, "KS_PORT");
+    char *ks_ip = config_get_string_value(config, "KS_IP");
+    int fd_ks = crear_conexion(ks_ip, ks_port);
+    log_info(logger_cpu, "Enviando HANDSHAKE a servidores");
+
+    op_code handshake = MSG_HANDSHAKE_CPU;
+
+    enviar_mensaje(fd_ks, &handshake, sizeof(op_code));
+    int size_resp_ks;
+    op_code* respuesta = recibir_mensaje(fd_ks, &size_resp_ks);
+    if (respuesta == NULL){
+        log_error(logger_cpu, "Error al recibir mensaje desde KS");
+        exit(EXIT_FAILURE);
+    } else if (*respuesta == MSG_OK) {
+        log_info(logger_cpu, "Handshake con KS exitoso");
+    } else if (*respuesta == MSG_ERROR){
+        log_error(logger_cpu, "Handshake con KS FALLIDO");
+    }
+    free(respuesta);
+    log_info(logger_cpu, "TERMINANDO PROGRAMA");
+    close(fd_ks);
+}
+
+void conexionCPUKernelMemory (t_log* logger_cpu, int id, const char* archivo_config) {
+    log_info(logger_cpu, "EJECUTANDO CPU %d, %s",id, archivo_config);
+    t_config* config = config_create(archivo_config);
+    char *km_port = config_get_string_value(config, "KM_PORT");
+    char *km_ip = config_get_string_value(config, "KM_IP");
+    int fd_km = crear_conexion(km_ip, km_port);
+    log_info(logger_cpu, "Enviando HANDSHAKE a servidores");
+
+    op_code handshake = MSG_HANDSHAKE_CPU;
+
+    enviar_mensaje(fd_km, &handshake, sizeof(op_code));
+    int size_resp_km;
+    op_code* respuesta = recibir_mensaje(fd_km, &size_resp_km);
+    if (respuesta == NULL){
+        log_error(logger_cpu, "Error al recibir mensaje desde KM");
+        exit(EXIT_FAILURE);
+    } else if (*respuesta == MSG_OK) {
+        log_info(logger_cpu, "Handshake con KM exitoso");
+    } else if (*respuesta == MSG_ERROR){
+        log_error(logger_cpu, "Handshake con KM FALLIDO");
+    }
+    free(respuesta);
+    log_info(logger_cpu, "TERMINANDO PROGRAMA");
+    close(fd_km);
+}
+
+void conexionCPUMemoryStick (t_log* logger_cpu, int id, const char* archivo_config) {
+    log_info(logger_cpu, "EJECUTANDO CPU %d, %s",id, archivo_config);
+    t_config* config = config_create(archivo_config);
+    char *ms_port = config_get_string_value(config, "MS_PORT");
+    char *ms_ip = config_get_string_value(config, "MS_IP");
+    int fd_ms = crear_conexion(ms_ip, ms_port);
+    log_info(logger_cpu, "Enviando HANDSHAKE a servidores");
+
+    op_code handshake = MSG_HANDSHAKE_CPU;
+
+    enviar_mensaje(fd_ms, &handshake, sizeof(op_code));
+    int size_resp_ms;
+    op_code* respuesta = recibir_mensaje(fd_ms, &size_resp_ms);
+    if (respuesta == NULL){
+        log_error(logger_cpu, "Error al recibir mensaje desde MS");
+        exit(EXIT_FAILURE);
+    } else if (*respuesta == MSG_OK) {
+        log_info(logger_cpu, "Handshake con MS exitoso");
+    } else if (*respuesta == MSG_ERROR){
+        log_error(logger_cpu, "Handshake con MS FALLIDO");
+    }
+    free(respuesta);
+    log_info(logger_cpu, "TERMINANDO PROGRAMA");
+    close(fd_ms);
+}
  
 int main(int argc, char* argv[]) {
 
@@ -38,7 +116,7 @@ int main(int argc, char* argv[]) {
     }
     //Check archivo .config
     char* archivo_config = argv[1];
-    if (string_ends_with(archivo_config, ".config") != 0){
+    if (string_ends_with(archivo_config, ".config") == 0){
         log_info(logger_cpu, "El primer parametro debe ser .config");
         exit(EXIT_FAILURE);
     }
@@ -54,15 +132,15 @@ int main(int argc, char* argv[]) {
     switch (id) {
         case 1:
             log_info(logger_cpu, "Ejecutando CPU 1");
-            funcion_cpu(archivo_config, id);
+            conexionCPUKernelScheduler(logger_cpu, id, archivo_config);
             break;
         case 2:
             log_info(logger_cpu, "Ejecutando CPU 2");
-            funcion_cpu(archivo_config, id);
+            conexionCPUKernelMemory(logger_cpu, id, archivo_config);
             break;
         case 3:
             log_info(logger_cpu, "Ejecutando CPU 3");
-            funcion_cpu(archivo_config, id);
+            conexionCPUMemoryStick(logger_cpu, id, archivo_config);
             break;
         default:
             printf("Identificador invalido. Debe ser 1, 2 o 3.\n");
