@@ -17,16 +17,81 @@
 #include <commons/config.h>
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
- 
-t_log*    logger;
+#include <cpu.h>
+
 t_config* config;
  
 int main(int argc, char* argv[]) {
- 
-    // TODO Adriel: verificar argumentos (config + identificador)
- 
+
+    t_log* logger_cpu;
+    logger_cpu = log_create("cpu.log","CPU LOGGER",1,LOG_LEVEL_INFO);
+    if (logger_cpu == NULL){
+	perror("Error al crear el archivo .log. La funcion log_create este devolviendo NULL");
+	exit(EXIT_FAILURE);
+    }
+
+    //Check argumentos
+    if (argc != 3) {
+        log_info(logger_cpu, "Debe ingreslear %s [Archivo Config] [Identificador]. Verifique los argumentos.", argv[0]); 
+        exit(EXIT_FAILURE);
+    }
+    //Check archivo .config
+    char* archivo_config = argv[1];
+    if (string_ends_with(archivo_config, ".config") != 0){
+        log_info(logger_cpu, "El primer parametro debe ser .config");
+        exit(EXIT_FAILURE);
+    }
+    //Check identificadores
+    int id = atoi(argv[2]);
+    if(id < 1 || id > 3) {
+        log_info(logger_cpu, "Error: el identificador debe ser 1, 2 o 3\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Dependiendo del identificador se lanza cada cpu y se le pasa el archivo .config como parametro
+    log_info(logger_cpu, "Iniciando CPU");
+    switch (id) {
+        case 1:
+            log_info(logger_cpu, "Ejecutando CPU 1");
+            funcion_cpu(archivo_config, id);
+            break;
+        case 2:
+            log_info(logger_cpu, "Ejecutando CPU 2");
+            funcion_cpu(archivo_config, id);
+            break;
+        case 3:
+            log_info(logger_cpu, "Ejecutando CPU 3");
+            funcion_cpu(archivo_config, id);
+            break;
+        default:
+            printf("Identificador invalido. Debe ser 1, 2 o 3.\n");
+            return 1;
+    }
+    log_destroy(logger_cpu);
+return 0;
+}//FIN MAIN CPU
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // TODO Adriel: cargar config con config_create()
- 
+   
     // TODO Adriel: crear logger con log_create()
     // OJO: el nombre del archivo de log tiene que incluir el identificador
     // Ejemplo: "cpu_1.log" si el identificador es 1
@@ -45,5 +110,4 @@ int main(int argc, char* argv[]) {
  
     // CP2: ciclo de instrucción Fetch→Decode→Execute→Check Interrupt
  
-    return 0;
-}
+
