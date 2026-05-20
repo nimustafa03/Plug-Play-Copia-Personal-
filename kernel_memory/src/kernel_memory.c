@@ -16,6 +16,9 @@
 #include <commons/config.h>
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
+#include <commons/collections/list.h>
+#include <kernel_memory/src/kernel_memory.h>
+#include <kernel_memory/src/funciones_km.c>
 
 t_log*    logger;
 t_config* config;

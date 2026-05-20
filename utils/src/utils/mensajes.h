@@ -31,6 +31,10 @@ typedef enum {
 
     // ── (Acá van agregando los mensajes reales en CP2/CP3) ───
 
+    // ── CP2 ──────────────────────────────────────────────────
+    MSG_PEDIR_INSTRUCCION = 12, // CPU le pide instruccion a KM
+    MSG_CONTEXTO = 13, // KM le envía contexto a CPU
+    MSG_INICIAR_PROCESO = 14 // CPU ordena a KM crear un proceso
 } op_code;
 
 #endif // MENSAJES_H
