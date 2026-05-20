@@ -22,7 +22,7 @@
 
 t_log*    logger;
 t_config* config;
-
+t_dictionary* diccionario_procesos;
 
 // ── Variables de info del Kernel Scheduler ─────────────
 int fd_kernel_scheduler = 0;
@@ -48,16 +48,22 @@ void atender_kernel_scheduler(int fd_kernel_scheduler) {
 }
 
 void atender_cpu(int fd_cpu) {
-    /* int size;
+    int size;
 
     int* ptr_id_cpu = recibir_mensaje(fd_cpu, &size);
     id_cpu = *ptr_id_cpu;
 
-    free(ptr_id_cpu); */
-
     log_info(logger, "## CPU %d Conectada", id_cpu);
     op_code ok = MSG_OK;
     enviar_mensaje(fd_cpu, &ok, sizeof(op_code));
+    free(ptr_id_cpu);
+    // NICO M: Loop de espera activa, hasta que reciba el mensaje de iniciar proceso.
+    while(1){
+        op_code*codigo = recibir_mensaje(fd_cpu,&size);
+
+        if (*codigo = MSG_INICIAR_PROCESO) iniciar_proceso(fd_cpu,diccionario_procesos);
+    }
+
 }
 
 void atender_memory_stick(int fd_memory_stick) {
@@ -187,6 +193,8 @@ int main(int argc, char* argv[]) {
     int fd_servidor = iniciar_servidor(km_port);
     log_info(logger, "Kernel Memory listo en puerto %s. Esperando conexiones...", km_port);
 
+    //  CP2 NICO M: Creo un diccionario para los procesos.
+    diccionario_procesos = dictionary_create();
     // ---------------------------------------------------------
     // 6. Loop que acepta todas las conexiones entrantes
     //    (KS, CPUs, Memory Sticks y SWAP)
@@ -205,6 +213,7 @@ int main(int argc, char* argv[]) {
     // ---------------------------------------------------------
     config_destroy(config);
     log_destroy(logger);
+    dictionary_destroy_and_destroy_elements(diccionario_procesos);
 
     return EXIT_SUCCESS;
 }

@@ -1,5 +1,6 @@
 #ifndef KERNELMEMORY_H
 #ifndef KERNELMEMORY_H
+#include <stdint.h>
 
 typedef struct 
 {
@@ -18,7 +19,7 @@ typedef struct
     uint8_t BX;
     uint8_t CX;
     uint8_t DX;
-
+    
     uint32_t EAX;
     uint32_t EBX;
     uint32_t ECX;
@@ -32,10 +33,4 @@ typedef struct
 ## SI ALGUIEN DECIDE MOVERLO. PLS CAMBIAR EL INCLUDE DE KERNEL MEMORY O AVISARME PARA QUE LO HAGA YO.
 */
 
-typedef struct {
-    uint32_t id;
-    uint32_t base;
-    uint32_t limite;
-} t_segmento;
-
-char** cargar_instrucciones(char* path)
+char** cargar_instrucciones(uint32_t pid);
