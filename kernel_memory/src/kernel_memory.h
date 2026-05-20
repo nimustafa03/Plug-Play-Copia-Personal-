@@ -33,4 +33,4 @@ typedef struct
 ## SI ALGUIEN DECIDE MOVERLO. PLS CAMBIAR EL INCLUDE DE KERNEL MEMORY O AVISARME PARA QUE LO HAGA YO.
 */
 
-char** cargar_instrucciones(uint32_t pid);
+char** cargar_instrucciones(char*path);

@@ -10,6 +10,7 @@
 // =============================================================
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <commons/log.h>
@@ -60,10 +61,36 @@ void atender_cpu(int fd_cpu) {
     // NICO M: Loop de espera activa, hasta que reciba el mensaje de iniciar proceso.
     while(1){
         op_code*codigo = recibir_mensaje(fd_cpu,&size);
-
         if (*codigo = MSG_INICIAR_PROCESO) iniciar_proceso(fd_cpu,diccionario_procesos);
     }
 
+}
+
+void iniciar_proceso(int fd_cpu, t_dictionary*diccionario){
+    pthread_t nuevo_proceso;
+    // NICO M: Recibimos pid.
+    int size;
+    uint32_t pid;
+    pid = recibir_mensaje(fd_cpu, &size);
+    // NICO M: Recibimos path.
+    char*path = recibir_mensaje(fd_cpu,&size);
+    // NICO M: Creamos el proceso en si, creamos nuevo thread para manejarlo por separado.
+    crear_proceso(pid,path,diccionario);
+    t_contexto_ejecucion*proceso = dictionary_get(diccionario,"%d",pid);
+    nuevo_proceso = pthread_create(&nuevo_proceso,NULL, manejar_proceso,(fd_cpu, proceso));
+    log_info(logger, "## PID: %d - Proceso Creado.", pid);
+}
+
+void manejar_proceso(int fd_cpu, t_contexto_ejecucion*proceso){
+    char ** instrucciones = proceso->instrucciones;
+    log_info(logger,instrucciones);
+    // NICO M: Esperamos a que CPU nos envíe el mensaje de pedido de instrucción.
+    while(1){
+        int size;
+        op_code*codigo = recibir_mensaje(fd_cpu,&size);
+        if (*codigo = MSG_PEDIR_INSTRUCCION){
+        }; // NICO M: El CP2 Solo nos pide devolver la lista de instrucciones, para el CP3 Debería devolver instrucciones particulares.
+    }
 }
 
 void atender_memory_stick(int fd_memory_stick) {
