@@ -102,6 +102,7 @@ void manejar_proceso(int fd_cpu, t_contexto_ejecucion*proceso){
 
             // NICO M: Chequeamos que nos haya devuelto una instrucción y no NULL.
             if (proxima_instruccion = NULL){
+                log_error(logger, "## PID: %d - Obtener instruccion: %d - INSTRUCCION FUERA DE RANGO.", proceso->pid, pc);
                 codigo = MSG_ERROR;
                 enviar_mensaje(fd_cpu,*codigo,sizeof(op_code));
             }
