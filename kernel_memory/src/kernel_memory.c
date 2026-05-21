@@ -74,7 +74,7 @@ void iniciar_proceso(int fd_cpu, t_dictionary*diccionario){
     pid = recibir_mensaje(fd_cpu, &size);
     // NICO M: Recibimos path.
     char*path = recibir_mensaje(fd_cpu,&size);
-    
+
     // NICO M: Creamos el proceso en si, creamos nuevo thread para manejarlo por separado.
     t_contexto_ejecucion*contexto_ejecucion = crear_proceso(pid,path,diccionario);
     nuevo_proceso = pthread_create(&nuevo_proceso,NULL, manejar_proceso,(fd_cpu, contexto_ejecucion));
@@ -93,8 +93,25 @@ void manejar_proceso(int fd_cpu, t_contexto_ejecucion*proceso){
     while(1){
         int size;
         op_code*codigo = recibir_mensaje(fd_cpu,&size);
-        if (*codigo = MSG_FETCH_CPU{
+        if (*codigo = MSG_FETCH_CPU){
             // NICO M: KM Recibe PC del CPU.
+            usleep(config_get_int_value(config,"INSTRUCTION_DELAY")*1000); // NICO M: Delay obligatorio por consigna.
+            uint32_t pc = recibir_mensaje(fd_cpu, &size);
+
+            char*proxima_instruccion = devolver_instruccion(pc, instrucciones);
+
+            // NICO M: Chequeamos que nos haya devuelto una instrucción y no NULL.
+            if (proxima_instruccion = NULL){
+                codigo = MSG_ERROR;
+                enviar_mensaje(fd_cpu,*codigo,sizeof(op_code));
+            }
+            else
+            {
+                log_info(logger,"## PID: %d - Obtener instrucción: %d - Instrucción: %s", proceso->pid,pc,proxima_instruccion);
+                codigo = MSG_OK;
+                enviar_mensaje(fd_cpu,codigo, sizeof(op_code));
+                enviar_mensaje(fd_cpu,proxima_instruccion,sizeof(proxima_instruccion));
+            }
         };
     }
 }

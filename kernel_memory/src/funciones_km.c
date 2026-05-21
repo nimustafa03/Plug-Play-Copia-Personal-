@@ -2,6 +2,7 @@
 #define FUNCIONES_KM
 #include <commons/collections/dictionary.h>
 #include <kernel_memory.h>
+#include <commons/string.h>
 #include <pthread.h>
 #include <stdint.h>
 
@@ -43,8 +44,24 @@ char**cargar_instrucciones(char*path){
     // NICO M: Leemos a buffer.
     fread(instrucciones, 1, tam, archivo);
     fclose(archivo);
-    
+
     instrucciones["\0"]; // NICO M: Añadimos terminador nulo.
 
     return instrucciones;
+}
+
+char*devolver_instruccion(uint32_t pc,char*lista_instrucciones){
+    char*instruccion;
+    int contador = 0; // NICO M: Según los ejemplos, el PC tomaría la primera linea de una lista de instrucciones como 1.
+    char*copia_lista_instrucciones = string_duplicate(lista_instrucciones); // NICO M: CREO que string_split() rompe el string que se le pase. No queremos que la lista de instrucciones se rompa.
+    char* tokenizado = string_split(copia_lista_instrucciones,"\n"); 
+    free(copia_lista_instrucciones);
+    do
+    {
+        instruccion = tokenizado[contador-1];
+        contador++;
+    } while (contador-1 != pc && tokenizado[contador-1] != NULL); // NICO M: Nos movemos por el array tokenizado hasta donde nos indique el PC, siempre y cuando no nos encontremos en un espacio inválido, lo que indicaría que el PC se sale del rango de la lista.
+    string_array_destroy(tokenizado); // NICO M: Eliminamos el tokenizado, para liberar memoria.
+
+    return instruccion;
 }

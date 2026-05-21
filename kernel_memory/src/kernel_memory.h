@@ -35,6 +35,4 @@ typedef struct
 
 char** cargar_instrucciones(char*path); // NICO M: Devuelve como cadena de caracteres el archivo de pseudocódigo.
 
-void enviar_contexto_de_ejecucion(t_contexto_ejecucion contexto, int fd_cpu); // NICO M: Envía contexto de ejecución al CPU.
-
-void devolver_instruccion(uint32_t PC, int fd_cpu); // NICO M: Envía al CPU la instrucción que corresponda según el PC.
+char* devolver_instruccion(uint32_t pc, char*lista_instrucciones); // NICO M: Devuelve una cadena con la próxima instrucción basada en el pc.
