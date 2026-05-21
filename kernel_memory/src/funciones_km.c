@@ -1,52 +1,58 @@
-#ifndef FUNCIONES_KM
-#define FUNCIONES_KM
-#include <commons/collections/dictionary.h>
-#include <kernel_memory.h>
-#include <commons/string.h>
-#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stdint.h>
+#include <commons/string.h>   // string_itoa
+#include <commons/collections/dictionary.h>
+#include "kernel_memory.h"
 
-void crear_proceso(uint32_t pid,char*path, t_dictionary*diccionario){
+t_contexto_ejecucion* crear_proceso(uint32_t pid, char*path, t_dictionary*diccionario){
     // INICIALIZAMOS ESTRUCTURA
-    t_contexto_ejecucion* contexto_ejecucion;
-    contexto_ejecucion = new t_contexto_ejecucion();
+    t_contexto_ejecucion* contexto_ejecucion = malloc(sizeof(t_contexto_ejecucion));
     contexto_ejecucion->pid = pid;
     // INICIALIZAR REGISTROS EN CERO
-    t_registros* registros;
-    registros = new t_registros();
-    registros->AX=0;registros->BX=0;registros->CX=0;registros->DX=0;
-    registros->EAX=0;registros->EBX=0;registros->ECX=0;registros->EDX=0;
-    registros->SI=0;registros->DI=0;registros->PC=0;
+    memset(&contexto_ejecucion->registros, 0, sizeof(t_registros));
     // CARGAR INSTRUCCIONES
     contexto_ejecucion->instrucciones = cargar_instrucciones(path);
     contexto_ejecucion->cantidad_instrucciones = contar_lineas_en_cadena(contexto_ejecucion->instrucciones);
+    contexto_ejecucion->tabla_segmentos = NULL; // CP3
     // GUARDAMOS EN DICCIONARIO EL PROCESO
-    dictionary_put(diccionario,"%d",pid,contexto_ejecucion);
+    char* key = string_itoa(pid);
+    dictionary_put(diccionario, key, contexto_ejecucion);
+    free(key);
+    
     return contexto_ejecucion;
 }
 
-int contar_lineas_en_cadena(char*cadena[]){
+int contar_lineas_en_cadena(char** cadena){
     int lineas_totales = 0;
-    for (const char *p= cadena; *p; ++p){
-        if (*p= "\n") lineas_totales++;
+    for (int i=0; cadena[i] != NULL; i++){
+        lineas_totales++;
     }
     return lineas_totales;
 }
 
-char**cargar_instrucciones(char*path){
-    FILE*archivo = fopen(path,"r");
-    char*instrucciones;
-    // NICO M: Vemos el tamaño del archivo.
-    fseek(archivo,0,SEEK_END);
-    long tam = ftell(archivo);
+char** cargar_instrucciones(char* path) {
+    FILE* archivo = fopen(path, "r");
+    if (!archivo) return NULL;
+
+    // contar lineas primero
+    int lineas = 0;
+    char buf[256];
+    while (fgets(buf, sizeof(buf), archivo)) lineas++;
     rewind(archivo);
 
-    // NICO M: Leemos a buffer.
-    fread(instrucciones, 1, tam, archivo);
+    // alocar array de punteros + centinela NULL
+    char** instrucciones = malloc((lineas + 1) * sizeof(char*));
+    for (int i = 0; i < lineas; i++) {
+        fgets(buf, sizeof(buf), archivo);
+        // sacar el \n del final si existe
+        buf[strcspn(buf, "\n")] = '\0';
+        instrucciones[i] = strdup(buf);
+    }
+    instrucciones[lineas] = NULL; // centinela
+
     fclose(archivo);
-
-    instrucciones["\0"]; // NICO M: Añadimos terminador nulo.
-
     return instrucciones;
 }
 

@@ -3,10 +3,10 @@
 //  Cómo ejecutar: ./bin/kernel_memory kernel_memory.config
 //
 //  Responsables CP1:
-//    Nico S  → servidor KM acepta KS  (conexión 1, lado servidor)
-//              servidor KM acepta CPU (conexión 5, lado servidor)
-//              servidor KM acepta MS  (conexión 6, lado servidor)
-//    Santiago → servidor KM acepta SWAP (conexión 3, lado servidor)
+//    Nico S  → servidor KM acepta KS, CPU, MS
+//    Santiago → servidor KM acepta SWAP
+//  CP2:
+//    Nico M → atender_cpu, iniciar_proceso, manejar_proceso
 // =============================================================
 
 #include <stdio.h>
@@ -15,11 +15,10 @@
 #include <pthread.h>
 #include <commons/log.h>
 #include <commons/config.h>
+#include <commons/collections/list.h>
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
-#include <commons/collections/list.h>
 #include <kernel_memory.h>
-#include <funciones_km.c>
 
 t_log*    logger;
 t_config* config;
@@ -61,7 +60,7 @@ void atender_cpu(int fd_cpu) {
     // NICO M: Loop de espera activa, hasta que reciba el mensaje de iniciar proceso.
     while(1){
         op_code*codigo = recibir_mensaje(fd_cpu,&size);
-        if (*codigo = MSG_INIT_CPU) iniciar_proceso(fd_cpu,diccionario_procesos);
+        if (*codigo == MSG_INIT_CPU) iniciar_proceso(fd_cpu,diccionario_procesos);
     }
 
 }
