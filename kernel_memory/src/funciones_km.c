@@ -4,7 +4,6 @@
 #include <kernel_memory.h>
 #include <pthread.h>
 #include <stdint.h>
-#include <commons/log.h>
 
 void crear_proceso(uint32_t pid,char*path, t_dictionary*diccionario){
     // INICIALIZAMOS ESTRUCTURA
@@ -22,6 +21,7 @@ void crear_proceso(uint32_t pid,char*path, t_dictionary*diccionario){
     contexto_ejecucion->cantidad_instrucciones = contar_lineas_en_cadena(contexto_ejecucion->instrucciones);
     // GUARDAMOS EN DICCIONARIO EL PROCESO
     dictionary_put(diccionario,"%d",pid,contexto_ejecucion);
+    return contexto_ejecucion;
 }
 
 int contar_lineas_en_cadena(char*cadena[]){
@@ -32,6 +32,19 @@ int contar_lineas_en_cadena(char*cadena[]){
     return lineas_totales;
 }
 
-devolver_lista_instrucciones(uint32_t pid, t_log logger){
-    log_info
+char**cargar_instrucciones(char*path){
+    FILE*archivo = fopen(path,"r");
+    char*instrucciones;
+    // NICO M: Vemos el tamaño del archivo.
+    fseek(archivo,0,SEEK_END);
+    long tam = ftell(archivo);
+    rewind(archivo);
+
+    // NICO M: Leemos a buffer.
+    fread(instrucciones, 1, tam, archivo);
+    fclose(archivo);
+    
+    instrucciones["\0"]; // NICO M: Añadimos terminador nulo.
+
+    return instrucciones;
 }
