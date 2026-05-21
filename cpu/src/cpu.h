@@ -7,10 +7,8 @@
 #include <commons/config.h>
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
-#include <cpu.h>
-
+#include <utils/tipos.h>
 
 void funcion_cpu(char *archivo_config, int id);
 
-
-#endif 
+#endif // CPUS_H

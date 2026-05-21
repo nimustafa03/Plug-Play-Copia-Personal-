@@ -1,0 +1,22 @@
+#ifndef TIPOS_H
+#define TIPOS_H
+
+#include <stdint.h>
+#include <commons/collections/list.h>
+
+typedef struct {
+    uint8_t  AX,  BX,  CX,  DX;
+    uint32_t EAX, EBX, ECX, EDX;
+    uint32_t SI, DI;
+    uint32_t PC;
+} t_registros;
+
+typedef struct {
+    uint32_t    pid;
+    t_registros registros;
+    char**      instrucciones;
+    int         cantidad_instrucciones;
+    t_list*     tabla_segmentos; // CP3
+} t_contexto_ejecucion;
+
+#endif // TIPOS_H
