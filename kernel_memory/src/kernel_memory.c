@@ -3,22 +3,22 @@
 //  Cómo ejecutar: ./bin/kernel_memory kernel_memory.config
 //
 //  Responsables CP1:
-//    Nico S  → servidor KM acepta KS  (conexión 1, lado servidor)
-//              servidor KM acepta CPU (conexión 5, lado servidor)
-//              servidor KM acepta MS  (conexión 6, lado servidor)
-//    Santiago → servidor KM acepta SWAP (conexión 3, lado servidor)
+//    Nico S  → servidor KM acepta KS, CPU, MS
+//    Santiago → servidor KM acepta SWAP
+//  CP2:
+//    Nico M → atender_cpu, iniciar_proceso, manejar_proceso
 // =============================================================
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <commons/log.h>
 #include <commons/config.h>
+#include <commons/collections/list.h>
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
-#include <commons/collections/list.h>
-#include <kernel_memory/src/kernel_memory.h>
-#include <kernel_memory/src/funciones_km.c>
+#include <kernel_memory.h>
 
 t_log*    logger;
 t_config* config;
@@ -60,10 +60,60 @@ void atender_cpu(int fd_cpu) {
     // NICO M: Loop de espera activa, hasta que reciba el mensaje de iniciar proceso.
     while(1){
         op_code*codigo = recibir_mensaje(fd_cpu,&size);
-
-        if (*codigo = MSG_INICIAR_PROCESO) iniciar_proceso(fd_cpu,diccionario_procesos);
+        if (*codigo == MSG_INIT_CPU) iniciar_proceso(fd_cpu,diccionario_procesos);
     }
 
+}
+
+void iniciar_proceso(int fd_cpu, t_dictionary*diccionario){
+    pthread_t nuevo_proceso;
+    // NICO M: Recibimos pid.
+    int size;
+    uint32_t pid;
+    pid = recibir_mensaje(fd_cpu, &size);
+    // NICO M: Recibimos path.
+    char*path = recibir_mensaje(fd_cpu,&size);
+
+    // NICO M: Creamos el proceso en si, creamos nuevo thread para manejarlo por separado.
+    t_contexto_ejecucion*contexto_ejecucion = crear_proceso(pid,path,diccionario);
+    nuevo_proceso = pthread_create(&nuevo_proceso,NULL, manejar_proceso,(fd_cpu, contexto_ejecucion));
+
+    // NICO M: Enviamos Contexto de Ejecución al CPU.
+    enviar_mensaje(fd_cpu,contexto_ejecucion,sizeof(contexto_ejecucion));
+
+    log_info(logger, "## PID: %d - Proceso Creado.", pid);
+}
+
+void manejar_proceso(int fd_cpu, t_contexto_ejecucion*proceso){
+    char ** instrucciones = proceso->instrucciones;
+    log_info(logger, "## PID: %d - Imprimiendo lista de instrucciones para el proceso...", proceso->pid);
+    log_info(logger,instrucciones);
+    // NICO M: Esperamos a que CPU nos envíe el mensaje de pedido de instrucción.
+    while(1){
+        int size;
+        op_code*codigo = recibir_mensaje(fd_cpu,&size);
+        if (*codigo = MSG_FETCH_CPU){
+            // NICO M: KM Recibe PC del CPU.
+            usleep(config_get_int_value(config,"INSTRUCTION_DELAY")*1000); // NICO M: Delay obligatorio por consigna.
+            uint32_t pc = recibir_mensaje(fd_cpu, &size);
+
+            char*proxima_instruccion = devolver_instruccion(pc, instrucciones);
+
+            // NICO M: Chequeamos que nos haya devuelto una instrucción y no NULL.
+            if (proxima_instruccion = NULL){
+                log_error(logger, "## PID: %d - Obtener instruccion: %d - INSTRUCCION FUERA DE RANGO.", proceso->pid, pc);
+                codigo = MSG_ERROR;
+                enviar_mensaje(fd_cpu,*codigo,sizeof(op_code));
+            }
+            else
+            {
+                log_info(logger,"## PID: %d - Obtener instrucción: %d - Instrucción: %s", proceso->pid,pc,proxima_instruccion);
+                codigo = MSG_OK;
+                enviar_mensaje(fd_cpu,codigo, sizeof(op_code));
+                enviar_mensaje(fd_cpu,proxima_instruccion,sizeof(proxima_instruccion));
+            }
+        };
+    }
 }
 
 void atender_memory_stick(int fd_memory_stick) {

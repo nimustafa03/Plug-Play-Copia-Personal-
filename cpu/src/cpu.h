@@ -8,9 +8,58 @@
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
 #include <cpu.h>
+#include <stdint.h>
 
 
-void funcion_cpu(char *archivo_config, int id);
+// OPCODES CPU
+typedef enum {
+    OP_NOOP,
+    OP_SET,
+    OP_MOV_IN,
+    OP_MOV_OUT,
+    OP_SUM,
+    OP_SUB,
+    OP_JNZ,
+    OP_COPY_MEM,
+    OP_INVALID = -1
+} op_code_cpu;
 
 
-#endif 
+// REGISTROS CPU
+
+typedef struct {
+    uint32_t PC;
+    uint8_t AX;
+    uint8_t BX;
+    uint8_t CX;
+    uint8_t DX;
+    uint32_t EAX;
+    uint32_t EBX;
+    uint32_t ECX;
+    uint32_t EDX;
+    uint32_t SI;
+    uint32_t DI;
+} RegistrosCPU;
+
+// REQUEST FETCH
+typedef struct {
+    uint32_t pid;
+    uint32_t pc;
+} t_fetch;
+
+// INTERRUPCIONES
+typedef struct {
+    uint32_t pid;
+    int motivo;
+} t_interrupcion;
+
+// CICLO DE INSTRUCCION
+
+char* fetch(int conexion_servidor,uint32_t pid,RegistrosCPU* cpu);
+
+op_code_cpu decode(char* instruccion);
+
+void execute(op_code_cpu codeop,char* instruccion,RegistrosCPU* cpu);
+
+
+#endif
