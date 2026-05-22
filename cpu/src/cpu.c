@@ -10,7 +10,7 @@
 //  Te toca conectarte a los tres módulos. 
 //  Copía donde corresponde lo que habías hecho
 // =============================================================
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <commons/log.h>
@@ -20,86 +20,45 @@
 #include <utils/mensajes.h>
 #include <cpu.h>
 
-t_config* config;
-
-void conexionCPUKernelScheduler (t_log* logger_cpu, int id, const char* archivo_config) {
-    log_info(logger_cpu, "EJECUTANDO CPU %d, %s",id, archivo_config);
-    t_config* config = config_create(archivo_config);
-    char *ks_port = config_get_string_value(config, "KS_PORT");
-    char *ks_ip = config_get_string_value(config, "KS_IP");
-    int fd_ks = crear_conexion(ks_ip, ks_port);
-    log_info(logger_cpu, "Enviando HANDSHAKE a servidores");
-
-    op_code handshake = MSG_HANDSHAKE_CPU;
-
-    enviar_mensaje(fd_ks, &handshake, sizeof(op_code));
-    int size_resp_ks;
-    op_code* respuesta = recibir_mensaje(fd_ks, &size_resp_ks);
-    if (respuesta == NULL){
-        log_error(logger_cpu, "Error al recibir mensaje desde KS");
-        exit(EXIT_FAILURE);
-    } else if (*respuesta == MSG_OK) {
-        log_info(logger_cpu, "Handshake con KS exitoso");
-    } else if (*respuesta == MSG_ERROR){
-        log_error(logger_cpu, "Handshake con KS FALLIDO");
-    }
-    free(respuesta);
-    log_info(logger_cpu, "TERMINANDO PROGRAMA");
-    close(fd_ks);
-}
-
-void conexionCPUKernelMemory (t_log* logger_cpu, int id, const char* archivo_config) {
-    log_info(logger_cpu, "EJECUTANDO CPU %d, %s",id, archivo_config);
-    t_config* config = config_create(archivo_config);
+int conexionCPUKernelMemory (t_config* config) {
     char *km_port = config_get_string_value(config, "KM_PORT");
     char *km_ip = config_get_string_value(config, "KM_IP");
     int fd_km = crear_conexion(km_ip, km_port);
-    log_info(logger_cpu, "Enviando HANDSHAKE a servidores");
-
-    op_code handshake = MSG_HANDSHAKE_CPU;
-
-    enviar_mensaje(fd_km, &handshake, sizeof(op_code));
-    int size_resp_km;
-    op_code* respuesta = recibir_mensaje(fd_km, &size_resp_km);
-    if (respuesta == NULL){
-        log_error(logger_cpu, "Error al recibir mensaje desde KM");
-        exit(EXIT_FAILURE);
-    } else if (*respuesta == MSG_OK) {
-        log_info(logger_cpu, "Handshake con KM exitoso");
-    } else if (*respuesta == MSG_ERROR){
-        log_error(logger_cpu, "Handshake con KM FALLIDO");
+    return fd_km;
     }
-    free(respuesta);
-    log_info(logger_cpu, "TERMINANDO PROGRAMA");
-    close(fd_km);
-}
 
-void conexionCPUMemoryStick (t_log* logger_cpu, int id, const char* archivo_config) {
-    log_info(logger_cpu, "EJECUTANDO CPU %d, %s",id, archivo_config);
-    t_config* config = config_create(archivo_config);
+int conexionCPUKernelScheduler (t_config* config) {
+    char *ks_port = config_get_string_value(config, "KS_PORT");
+    char *ks_ip = config_get_string_value(config, "KS_IP");
+    int fd_ks = crear_conexion(ks_ip, ks_port);
+    return fd_ks;
+    }
+
+int conexionCPUMemoryStick (t_config* config) {
     char *ms_port = config_get_string_value(config, "MS_PORT");
     char *ms_ip = config_get_string_value(config, "MS_IP");
     int fd_ms = crear_conexion(ms_ip, ms_port);
-    log_info(logger_cpu, "Enviando HANDSHAKE a servidores");
-
-    op_code handshake = MSG_HANDSHAKE_CPU;
-
-    enviar_mensaje(fd_ms, &handshake, sizeof(op_code));
-    int size_resp_ms;
-    op_code* respuesta = recibir_mensaje(fd_ms, &size_resp_ms);
-    if (respuesta == NULL){
-        log_error(logger_cpu, "Error al recibir mensaje desde MS");
-        exit(EXIT_FAILURE);
-    } else if (*respuesta == MSG_OK) {
-        log_info(logger_cpu, "Handshake con MS exitoso");
-    } else if (*respuesta == MSG_ERROR){
-        log_error(logger_cpu, "Handshake con MS FALLIDO");
+    return fd_ms;
     }
-    free(respuesta);
-    log_info(logger_cpu, "TERMINANDO PROGRAMA");
-    close(fd_ms);
+
+int esperar_pid(int fd_ks) {
+    log_info(logger_cpu, "CPU esperando PID del Kernel Scheduler...");
+    while (1) {
+        int size;
+        uint32_t* pid_ptr = recibir_mensaje(fd_ks, &size);
+
+        if (pid_ptr == NULL) {
+            log_error(logger_cpu, "Error al recibir PID");
+            continue;
+        }
+        uint32_t pid = *pid_ptr;
+        free(pid_ptr);
+
+        log_info(logger_cpu, "PID recibido: %u", pid);
+        return pid;
+    }
 }
- 
+
 int main(int argc, char* argv[]) {
 
     t_log* logger_cpu;
@@ -111,12 +70,12 @@ int main(int argc, char* argv[]) {
 
     //Check argumentos
     if (argc != 3) {
-        log_info(logger_cpu, "Debe ingreslear %s [Archivo Config] [Identificador]. Verifique los argumentos.", argv[0]); 
+        log_info(logger_cpu, "Debe ingresar %s [Archivo Config] [Identificador]. Verifique los argumentos.", argv[0]); 
         exit(EXIT_FAILURE);
     }
     //Check archivo .config
-    char* archivo_config = argv[1];
-    if (string_ends_with(archivo_config, ".config") == 0){
+    char* direccion_archivo = argv[1];
+    if (string_ends_with(direccion_archivo, ".config") == 0){
         log_info(logger_cpu, "El primer parametro debe ser .config");
         exit(EXIT_FAILURE);
     }
@@ -127,35 +86,66 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    // Dependiendo del identificador se lanza cada cpu y se le pasa el archivo .config como parametro
-    log_info(logger_cpu, "Iniciando CPU");
-    switch (id) {
-        case 1:
-            log_info(logger_cpu, "Ejecutando CPU 1");
-            conexionCPUKernelScheduler(logger_cpu, id, archivo_config);
-            break;
-        case 2:
-            log_info(logger_cpu, "Ejecutando CPU 2");
-            conexionCPUKernelMemory(logger_cpu, id, archivo_config);
-            break;
-        case 3:
-            log_info(logger_cpu, "Ejecutando CPU 3");
-            conexionCPUMemoryStick(logger_cpu, id, archivo_config);
-            break;
-        default:
-            printf("Identificador invalido. Debe ser 1, 2 o 3.\n");
-            return 1;
+    char* archivo_config = string_from_format("cpu_%d.config", id);
+    t_config* config = config_create(archivo_config);
+    free(archivo_config);
+
+    int fd_km = conexionCPUKernelMemory(config);
+    if (fd_km == -1) {
+    log_error(logger_cpu, "Error al conectar con Kernel Memory");
+    exit(EXIT_FAILURE);
     }
-    log_destroy(logger_cpu);
-return 0;
-}//FIN MAIN CPU
+    int fd_ks = conexionCPUKernelScheduler(config);
+    if (fd_ks == -1) {
+    log_error(logger_cpu, "Error al conectar con Kernel Scheduler");
+    exit(EXIT_FAILURE);
+    }
+    int fd_ms = conexionCPUMemoryStick(config);
+    if (fd_ms == -1) {
+    log_error(logger_cpu, "Error al conectar con Memory Stick");
+    exit(EXIT_FAILURE);
+    }
 
+    //WHILE DE ESPERA PID
+    while (1) {
+        int pid = esperar_pid(fd_ks);
+        
+        log_info(logger_cpu, "FASE FETCH");
 
+        RegistrosCPU cpu = {0}; //inicializo registros
+        cpu.PC = 0;
 
+        // WHILE CICLO DE INSTRUCCION
+        while (1) {
+            char* instruccion = fetch(fd_km, pid, &cpu);
 
+            log_info(logger_cpu, "FASE DECODE");
+            op_code_cpu codop = decode(instruccion);
 
+            log_info(logger_cpu, "FASE EXECUTE");
+            execute(codop,instruccion,&cpu);
+            free(instruccion);
 
+            log_info(logger_cpu, "FASE INTERRUPCIONES");
+            
+            op_code op;
 
+            if (check_interrupcion(fd_ks, &op)) {
+                if (op == MSG_INTERRUPT) {
+                    t_interrupcion intr;
+                    int bytes = recv(fd_ks, &intr, sizeof(t_interrupcion), MSG_WAITALL);
+                    if (bytes <= 0)
+                        return 0;
+                    if (intr.pid == pid) {
+                        enviar_mensaje(fd_km, &cpu, sizeof(RegistrosCPU));
+                        enviar_mensaje(fd_ks, &MSG_INTERRUPCION_ATENDIDA, sizeof(op_code));
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
 
 
 
@@ -188,5 +178,3 @@ return 0;
     // enviar handshake MSG_HANDSHAKE_CPU
  
     // CP2: ciclo de instrucción Fetch→Decode→Execute→Check Interrupt
- 
-
