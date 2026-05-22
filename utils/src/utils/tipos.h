@@ -19,4 +19,9 @@ typedef struct {
     t_list*     tabla_segmentos; // CP3
 } t_contexto_ejecucion;
 
+typedef struct {
+    uint32_t pid;
+    int      motivo;
+} t_interrupcion;
+
 #endif // TIPOS_H

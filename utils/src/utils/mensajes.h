@@ -34,7 +34,7 @@ typedef enum {
     // ── CP2 ──────────────────────────────────────────────────
     MSG_FETCH_CPU = 12, // CPU le pide instruccion a KM
     MSG_CONTEXTO_EJECUCION_KM = 13, // KM le envía contexto a CPU
-    MSG_INIT_CPU = 14 // CPU ordena a KM crear un proceso
+    MSG_INIT_CPU = 14, // CPU ordena a KM crear un proceso
     MSG_REQUEST_PID = 15, // CPU pide PID a KS
     MSG_INTERRUPT = 16, // interrupciones hacia CPU
     MSG_INTERRUPCION_ATENDIDA = 17

@@ -7,8 +7,8 @@
 #include <commons/config.h>
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
-#include <cpu.h>
 #include <stdint.h>
+#include <utils/tipos.h>  // t_interrupcion viene de acá
 
 
 // OPCODES CPU
@@ -47,11 +47,7 @@ typedef struct {
     uint32_t pc;
 } t_fetch;
 
-// INTERRUPCIONES
-typedef struct {
-    uint32_t pid;
-    int motivo;
-} t_interrupcion;
+// INTERRUPCIONES -> tipos.h
 
 // CICLO DE INSTRUCCION
 
