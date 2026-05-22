@@ -8,6 +8,8 @@
 //
 //  Te toca conectarte al Kernel Scheduler e informar tu tipo.
 //  Dale que se puede
+
+// CP2: Bianca
 // =============================================================
  
 #include <stdio.h>
@@ -30,6 +32,9 @@ int main(int argc, char* argv[]) {
     // (Si argc es menor a 2, es que no escribieron el nombre del archivo)
     if (argc < 2) {
         printf("Error: Falta el archivo de configuracion\n Uso: ./bin/io [archivo_config] [TIPO]\n TIPO: STDIN/STDOUT/SLEEP");
+        return EXIT_FAILURE;
+    } else if (argc <3) {
+        printf("Error: Falta el tipo de IO\n Uso: ./bin/io [archivo_config] [TIPO]\n TIPO: STDIN/STDOUT/SLEEP");
         return EXIT_FAILURE;
     }
  
@@ -75,13 +80,45 @@ int main(int argc, char* argv[]) {
     
     if (*respuesta == MSG_OK) {
         // Log obligatorio: log_info(logger, "## Conectado a Kernel Scheduler");
-        log_info(logger, "## Conectado a Kernel Scheduler y aceptado");
+        log_info(logger, "## Conectado a Kernel Scheduler");
     }
     free(respuesta); // Liberar la memoria del mensaje recibido
  
     // Quedarse esperando peticiones del KS
-    pause();
-    // pause(); por ahora alcanza para CP1
+    while(1) {
+        int size_resp;
+        op_code* orden = recibir_mensaje(fd_ks, &size_resp);
+
+        if(*orden) {
+            log_info(logger, "## PID: %d - Inicio de IO", pid);
+
+            switch (*orden)
+            {
+            case STDIN:
+                log_info(logger, "## PID: %d - Ingrese %s caracteres:" , pid, cant_carac);
+                op_code* done = MSG_DONE; 
+                enviar_mensaje(fd_ks, &done, sizeof(op_code));
+                break;
+            
+            case STDOUT:
+                log_info(logger, "## PID: %d - %s", pid, cont_imprimir);
+                printf("%s\n", cont_imprimir);
+                op_code* done = MSG_DONE; 
+                enviar_mensaje(fd_ks, &done, sizeof(op_code));
+                break;
+
+            case SLEEP:
+                log_info(logger, "## PID: %d - Haciendo sleep por %s milisegundos", pid, tiempo);
+                usleep(tiempo * 1000);
+                op_code* done = MSG_DONE; 
+                enviar_mensaje(fd_ks, &done, sizeof(op_code));
+                break;
+            }
+
+            log_info(logger, "## PID: %d - Fin de IO", pid);
+
+        }
+    }
     
     // TODO CP2: implementar STDIN, STDOUT y SLEEP
 
