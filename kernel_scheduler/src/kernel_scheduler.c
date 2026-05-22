@@ -18,8 +18,9 @@
 #include <commons/config.h>
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
+#include "funciones_ks.h"
  
-t_log*    logger;
+t_log*    logger_ks = NULL;
 t_config* config;
 int       fd_servidor_ks;
  
@@ -47,7 +48,7 @@ void* atender_cliente_ks(void* arg) {
         // ── PARTE DE BIANCA ──────────────────────────────────
         case MSG_HANDSHAKE_CPU:
             // Bianca completa esto
-            log_info(logger, "CPU conectado - FD: %d", fd_cliente);
+            log_info(logger_ks, "CPU conectado - FD: %d", fd_cliente);
             // le contestamos que la conexión se estableció OK
             enviar_mensaje(fd_cliente, &respuesta_ok, sizeof(op_code));
 
@@ -58,7 +59,7 @@ void* atender_cliente_ks(void* arg) {
             // Una IO se conectó
             // Log obligatorio del enunciado (lo loguea el módulo IO,
             // acá guardamos el fd para usarlo después en CP2)
-            log_info(logger, "IO conectada - FD: %d", fd_cliente);
+            log_info(logger_ks, "IO conectada - FD: %d", fd_cliente);
             // le contestamos que la conexión se estableció OK
             enviar_mensaje(fd_cliente, &respuesta_ok, sizeof(op_code));
  
@@ -66,7 +67,7 @@ void* atender_cliente_ks(void* arg) {
             break;
  
         default:
-            log_warning(logger, "Conexion desconocida - codigo: %d - FD: %d",
+            log_warning(logger_ks, "Conexion desconocida - codigo: %d - FD: %d",
                         *codigo, fd_cliente);
             break;
     }
@@ -93,13 +94,13 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
  
-    logger = log_create("kernel_scheduler.log",
+    logger_ks = log_create("kernel_scheduler.log",
                         "KernelScheduler",
                         true,
                         log_level_from_string(
                             config_get_string_value(config, "LOG_LEVEL")));
-    if (logger == NULL) {
-        printf("Error: no se pudo crear el logger\n");
+    if (logger_ks == NULL) {
+        printf("Error: no se pudo crear el logger_ks\n");
         return EXIT_FAILURE;
     }
  
@@ -110,26 +111,26 @@ int main(int argc, char* argv[]) {
     // ── PARTE DE BIANCA: conectarse a KM ─────────────────────
     int fd_km = crear_conexion(km_ip, km_port);
     if (fd_km == -1) {
-        log_error(logger, "No se pudo conectar a Kernel Memory en %s:%s",
+        log_error(logger_ks, "No se pudo conectar a Kernel Memory en %s:%s",
                   km_ip, km_port);
         return EXIT_FAILURE;
     }
     op_code codigo = MSG_HANDSHAKE_KS;
     enviar_mensaje(fd_km, &codigo, sizeof(op_code));
-    log_info(logger, "## Conectado a Kernel Memory");
+    log_info(logger_ks, "## Conectado a Kernel Memory");
 
     // 2. Esperar OK 
     int size_resp;
     op_code* respuesta = recibir_mensaje(fd_km, &size_resp);
     
     if (*respuesta == MSG_OK) {
-        log_info(logger, "## Conectado a Kernel Memory y aceptado");
+        log_info(logger_ks, "## Conectado a Kernel Memory y aceptado");
     }
     free(respuesta); // Liberar la memoria del mensaje recibido
 
     // ── PARTE DE BIANCA: levantar servidor ───────────────────
     fd_servidor_ks = iniciar_servidor(ks_port);
-    log_info(logger, "Servidor KS listo en puerto %s", ks_port);
+    log_info(logger_ks, "Servidor KS listo en puerto %s", ks_port);
  
     // ── PARTE DE AMBOS: loop que acepta CPUs e IOs ───────────
     // (el mismo servidor atiende a ambos, atender_cliente_ks
@@ -142,8 +143,21 @@ int main(int argc, char* argv[]) {
         pthread_create(&hilo, NULL, atender_cliente_ks, fd_cliente);
         pthread_detach(hilo);
     }
+
+    // Planificador
+    inicializarListasProcesos();
+
+    pthread_t threadPlanificadorLargoPlazo;
+    pthread_t threadPlanificadorCortoPlazo;
+    
+    pthread_create(&threadPlanificadorLargoPlazo, NULL, iniciar_planificador_largo_plazo, NULL);
+    pthread_create(&threadPlanificadorCortoPlazo, NULL, iniciar_planificador_corto_plazo, NULL);
+
+
+    pthread_detach(threadPlanificadorLargoPlazo);
+    pthread_detach(threadPlanificadorCortoPlazo);
  
     config_destroy(config);
-    log_destroy(logger);
+    log_destroy(logger_ks);
     return EXIT_SUCCESS;
 }
