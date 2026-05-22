@@ -41,10 +41,29 @@ int swap_block_size = 0;
 int swap_total_size = 0;
 
 
+int espacio_libre_en_segmento(int id_Segmento){ 
+    int espacio_libre = config_get_int_value(config,"ESPACIO_LIBRE_MOCK");
+    return espacio_libre;
+}
+
 void atender_kernel_scheduler(int fd_kernel_scheduler) {
     log_info(logger, "## Kernel Scheduler Conectado - FD del socket: %d", fd_kernel_scheduler);
-    op_code ok = MSG_OK;
-    enviar_mensaje(fd_kernel_scheduler, &ok, sizeof(op_code));
+    op_code codigo = MSG_OK;
+    enviar_mensaje(fd_kernel_scheduler, &codigo, sizeof(op_code));
+
+    // NICO M: Loop de espera activa, espera órdenes del kernel scheduler.
+    op_code*codigo_recibido;
+    while(1){
+        switch(*codigo) {
+            case MSG_DONE:
+                terminar_proceso(int pid);
+            case MSG_STDIN:
+                enviar_mensaje(fd_kernel_scheduler,codigo,sizeof(op_code));
+            case MSG_STDOUT:
+                enviar_mensaje(fd_kernel_scheduler,codigo,sizeof(op_code)); 
+        }
+    }
+    free(codigo_recibido);
 }
 
 void atender_cpu(int fd_cpu) {
@@ -58,14 +77,16 @@ void atender_cpu(int fd_cpu) {
     enviar_mensaje(fd_cpu, &ok, sizeof(op_code));
     free(ptr_id_cpu);
     // NICO M: Loop de espera activa, hasta que reciba el mensaje de iniciar proceso.
+    op_code*codigo;
     while(1){
-        op_code*codigo = recibir_mensaje(fd_cpu,&size);
-        if (*codigo == MSG_INIT_CPU) iniciar_proceso(fd_cpu,diccionario_procesos);
+        codigo = recibir_mensaje(fd_cpu,&size);
+        if (*codigo == MSG_INIT_CPU) iniciar_proceso(fd_cpu);
     }
+    free(codigo);
 
 }
 
-void iniciar_proceso(int fd_cpu, t_dictionary*diccionario){
+void iniciar_proceso(int fd_cpu){
     pthread_t nuevo_proceso;
     // NICO M: Recibimos pid.
     int size;
@@ -75,8 +96,9 @@ void iniciar_proceso(int fd_cpu, t_dictionary*diccionario){
     char*path = recibir_mensaje(fd_cpu,&size);
 
     // NICO M: Creamos el proceso en si, creamos nuevo thread para manejarlo por separado.
-    t_contexto_ejecucion*contexto_ejecucion = crear_proceso(pid,path,diccionario);
-    nuevo_proceso = pthread_create(&nuevo_proceso,NULL, manejar_proceso,(fd_cpu, contexto_ejecucion));
+    t_contexto_ejecucion*contexto_ejecucion = crear_proceso(pid,path, diccionario_procesos);
+    free(path);
+    pthread_create(&nuevo_proceso,NULL, manejar_proceso,(fd_cpu, contexto_ejecucion->pid, contexto_ejecucion->instrucciones));
 
     // NICO M: Enviamos Contexto de Ejecución al CPU.
     enviar_mensaje(fd_cpu,contexto_ejecucion,sizeof(contexto_ejecucion));
@@ -84,12 +106,20 @@ void iniciar_proceso(int fd_cpu, t_dictionary*diccionario){
     log_info(logger, "## PID: %d - Proceso Creado.", pid);
 }
 
-void manejar_proceso(int fd_cpu, t_contexto_ejecucion*proceso){
+void eliminar_proceso(uint32_t pid){
+    t_contexto_ejecucion*a_eliminar = dictionary_get(diccionario_procesos,pid);
+    dictionary_remove(diccionario_procesos, pid);
+    free(a_eliminar-> tabla_segmentos);
+    free(a_eliminar->instrucciones);
+    free(a_eliminar);
+}
+
+void manejar_proceso(int fd_cpu, t_contexto_ejecucion proceso){
     char ** instrucciones = proceso->instrucciones;
     log_info(logger, "## PID: %d - Imprimiendo lista de instrucciones para el proceso...", proceso->pid);
     log_info(logger,instrucciones);
     // NICO M: Esperamos a que CPU nos envíe el mensaje de pedido de instrucción.
-    while(1){
+    while(proceso->proximo_a_detener){
         int size;
         op_code*codigo = recibir_mensaje(fd_cpu,&size);
         if (*codigo = MSG_FETCH_CPU){
@@ -112,8 +142,12 @@ void manejar_proceso(int fd_cpu, t_contexto_ejecucion*proceso){
                 enviar_mensaje(fd_cpu,codigo, sizeof(op_code));
                 enviar_mensaje(fd_cpu,proxima_instruccion,sizeof(proxima_instruccion));
             }
+            free(proxima_instruccion);
         };
-    }
+        free(codigo);
+    };
+    eliminar_proceso(proceso->pid);
+    pthread_exit();
 }
 
 void atender_memory_stick(int fd_memory_stick) {
@@ -243,8 +277,9 @@ int main(int argc, char* argv[]) {
     int fd_servidor = iniciar_servidor(km_port);
     log_info(logger, "Kernel Memory listo en puerto %s. Esperando conexiones...", km_port);
 
-    //  CP2 NICO M: Creo un diccionario para los procesos.
+    //  CP2 NICO M: Creo un diccionario para los procesos. Otro para sus hilos.
     diccionario_procesos = dictionary_create();
+
     // ---------------------------------------------------------
     // 6. Loop que acepta todas las conexiones entrantes
     //    (KS, CPUs, Memory Sticks y SWAP)
