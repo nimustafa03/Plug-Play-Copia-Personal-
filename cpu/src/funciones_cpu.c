@@ -8,25 +8,37 @@
 #include <unistd.h>
 #include <string.h>
 #include "cpu.h"
+#include "tipos.h"
 
 
-char* fetch(int conexion_servidor, u_int32_t pid, RegistrosCPU* cpu){
-    op_code codigo = MSG_FETCH_CPU;     //envio codigo de operacion al servidor
-    enviar_mensaje(conexion_servidor,&codigo,sizeof(op_code));
+typedef struct {
+    uint32_t pid;
+    int motivo;
+} t_interrupcion;
 
-    t_fetch request;
-    request.pid = pid;
-    request.pc  = cpu->PC;
+char* fetch(int fd_km, u_int32_t pid, t_registros* cpu){
 
-    enviar_mensaje(conexion_servidor, &request, sizeof(t_fetch)); //envio peticion de instruccion
-
+    // Aviso de fetch
+    op_code codigo_fetch = MSG_FETCH_CPU;
+    enviar_mensaje(fd_km,&codigo_fetch,sizeof(op_code));
+    // Envio PC
+    int pc = cpu->PC;
+    enviar_mensaje(fd_km, &pc, sizeof(pc)); 
+    // KM responde por OK/ERROR
+    int size_respuesta;
+    op_code* respuesta_km = (op_code*) recibir_mensaje(fd_km,&size_respuesta);
+    if (*respuesta_km == MSG_ERROR){
+        free(respuesta_km);
+        return NULL;
+    free(respuesta_km);
+    // Recibe Instruccion
     int size_instruccion;
-    char* instruccion = (char*) recibir_mensaje(conexion_servidor, &size_instruccion);
+    char* instruccion = (char*) recibir_mensaje(fd_km, &size_instruccion);
     if (instruccion == NULL) {
-        printf("Error al recibir instruccion. Se cerrara el programa.\n");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
     return instruccion;
+    }
 }
 
 op_code_cpu decode(char* instruccion) {
@@ -53,7 +65,7 @@ op_code_cpu decode(char* instruccion) {
     return OP_INVALID;
 }
 
-void execute(op_code_cpu codeop, char* instruccion,RegistrosCPU* cpu){
+void execute(op_code_cpu codeop, char* instruccion, t_registros* cpu){
     switch (codeop){
     case OP_SET:
         set(instruccion, cpu);
@@ -82,54 +94,48 @@ void execute(op_code_cpu codeop, char* instruccion,RegistrosCPU* cpu){
     }
 }
 
-int check_interrupcion(int fd_ks, op_code* codigo_recibido) {   //Consulto si llego un mensaje de interrupcion desde el KS
-    op_code op;
-    int bytes = recv(fd_ks, &op, sizeof(op_code), MSG_DONTWAIT);    //DONTWAIT para no quedarse escuchando
+int atender_interrupcion(int fd_ks,int fd_km,t_contexto_ejecucion* contexto){
+    
+    op_code codigo;
+    int bytes = recv(fd_ks,&codigo,sizeof(op_code),MSG_DONTWAIT);
 
-    if (bytes == 0)
+    if (bytes <= 0)
         return 0;
-    if (bytes < 0) 
+
+    if (codigo != MSG_INTERRUPT)
         return 0;
-    if (bytes != sizeof(op_code))
-        return 0; // por si es una lectura incompleta
-    *codigo_recibido = op;
-    return 1;
-}
 
+    // Recibo estructura de interrupción
+    int size;
+    t_interrupcion* intr =recibir_mensaje(fd_ks, &size);
+    if (intr == NULL)
+        return 0;
 
-void cpu(int conexion_servidor, u_int32_t pid){
-    t_log* logger_cpu;
-    logger_cpu = log_create("funcion_cpu.log","FUNCION CPU LOGGER",1,LOG_LEVEL_INFO);
-    if (logger_cpu == NULL){
-	    perror("Error al crear el archivo .log. La funcion log_create este devolviendo NULL");
-	    exit(EXIT_FAILURE);
+    // Interrupción para otro PID
+    if (intr->pid != contexto->pid) {
+        free(intr);
+        return 0;
     }
-    log_info(logger_cpu, "EJECUTANDO CPU");
 
-    RegistrosCPU cpu = {0}; //inicializo registros
-    cpu.PC = 0;
-    log_info(logger_cpu, "FASE FETCH");
-    char* instruccion = fetch(conexion_servidor, pid, &cpu);
-    log_info(logger_cpu, "FASE DECODE");
-    op_code_cpu codop = decode(instruccion);
-    log_info(logger_cpu, "FASE EXECUTE");
-    execute(codop,instruccion,&cpu);
+    // Aviso a KM que voy a actualizar contexto
+    op_code guardar_contexto = MSG_CONTEXTO_EJECUCION_CPU;
+    enviar_mensaje(fd_km,&guardar_contexto,sizeof(op_code));
 
-    op_code op;
+    // Envío contexto actualizado
+    enviar_mensaje(fd_km,contexto,sizeof(t_contexto_ejecucion));
 
-    if (check_interrupcion(fd_ks, &op)) {
-        if (op == MSG_INTERRUPT) {
-            int size;
-            t_interrupcion* intr = recibir_mensaje(fd_ks, &size);
+    // Aviso a KS que atendí la interrupción
+    op_code respuesta = MSG_INTERRUPCION_ATENDIDA;
 
-            if (intr == NULL)
-                return;
-            if (intr->pid == pid) {
-                enviar_mensaje(fd_km, cpu, sizeof(RegistrosCPU));
-                enviar_mensaje(fd_ks, &MSG_INTERRUPCION_ATENDIDA, sizeof(op_code));
-            }
-            free(intr);
-        }
-}
-    free(instruccion);
+    enviar_mensaje(fd_ks,&respuesta,sizeof(op_code));
+
+    // Devuelvo PID
+    enviar_mensaje(fd_ks,&(contexto->pid),sizeof(uint32_t));
+
+    // Devuelvo motivo
+    enviar_mensaje(fd_ks,&(intr->motivo),sizeof(int));
+
+    free(intr);
+
+    return 1;
 }

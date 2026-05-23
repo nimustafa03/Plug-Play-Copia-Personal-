@@ -10,6 +10,7 @@ t_contexto_ejecucion* crear_proceso(uint32_t pid, char*path, t_dictionary*diccio
     // INICIALIZAMOS ESTRUCTURA
     t_contexto_ejecucion* contexto_ejecucion = malloc(sizeof(t_contexto_ejecucion));
     contexto_ejecucion->pid = pid;
+    contexto_ejecucion->proximo_a_detener=false;
     // INICIALIZAR REGISTROS EN CERO
     memset(&contexto_ejecucion->registros, 0, sizeof(t_registros));
     // CARGAR INSTRUCCIONES
@@ -56,10 +57,10 @@ char** cargar_instrucciones(char* path) {
     return instrucciones;
 }
 
-char*devolver_instruccion(uint32_t pc,char*lista_instrucciones){
+char*devolver_instruccion(uint32_t pc,char**lista_instrucciones){
     char*instruccion;
     int contador = 0; // NICO M: Según los ejemplos, el PC tomaría la primera linea de una lista de instrucciones como 1.
-    char*copia_lista_instrucciones = string_duplicate(lista_instrucciones); // NICO M: CREO que string_split() rompe el string que se le pase. No queremos que la lista de instrucciones se rompa.
+    char**copia_lista_instrucciones = string_duplicate(lista_instrucciones); // NICO M: CREO que string_split() rompe el string que se le pase. No queremos que la lista de instrucciones se rompa.
     char* tokenizado = string_split(copia_lista_instrucciones,"\n"); 
     free(copia_lista_instrucciones);
     do

@@ -28,16 +28,23 @@ typedef enum {
     // ── Respuestas generales ─────────────────────────────────
     MSG_OK              = 10, // Confirmación genérica de que todo salió bien
     MSG_ERROR           = 11, // Algo salió mal
+    MSG_DONE            = 21, // Terminó su tarea
 
     // ── (Acá van agregando los mensajes reales en CP2/CP3) ───
 
     // ── CP2 ──────────────────────────────────────────────────
     MSG_FETCH_CPU = 12, // CPU le pide instruccion a KM
     MSG_CONTEXTO_EJECUCION_KM = 13, // KM le envía contexto a CPU
+    MSG_CONTEXTO_EJECUCION_CPU = 22,
     MSG_INIT_CPU = 14, // CPU ordena a KM crear un proceso
     MSG_REQUEST_PID = 15, // CPU pide PID a KS
     MSG_INTERRUPT = 16, // interrupciones hacia CPU
-    MSG_INTERRUPCION_ATENDIDA = 17
+    MSG_INTERRUPCION_ATENDIDA = 17,
+        //--- IO CP2
+    MSG_STDIN = 18, // KS le pide a IO que lea por teclado
+    MSG_STDOUT = 19, // KS le pide a IO que imprima por pantalla
+    MSG_SLEEP = 20, // KS le pide a IO que se pause
+    
 } op_code;
 
 #endif // MENSAJES_H

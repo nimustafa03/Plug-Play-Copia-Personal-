@@ -19,6 +19,7 @@
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
 #include <cpu.h>
+#include <tipos.h>
 
 int conexionCPUKernelMemory (t_config* config) {
     char *km_port = config_get_string_value(config, "KM_PORT");
@@ -59,37 +60,39 @@ int esperar_pid(int fd_ks) {
     }
 }
 
+/*----------------------------- MAIN -----------------------------*/
+
 int main(int argc, char* argv[]) {
 
-    t_log* logger_cpu;
-    logger_cpu = log_create("cpu.log","CPU LOGGER",1,LOG_LEVEL_INFO);
-    if (logger_cpu == NULL){
-	perror("Error al crear el archivo .log. La funcion log_create este devolviendo NULL");
-	exit(EXIT_FAILURE);
-    }
-
-    //Check argumentos
+    // Check argumentos
     if (argc != 3) {
-        log_info(logger_cpu, "Debe ingresar %s [Archivo Config] [Identificador]. Verifique los argumentos.", argv[0]); 
+        printf("Debe ingresar %s [Archivo Config] [Identificador]\n Programa finalizado",argv[0]);
         exit(EXIT_FAILURE);
+    }
+    // Identificador
+    int id = atoi(argv[2]);
+
+    // Logger usando identificador
+    char* nombre_log = string_from_format("cpu_%d.log", id);
+    t_log* logger_cpu = log_create(nombre_log,"CPU LOGGER",1,LOG_LEVEL_INFO);
+    free(nombre_log);
+    if (logger_cpu == NULL){
+	    perror("Error al crear el archivo .log. La funcion log_create este devolviendo NULL");
+	    exit(EXIT_FAILURE);
     }
     //Check archivo .config
     char* direccion_archivo = argv[1];
     if (string_ends_with(direccion_archivo, ".config") == 0){
-        log_info(logger_cpu, "El primer parametro debe ser .config");
+        log_error(logger_cpu, "El primer parametro debe ser .config");
         exit(EXIT_FAILURE);
     }
-    //Check identificadores
-    int id = atoi(argv[2]);
-    if(id < 1 || id > 3) {
-        log_info(logger_cpu, "Error: el identificador debe ser 1, 2 o 3\n");
-        exit(EXIT_FAILURE);
-    }
+    // Crear .config
+    t_config* config = config_create(argv[1]);
+    if (config == NULL) {
+        log_error(logger_cpu, "Error al leer .config");
+        exit(EXIT_FAILURE);}
 
-    char* archivo_config = string_from_format("cpu_%d.config", id);
-    t_config* config = config_create(archivo_config);
-    free(archivo_config);
-
+    // INICIAR CONEXIONES CON SERVIDORES
     int fd_km = conexionCPUKernelMemory(config);
     if (fd_km == -1) {
     log_error(logger_cpu, "Error al conectar con Kernel Memory");
@@ -106,45 +109,50 @@ int main(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
     }
 
-    //WHILE DE ESPERA PID
+    //WHILE PID
     while (1) {
-        int pid = esperar_pid(fd_ks);
         
-        log_info(logger_cpu, "FASE FETCH");
-
-        RegistrosCPU cpu = {0}; //inicializo registros
-        cpu.PC = 0;
+        // CPU espera la llegada de un pid por parte del KS
+        int pid = esperar_pid(fd_ks); 
+        // Aviso de inicio de proceso al KM
+        op_code codigo_init = MSG_INIT_CPU;
+        enviar_mensaje(fd_km,&codigo_init,sizeof(op_code));
+        // Se envia pid a KM
+        enviar_mensaje(fd_km, &pid, sizeof(pid));
+        // KM envia contexto
+        int size;
+        t_contexto_ejecucion* contexto = recibir_mensaje(fd_km, &size);
+        if (contexto == NULL) {
+            log_error(logger_cpu, "Error al recibir contexto");
+            break;
+        }
 
         // WHILE CICLO DE INSTRUCCION
         while (1) {
-            char* instruccion = fetch(fd_km, pid, &cpu);
+            // FETCH
+            char* instruccion = fetch(fd_km, pid, &contexto);
+            if (*instruccion = NULL) {
+                log_error(logger_cpu, "Error en FETCH");
+                break;}
 
-            log_info(logger_cpu, "FASE DECODE");
+            // DECODE
             op_code_cpu codop = decode(instruccion);
 
-            log_info(logger_cpu, "FASE EXECUTE");
-            execute(codop,instruccion,&cpu);
+            // EXECUTE
+            execute(codop,instruccion,&contexto);
             free(instruccion);
 
-            log_info(logger_cpu, "FASE INTERRUPCIONES");
+            // INTERRUPCIONES
             
             op_code op;
+            int interrumpido = atender_interrupcion(fd_ks, fd_km, contexto);
 
-            if (check_interrupcion(fd_ks, &op)) {
-                if (op == MSG_INTERRUPT) {
-                    t_interrupcion intr;
-                    int bytes = recv(fd_ks, &intr, sizeof(t_interrupcion), MSG_WAITALL);
-                    if (bytes <= 0)
-                        return 0;
-                    if (intr.pid == pid) {
-                        enviar_mensaje(fd_km, &cpu, sizeof(RegistrosCPU));
-                        enviar_mensaje(fd_ks, &MSG_INTERRUPCION_ATENDIDA, sizeof(op_code));
-                        break;
-                    }
-                }
+            if (interrumpido)
+                break;
+                
             }
+        free(contexto);
         }
-    }
 }
 
 

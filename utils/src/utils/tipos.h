@@ -17,6 +17,7 @@ typedef struct {
     char**      instrucciones;
     int         cantidad_instrucciones;
     t_list*     tabla_segmentos; // CP3
+    bool proximo_a_detener;
 } t_contexto_ejecucion;
 
 typedef struct {
