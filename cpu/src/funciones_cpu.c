@@ -8,25 +8,32 @@
 #include <unistd.h>
 #include <string.h>
 #include "cpu.h"
+#include "tipos.h"
 
 
-char* fetch(int conexion_servidor, u_int32_t pid, RegistrosCPU* cpu){
-    op_code codigo = MSG_FETCH_CPU;     //envio codigo de operacion al servidor
-    enviar_mensaje(conexion_servidor,&codigo,sizeof(op_code));
+char* fetch(int fd_km, u_int32_t pid, t_registros* cpu){
 
-    t_fetch request;
-    request.pid = pid;
-    request.pc  = cpu->PC;
-
-    enviar_mensaje(conexion_servidor, &request, sizeof(t_fetch)); //envio peticion de instruccion
-
+    // Aviso de fetch
+    op_code codigo_fetch = MSG_FETCH_CPU;
+    enviar_mensaje(fd_km,&codigo_fetch,sizeof(op_code));
+    // Envio PC
+    int pc = cpu->PC;
+    enviar_mensaje(fd_km, &pc, sizeof(pc)); 
+    // KM responde por OK/ERROR
+    int size_respuesta;
+    op_code* respuesta_km = (op_code*) recibir_mensaje(fd_km,&size_respuesta);
+    if (*respuesta_km == MSG_ERROR){
+        free(respuesta_km);
+        return NULL;
+    free(respuesta_km);
+    // Recibe Instruccion
     int size_instruccion;
-    char* instruccion = (char*) recibir_mensaje(conexion_servidor, &size_instruccion);
+    char* instruccion = (char*) recibir_mensaje(fd_km, &size_instruccion);
     if (instruccion == NULL) {
-        printf("Error al recibir instruccion. Se cerrara el programa.\n");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
     return instruccion;
+    }
 }
 
 op_code_cpu decode(char* instruccion) {
@@ -53,7 +60,7 @@ op_code_cpu decode(char* instruccion) {
     return OP_INVALID;
 }
 
-void execute(op_code_cpu codeop, char* instruccion,RegistrosCPU* cpu){
+void execute(op_code_cpu codeop, char* instruccion, t_registros* cpu){
     switch (codeop){
     case OP_SET:
         set(instruccion, cpu);
@@ -94,42 +101,4 @@ int check_interrupcion(int fd_ks, op_code* codigo_recibido) {   //Consulto si ll
         return 0; // por si es una lectura incompleta
     *codigo_recibido = op;
     return 1;
-}
-
-
-void cpu(int conexion_servidor, u_int32_t pid){
-    t_log* logger_cpu;
-    logger_cpu = log_create("funcion_cpu.log","FUNCION CPU LOGGER",1,LOG_LEVEL_INFO);
-    if (logger_cpu == NULL){
-	    perror("Error al crear el archivo .log. La funcion log_create este devolviendo NULL");
-	    exit(EXIT_FAILURE);
-    }
-    log_info(logger_cpu, "EJECUTANDO CPU");
-
-    RegistrosCPU cpu = {0}; //inicializo registros
-    cpu.PC = 0;
-    log_info(logger_cpu, "FASE FETCH");
-    char* instruccion = fetch(conexion_servidor, pid, &cpu);
-    log_info(logger_cpu, "FASE DECODE");
-    op_code_cpu codop = decode(instruccion);
-    log_info(logger_cpu, "FASE EXECUTE");
-    execute(codop,instruccion,&cpu);
-
-    op_code op;
-
-    if (check_interrupcion(fd_ks, &op)) {
-        if (op == MSG_INTERRUPT) {
-            int size;
-            t_interrupcion* intr = recibir_mensaje(fd_ks, &size);
-
-            if (intr == NULL)
-                return;
-            if (intr->pid == pid) {
-                enviar_mensaje(fd_km, cpu, sizeof(RegistrosCPU));
-                enviar_mensaje(fd_ks, &MSG_INTERRUPCION_ATENDIDA, sizeof(op_code));
-            }
-            free(intr);
-        }
-}
-    free(instruccion);
 }

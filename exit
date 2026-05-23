@@ -1,0 +1,171 @@
+[33mcommit c81220382981b7d8fc6150b8a561bb853202ec67[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m
+Author: Adriel <adouton@frba.utn.edu.ar>
+Date:   Fri May 22 02:40:08 2026 +0000
+
+    se agrego ciclo de instruccion
+
+[33mcommit 24007c470156aedfb9913bc040389cabdcd4514e[m
+Author: Adriel <adouton@frba.utn.edu.ar>
+Date:   Fri May 22 02:36:04 2026 +0000
+
+    pre push
+
+[33mcommit 849c7da4f7d729395e470cb670cef091a3996067[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: SantiagoPasseriniT <spasseriniterranova@frba.utn.edu.ar>
+Date:   Thu May 21 21:41:06 2026 +0000
+
+    fix: headers funciones_km.c y funciones del mismo
+
+[33mcommit 68b0866c3b45e5f0a1e5799dac5d95d9b1732bb4[m
+Author: SantiagoPasseriniT <spasseriniterranova@frba.utn.edu.ar>
+Date:   Thu May 21 19:40:53 2026 +0000
+
+    Crear gestor.h para KM y KS
+
+[33mcommit 9f431b97b6addb3ef00956f8a62d1cdb65132d5a[m
+Author: SantiagoPasseriniT <spasseriniterranova@frba.utn.edu.ar>
+Date:   Thu May 21 19:35:30 2026 +0000
+
+    Agregar tipos.h a utils
+
+[33mcommit a7b6b97ef4e403e8ad5f15fdcaa92da279f42d38[m
+Author: Nicolas <nimustafa03@gmail.com>
+Date:   Thu May 21 18:39:53 2026 +0000
+
+    El KM loggea el error al no encontrar instrucción en el PC pedido.
+
+[33mcommit f3f592c2e3f1e58434dda67d607a49f542e470b2[m
+Author: Nicolas <nimustafa03@gmail.com>
+Date:   Thu May 21 18:37:45 2026 +0000
+
+    El KM responde a Fetchs del CPU, enviandole la instrucción solicitada mediante su PC, o MSG_ERROR en caso de no hallarla.
+
+[33mcommit 02ecd4925ba7134427ee7cb0e100f2ee3d74f303[m
+Author: Nicolas <nimustafa03@gmail.com>
+Date:   Thu May 21 15:02:17 2026 +0000
+
+    Cambiados nombres de algunos mensajes por claridad.
+
+[33mcommit aae41d7c4bba954251b4867f6ee21471aea15c98[m
+Author: Nicolas <nimustafa03@gmail.com>
+Date:   Thu May 21 15:00:37 2026 +0000
+
+    Desarrollada función cargar_instrucciones().
+
+[33mcommit cc763c04d3b1423659c143af0257a92b3f4afedb[m
+Author: Nicolas <nimustafa03@gmail.com>
+Date:   Wed May 20 14:47:43 2026 +0000
+
+    El Kernel Memory ahora recibe el path de instrucciones para crear un proceso. Por ahora devuelve la lista de instrucciones en lugar de realizar el ciclo completo de instrucción junto al CPU.
+
+[33mcommit e34559e166d1585a686c8639a1a31b4b5c015e68[m
+Author: Nicolas <nimustafa03@gmail.com>
+Date:   Wed May 20 14:16:03 2026 +0000
+
+    El Kernel Memory espera órdenes del CPU para crear nuevos procesos, y los inicia en threads distintos.
+
+[33mcommit 39218f6a9e515167afa2ec51b0afd41339017bd1[m
+Author: Nicolas <nimustafa03@gmail.com>
+Date:   Wed May 20 00:27:53 2026 +0000
+
+    Avanzado Kernel Memory
+
+[33mcommit ba7fa2d63867d18f928e910c8ac5381773c1d5b5[m[33m ([m[1;33mtag: checkpoint1[m[33m)[m
+Author: Nicolas Sicolo <nsicolo@frba.utn.edu.ar>
+Date:   Sat Apr 18 23:24:58 2026 +0000
+
+    chore: cambios cpu y kernel memory
+
+[33mcommit be9bd3666eaf4f9609c25b9894624cbe0263d94d[m
+Author: Adriel <adouton@frba.utn.edu.ar>
+Date:   Sat Apr 18 20:47:01 2026 +0000
+
+    Estructura cpu 2.0
+
+[33mcommit d72e7bc11dd435ee57c6a95cda5d2b8fc7d4ae91[m
+Author: Adriel <adouton@frba.utn.edu.ar>
+Date:   Sat Apr 18 20:02:04 2026 +0000
+
+    Estructura cpu 2.0
+
+[33mcommit 795841e3e2603642604f120c75a6e5b0a3164762[m
+Author: Adriel <adouton@frba.utn.edu.ar>
+Date:   Fri Apr 17 19:06:55 2026 +0000
+
+    Subo estructura CPUs
+
+[33mcommit 42bb90a458e5312e1f0c526ceaba139e3860f14d[m
+Author: Nicolas <nimustafa03@gmail.com>
+Date:   Fri Apr 17 13:23:15 2026 +0000
+
+    Se esperan conexiones de CPU, y loggea ID al confirmarla. Adicionalmente, se añade warning en caso de no concretar conexion con Kernel Memory. Se cambia log_info a log_debug para mensajes que no interesa leer por consola.
+
+[33mcommit 891868b3f3c9e8bce966fd53cde4abe07fcf5780[m
+Author: SantiagoPasseriniT <spasseriniterranova@frba.utn.edu.ar>
+Date:   Thu Apr 16 02:10:45 2026 +0000
+
+    Agrego MSK_OK faltantes
+
+[33mcommit c3afe3627fc0789aaf8f9a05594c288a89da6d5f[m
+Author: SantiagoPasseriniT <spasseriniterranova@frba.utn.edu.ar>
+Date:   Thu Apr 16 01:36:48 2026 +0000
+
+    Estandarizacion de los includes del utils/, estan configurados asi en los settings.mk
+
+[33mcommit 6fce592c6055bce4aa656878e68d8302bcc543a1[m
+Author: bcastoldi <bcastoldi@frba.utn.edu.ar>
+Date:   Wed Apr 15 22:06:04 2026 -0300
+
+    Reestructuracion de codigo guardando el valor de MSG_OK dentro de una variable por fuera del switch para evitar repeticion de codigo
+
+[33mcommit 0a449822fbbd62f8c7347051ca697a8ce66461f3[m
+Author: bcastoldi <bcastoldi@frba.utn.edu.ar>
+Date:   Wed Apr 15 21:59:31 2026 -0300
+
+    - Se agrego la carga dinamica de configuracion (IP, Puerto y Log Level).
+    - Se implemento la conexion como cliente hacia el Kernel Scheduler.
+    - Se integro el protocolo de handshake: envio de MSG_HANDSHAKE_IO y espera de confirmacion MSG_OK.
+    - Se añadieron validaciones de argumentos de entrada y manejo de errores en sockets.
+    - Se incluyo la limpieza de memoria (config_destroy, log_destroy y free).
+
+[33mcommit 81a15c431b9b7124ef00ff854c97c92b7959b1cc[m
+Author: bcastoldi <bcastoldi@frba.utn.edu.ar>
+Date:   Wed Apr 15 21:14:09 2026 -0300
+
+    variables config, obtencion de ip, puerto, del config.io con la funcion get_string_value de las commons, traduccion del log level (variable dinamica alojada en el config), y creacion del logger. Creacion de conexion con ip y puerto
+
+[33mcommit 0b8a8c95f9ca840b6947f13451fe82267bc01395[m
+Author: bcastoldi <bcastoldi@frba.utn.edu.ar>
+Date:   Wed Apr 15 20:40:46 2026 -0300
+
+    KS a KM como Cliente
+
+[33mcommit 1f91be6f3af59a817af046d9969a41fed56afd9b[m
+Author: Nicolas <nimustafa03@gmail.com>
+Date:   Wed Apr 15 16:02:26 2026 +0000
+
+    MS carga configs, se conecta al KM y envía tamaño.
+
+[33mcommit 48c7895c3194e679534a73f8ad03a170c0dbd9e1[m
+Author: Nicolas Sicolo <nsicolo@frba.utn.edu.ar>
+Date:   Tue Apr 14 23:53:00 2026 +0000
+
+    chore: borro algunos comentarios
+
+[33mcommit e578636b034d2b55e512ea6e39936b7a01d0bee8[m
+Author: Nicolas Sicolo <nsicolo@frba.utn.edu.ar>
+Date:   Tue Apr 14 23:50:50 2026 +0000
+
+    feat: Conexiones servidor KM acepta KS, servidor KM acepta CPU, servidor KM acepta CPU
+
+[33mcommit 12104999eb1e72f9e9a9a9375671c94c8d8886c7[m
+Author: SantiagoPasseriniT <spasseriniterranova@frba.utn.edu.ar>
+Date:   Tue Apr 14 04:34:16 2026 +0000
+
+    Agrego 3 conexiones, los .c con lo que tiene que hacer cada uno, todos los .config y utils
+
+[33mcommit b339b25eac2452fa8883b0e00d617e9e9390d520[m
+Author: Sistemas Operativos - UTN.BA <inscripciones.utnso@gmail.com>
+Date:   Tue Apr 7 11:56:42 2026 -0300
+
+    Initial commit
