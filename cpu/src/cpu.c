@@ -42,7 +42,7 @@ int conexionCPUMemoryStick (t_config* config) {
     return fd_ms;
     }
 
-int esperar_pid(int fd_ks) {
+int esperar_pid(int fd_ks, t_log* logger_cpu) {
     log_info(logger_cpu, "CPU esperando PID del Kernel Scheduler...");
     while (1) {
         int size;
@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
     while (1) {
         
         // CPU espera la llegada de un pid por parte del KS
-        int pid = esperar_pid(fd_ks); 
+        int pid = esperar_pid(fd_ks, logger_cpu); 
         // Aviso de inicio de proceso al KM
         op_code codigo_init = MSG_INIT_CPU;
         enviar_mensaje(fd_km,&codigo_init,sizeof(op_code));

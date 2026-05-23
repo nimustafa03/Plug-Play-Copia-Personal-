@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <string.h>
 #include "cpu.h"
-#include "tipos.h"
+#include "utils/tipos.h"
 
 
 typedef struct {
@@ -97,7 +97,7 @@ void execute(op_code_cpu codeop, char* instruccion, t_registros* cpu){
 int atender_interrupcion(int fd_ks,int fd_km,t_contexto_ejecucion* contexto){
     
     op_code codigo;
-    int bytes = recv(fd_ks,&codigo,sizeof(op_code),MSG_DONTWAIT);
+    int bytes = recv(fd_ks,&codigo,sizeof(op_code), MSG_DONTWAIT);
 
     if (bytes <= 0)
         return 0;

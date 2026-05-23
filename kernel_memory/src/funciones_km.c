@@ -57,7 +57,7 @@ char** cargar_instrucciones(char* path) {
     return instrucciones;
 }
 
-char*devolver_instruccion(uint32_t pc,char**lista_instrucciones){
+char* devolver_instruccion(uint32_t pc,char**lista_instrucciones){
     char*instruccion;
     int contador = 0; // NICO M: Según los ejemplos, el PC tomaría la primera linea de una lista de instrucciones como 1.
     char**copia_lista_instrucciones = string_duplicate(lista_instrucciones); // NICO M: CREO que string_split() rompe el string que se le pase. No queremos que la lista de instrucciones se rompa.

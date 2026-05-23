@@ -44,6 +44,7 @@ typedef enum {
     MSG_STDIN = 18, // KS le pide a IO que lea por teclado
     MSG_STDOUT = 19, // KS le pide a IO que imprima por pantalla
     MSG_SLEEP = 20, // KS le pide a IO que se pause
+    MSG_DONTWAIT
     
 } op_code;
 

@@ -54,13 +54,14 @@ void atender_kernel_scheduler(int fd_kernel_scheduler) {
     // NICO M: Loop de espera activa, espera órdenes del kernel scheduler.
     op_code*codigo_recibido;
     while(1){
-        switch(*codigo) {
+        switch(codigo) {
             case MSG_DONE:
-                terminar_proceso(int pid);
+                /* terminar_proceso(int pid); */
+                break;
             case MSG_STDIN:
-                enviar_mensaje(fd_kernel_scheduler,codigo,sizeof(op_code));
+                enviar_mensaje(fd_kernel_scheduler,&codigo,sizeof(op_code));
             case MSG_STDOUT:
-                enviar_mensaje(fd_kernel_scheduler,codigo,sizeof(op_code)); 
+                enviar_mensaje(fd_kernel_scheduler,&codigo,sizeof(op_code)); 
         }
     }
     free(codigo_recibido);
@@ -84,6 +85,42 @@ void atender_cpu(int fd_cpu) {
     }
     free(codigo);
 
+}
+
+void manejar_proceso(int fd_cpu, t_contexto_ejecucion proceso){
+    char ** instrucciones = proceso.instrucciones;
+    log_info(logger, "## PID: %d - Imprimiendo lista de instrucciones para el proceso...", proceso.pid);
+    log_info(logger,instrucciones);
+    // NICO M: Esperamos a que CPU nos envíe el mensaje de pedido de instrucción.
+    while(proceso.proximo_a_detener){
+        int size;
+        op_code*codigo = recibir_mensaje(fd_cpu,&size);
+        if (*codigo = MSG_FETCH_CPU){
+            // NICO M: KM Recibe PC del CPU.
+            usleep(config_get_int_value(config,"INSTRUCTION_DELAY")*1000); // NICO M: Delay obligatorio por consigna.
+            uint32_t pc = recibir_mensaje(fd_cpu, &size);
+
+            char*proxima_instruccion = devolver_instruccion(pc, instrucciones);
+
+            // NICO M: Chequeamos que nos haya devuelto una instrucción y no NULL.
+            if (proxima_instruccion = NULL){
+                log_error(logger, "## PID: %d - Obtener instruccion: %d - INSTRUCCION FUERA DE RANGO.", proceso.pid, pc);
+                codigo = MSG_ERROR;
+                enviar_mensaje(fd_cpu, codigo, sizeof(op_code));
+            }
+            else
+            {
+                log_info(logger,"## PID: %d - Obtener instrucción: %d - Instrucción: %s", proceso.pid,pc,proxima_instruccion);
+                codigo = MSG_OK;
+                enviar_mensaje(fd_cpu,codigo, sizeof(op_code));
+                enviar_mensaje(fd_cpu,proxima_instruccion,sizeof(proxima_instruccion));
+            }
+            free(proxima_instruccion);
+        };
+        free(codigo);
+    };
+    eliminar_proceso(proceso.pid);
+    /* pthread_exit(); */
 }
 
 void iniciar_proceso(int fd_cpu){
@@ -112,42 +149,6 @@ void eliminar_proceso(uint32_t pid){
     free(a_eliminar-> tabla_segmentos);
     free(a_eliminar->instrucciones);
     free(a_eliminar);
-}
-
-void manejar_proceso(int fd_cpu, t_contexto_ejecucion proceso){
-    char ** instrucciones = proceso->instrucciones;
-    log_info(logger, "## PID: %d - Imprimiendo lista de instrucciones para el proceso...", proceso->pid);
-    log_info(logger,instrucciones);
-    // NICO M: Esperamos a que CPU nos envíe el mensaje de pedido de instrucción.
-    while(proceso->proximo_a_detener){
-        int size;
-        op_code*codigo = recibir_mensaje(fd_cpu,&size);
-        if (*codigo = MSG_FETCH_CPU){
-            // NICO M: KM Recibe PC del CPU.
-            usleep(config_get_int_value(config,"INSTRUCTION_DELAY")*1000); // NICO M: Delay obligatorio por consigna.
-            uint32_t pc = recibir_mensaje(fd_cpu, &size);
-
-            char*proxima_instruccion = devolver_instruccion(pc, instrucciones);
-
-            // NICO M: Chequeamos que nos haya devuelto una instrucción y no NULL.
-            if (proxima_instruccion = NULL){
-                log_error(logger, "## PID: %d - Obtener instruccion: %d - INSTRUCCION FUERA DE RANGO.", proceso->pid, pc);
-                codigo = MSG_ERROR;
-                enviar_mensaje(fd_cpu,*codigo,sizeof(op_code));
-            }
-            else
-            {
-                log_info(logger,"## PID: %d - Obtener instrucción: %d - Instrucción: %s", proceso->pid,pc,proxima_instruccion);
-                codigo = MSG_OK;
-                enviar_mensaje(fd_cpu,codigo, sizeof(op_code));
-                enviar_mensaje(fd_cpu,proxima_instruccion,sizeof(proxima_instruccion));
-            }
-            free(proxima_instruccion);
-        };
-        free(codigo);
-    };
-    eliminar_proceso(proceso->pid);
-    pthread_exit();
 }
 
 void atender_memory_stick(int fd_memory_stick) {
@@ -298,7 +299,7 @@ int main(int argc, char* argv[]) {
     // ---------------------------------------------------------
     config_destroy(config);
     log_destroy(logger);
-    dictionary_destroy_and_destroy_elements(diccionario_procesos);
+    dictionary_destroy_and_destroy_elements(diccionario_procesos, free);
 
     return EXIT_SUCCESS;
 }
