@@ -145,22 +145,14 @@ int main(int argc, char* argv[]) {
             // INTERRUPCIONES
             
             op_code op;
-            if (check_interrupcion(fd_ks, &op)) {
-                if (op == MSG_INTERRUPT) {
-                    t_interrupcion intr;
-                    int bytes = recv(fd_ks, &intr, sizeof(t_interrupcion), MSG_WAITALL);
-                    if (bytes <= 0)
-                        return 0;
-                    if (intr.pid == pid) {
-                        enviar_mensaje(fd_km, &cpu, sizeof(RegistrosCPU));
-                        enviar_mensaje(fd_ks, &MSG_INTERRUPCION_ATENDIDA, sizeof(op_code));
-                        break;
-                    }
-                }
+            int interrumpido = atender_interrupcion(fd_ks, fd_km, contexto);
+
+            if (interrumpido)
+                break;
+                
             }
-        }
         free(contexto);
-    }
+        }
 }
 
 

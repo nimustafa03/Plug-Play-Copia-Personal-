@@ -11,6 +11,11 @@
 #include "tipos.h"
 
 
+typedef struct {
+    uint32_t pid;
+    int motivo;
+} t_interrupcion;
+
 char* fetch(int fd_km, u_int32_t pid, t_registros* cpu){
 
     // Aviso de fetch
@@ -89,16 +94,48 @@ void execute(op_code_cpu codeop, char* instruccion, t_registros* cpu){
     }
 }
 
-int check_interrupcion(int fd_ks, op_code* codigo_recibido) {   //Consulto si llego un mensaje de interrupcion desde el KS
-    op_code op;
-    int bytes = recv(fd_ks, &op, sizeof(op_code), MSG_DONTWAIT);    //DONTWAIT para no quedarse escuchando
+int atender_interrupcion(int fd_ks,int fd_km,t_contexto_ejecucion* contexto){
+    
+    op_code codigo;
+    int bytes = recv(fd_ks,&codigo,sizeof(op_code),MSG_DONTWAIT);
 
-    if (bytes == 0)
+    if (bytes <= 0)
         return 0;
-    if (bytes < 0) 
+
+    if (codigo != MSG_INTERRUPT)
         return 0;
-    if (bytes != sizeof(op_code))
-        return 0; // por si es una lectura incompleta
-    *codigo_recibido = op;
+
+    // Recibo estructura de interrupción
+    int size;
+    t_interrupcion* intr =recibir_mensaje(fd_ks, &size);
+    if (intr == NULL)
+        return 0;
+
+    // Interrupción para otro PID
+    if (intr->pid != contexto->pid) {
+        free(intr);
+        return 0;
+    }
+
+    // Aviso a KM que voy a actualizar contexto
+    op_code guardar_contexto = MSG_CONTEXTO_EJECUCION_CPU;
+    enviar_mensaje(fd_km,&guardar_contexto,sizeof(op_code));
+
+    // Envío contexto actualizado
+    enviar_mensaje(fd_km,contexto,sizeof(t_contexto_ejecucion));
+
+    // Aviso a KS que atendí la interrupción
+    op_code respuesta = MSG_INTERRUPCION_ATENDIDA;
+
+    enviar_mensaje(fd_ks,&respuesta,sizeof(op_code));
+
+    // Devuelvo PID
+    enviar_mensaje(fd_ks,&(contexto->pid),sizeof(uint32_t));
+
+    // Devuelvo motivo
+    enviar_mensaje(fd_ks,&(intr->motivo),sizeof(int));
+
+    free(intr);
+
     return 1;
 }
