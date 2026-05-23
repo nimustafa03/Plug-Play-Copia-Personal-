@@ -20,4 +20,9 @@ typedef struct {
     bool proximo_a_detener;
 } t_contexto_ejecucion;
 
+typedef struct {
+    uint32_t pid;
+    int      motivo;
+} t_interrupcion;
+
 #endif // TIPOS_H
