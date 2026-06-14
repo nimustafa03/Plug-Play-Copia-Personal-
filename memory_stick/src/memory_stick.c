@@ -20,21 +20,78 @@
  
 t_log*    logger;
 t_config* config;
- 
+void* espacio_memoria;
+int   memory_delay;
 
 // NM: Vamos a leer el handshake que nos envía el cliente para asegurarnos que, efectivamente, es el CPU.
 
 
 void atender_cpu(int fd_cpu){
-    int size;
-    int id_cpu = recibir_mensaje(fd_cpu, &size);
+        int size_id;
+        int* id_cpu_ptr = recibir_mensaje(fd_cpu, &size_id);
+        int id_cpu = *id_cpu_ptr;
+        free(id_cpu_ptr);
 
-    log_info(logger, "## CPU %d CONECTADA.", id_cpu);
-    op_code ok = MSG_OK;
-    enviar_mensaje(fd_cpu,&ok, sizeof(op_code));
+        log_info(logger, "## CPU %d CONECTADA", id_cpu);
+        op_code ok = MSG_OK;
+        enviar_mensaje(fd_cpu, &ok, sizeof(op_code));
+
+        while(1){
+            int size_orden;
+            op_code* orden = recibir_mensaje(fd_cpu, &size_orden);
+
+            if (orden == NULL) {
+                log_warning(logger, "La CPU %d se desconectó", id_cpu);
+                break;
+            }
+
+            int size_dir;
+            int* dir_ptr = recibir_mensaje(fd_cpu, &size_dir);
+            int direccion_fisica = *dir_ptr;
+            free(dir_ptr);
+
+            usleep(memory_delay * 1000); // simulamos lo que tarda una memoria realmente
+
+            switch(*orden) {
+                case MSG_WRITE: {
+                    int size_datos;
+                    void* datos = recibir_mensaje(fd_cpu, &size_datos);
+
+                    memcpy(espacio_memoria + direccion_fisica, datos, size_datos);
+
+                    log_info(logger, "## Escritura de %d bytes", size_datos);
+                    op_code done = MSG_DONE;
+                    enviar_mensaje(fd_cpu, &done, sizeof(op_code));
+                    free(datos);
+                    break;
+
+                }
+
+                case MSG_READ: {
+                    int size_tam;
+                    int* tam_ptr = recibir_mensaje(fd_cpu, &size_tam);
+                    int tamanio_a_leer = *tam_ptr;
+                    free(tam_ptr);
+
+                    void* buffer = malloc(tamanio_a_leer);
+
+                    memcpy(buffer, espacio_memoria + direccion_fisica, tamanio_a_leer);
+
+                    log_info(logger, "## Lectura de %d bytes", tamanio_a_leer);
+                    enviar_mensaje(fd_cpu, buffer, tamanio_a_leer);
+                    free(buffer);
+                    break;
+
+                }
+            }
+        }
+        
+        free(orden);
+    
+
 }
 
-void esperar_cpu(void * arg){
+void esperar_cpu(void * arg){ 
     int fd_cliente = *((int*)arg);
     free(arg);
     
@@ -55,7 +112,6 @@ void esperar_cpu(void * arg){
 
 
 int main(int argc, char*argv[]) {
-
     // DONE Nico M: verificar argumentos (config + tamaño)
     // El tamaño viene por parámetro: argv[2]
 
@@ -73,6 +129,7 @@ int main(int argc, char*argv[]) {
 
     // DONE Nico M: cargar config con config_create()
     config = config_create(config_path);
+    memory_delay = config_get_int_value(config, "MEMORY_DELAY");
     if (config == NULL){
 		t_log *error_logger = log_create("memstickerror.log","MSERR",true,LOG_LEVEL_ERROR);
 		log_error(error_logger,"## ERROR. NO SE PUDO CREAR EL CONFIG. Abortando...");
@@ -88,7 +145,7 @@ int main(int argc, char*argv[]) {
 
 
     // DONE Nico M: reservar memoria con malloc(tamaño)
-    malloc(size);
+    espacio_memoria = (size);
  
     // DONE Nico M: conectarse a Kernel Memory
     char * KM_IP = config_get_string_value(config,"KM_IP");
@@ -106,7 +163,7 @@ int main(int argc, char*argv[]) {
     int size_resp;
     op_code* respuesta = recibir_mensaje(fd_km, &size_resp);
     if (*respuesta == MSG_OK)
-        log_info(logger, "## Conectado a Kernel Memory.");
+        log_info(logger, "## Conectado a Kernel Memory");
     else
         log_warning(logger, "## ATENCION. NO FUE POSIBLE CONECTARSE A KERNEL MEMORY.");
     free(respuesta);
