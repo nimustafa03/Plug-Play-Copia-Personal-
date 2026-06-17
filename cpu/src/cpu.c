@@ -28,7 +28,7 @@ int conexionCPUKernelMemory (t_config* config) {
     op_code hs = MSG_HANDSHAKE_CPU;
     enviar_mensaje(fd_km, &hs, sizeof(op_code));
     int size_ok;
-    op_code ok = recibir_mensaje(fd_km, &size_ok);
+    op_code* ok = recibir_mensaje(fd_km, &size_ok);
     free(ok);
     return fd_km;
     }
@@ -52,7 +52,7 @@ int conexionCPUMemoryStick (t_config* config) {
     op_code hs = MSG_HANDSHAKE_CPU;
     enviar_mensaje(fd_ms, &hs, sizeof(op_code));
     int size_ok;
-    op_code ok = recibir_mensaje(fd_ms, &size_ok);
+    op_code* ok = recibir_mensaje(fd_ms, &size_ok);
     free(ok);
     return fd_ms;
     }
@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) {
         while (1) {
             // FETCH
             char* instruccion = fetch(fd_km, pid, &contexto);
-            if (*instruccion == NULL) {
+            if (instruccion == NULL) {
                 log_error(logger_cpu, "Error en FETCH");
                 break;}
 

@@ -34,10 +34,12 @@ void inicializarListasProcesos() {
   listaProcesosSuspReady = list_create();
   listaProcesosExit = list_create(); // faltaba crear esta linea
   listaCPUsLibres = list_create();
+  listaIOsLibres = list_create();
 
   // arrancan bloqueados
   sem_init(&sem_hay_proceso_ready, 0, 0);
   sem_init(&sem_hay_cpu_libre, 0, 0);
+  sem_init(&sem_hay_io_libre, 0, 0);
   // mutex para proteger acceso concurrente a las listas
   pthread_mutex_init(&mutex_listas, NULL);
 }

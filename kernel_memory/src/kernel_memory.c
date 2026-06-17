@@ -127,14 +127,14 @@ void manejar_proceso(void *arg){
             // NICO M: Chequeamos que nos haya devuelto una instrucción y no NULL.
             if (proxima_instruccion == NULL){
                 log_error(logger, "## PID: %d - Obtener instruccion: %d - INSTRUCCION FUERA DE RANGO.", proceso->pid, pc);
-                codigo = MSG_ERROR;
-                enviar_mensaje(fd_cpu, codigo, sizeof(op_code));
+                op_code resp = MSG_ERROR;
+                enviar_mensaje(fd_cpu, &resp, sizeof(op_code));
             }
             else
             {
                 log_info(logger,"## PID: %d - Obtener instrucción: %d - Instrucción: %s", proceso->pid,pc,proxima_instruccion);
-                codigo = MSG_OK;
-                enviar_mensaje(fd_cpu,codigo, sizeof(op_code));
+                op_code resp = MSG_OK;
+                enviar_mensaje(fd_cpu, &resp, sizeof(op_code));
                 enviar_mensaje(fd_cpu, proxima_instruccion, strlen(proxima_instruccion) + 1);
             }
             free(proxima_instruccion);
@@ -149,8 +149,9 @@ void iniciar_proceso(int fd_cpu){
     pthread_t nuevo_proceso;
     // NICO M: Recibimos pid.
     int size;
-    uint32_t pid;
-    pid = recibir_mensaje(fd_cpu, &size);
+    uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
+    uint32_t pid = *pid_ptr;
+    free(pid_ptr);
     // NICO M: Recibimos path.
     char*path = recibir_mensaje(fd_cpu,&size);
 
@@ -163,7 +164,7 @@ void iniciar_proceso(int fd_cpu){
     pthread_create(&nuevo_proceso, NULL, manejar_proceso, args);
 
     // NICO M: Enviamos Contexto de Ejecución al CPU.
-    enviar_mensaje(fd_cpu,contexto_ejecucion,sizeof(contexto_ejecucion));
+    enviar_mensaje(fd_cpu,contexto_ejecucion,sizeof(t_contexto_ejecucion));
 
     log_info(logger, "## PID: %d - Proceso Creado.", pid);
 }
