@@ -60,8 +60,14 @@ void* atender_cliente_ks(void* arg) {
         case MSG_HANDSHAKE_IO:
             log_info(logger_ks, "IO conectada - FD: %d", fd_cliente);
             enviar_mensaje(fd_cliente, &respuesta_ok, sizeof(op_code));
-            // guardar fd_io en lista de IOs libres
- 
+
+            pthread_mutex_lock(&mutex_listas);
+            int* fd_io_ptr = malloc(sizeof(int));
+            *fd_io_ptr = fd_cliente;
+            list_add(listaIOsLibres, fd_io_ptr);
+            pthread_mutex_unlock(&mutex_listas);
+
+            sem_post(&sem_hay_io_libre);
             break;
  
         default:

@@ -18,10 +18,12 @@ extern t_list* listaProcesosSuspBlock;
 extern t_list* listaProcesosSuspReady;
 extern t_list* listaProcesosExit;
 extern t_list* listaCPUsLibres; // FDs de CPUs que están libres esperando un proceso
+extern t_list* listaIOsLibres;  // lo mismo que arriba
 
 // semáforos y mutex
 extern sem_t sem_hay_proceso_ready;
 extern sem_t sem_hay_cpu_libre;
+extern sem_t sem_hay_io_libre;
 extern pthread_mutex_t mutex_listas;
 
 typedef enum {

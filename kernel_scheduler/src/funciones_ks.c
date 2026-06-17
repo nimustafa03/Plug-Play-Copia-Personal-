@@ -16,10 +16,12 @@ t_list* listaProcesosSuspBlock = NULL;
 t_list* listaProcesosSuspReady = NULL;
 t_list* listaProcesosExit = NULL;
 t_list* listaCPUsLibres = NULL; // lista de FDs de CPUs libres 
+t_list* listaIOsLibres = NULL; // lo mismo que arriba, pero para IO
 
 // semáforos y mutex nuevos 
 sem_t sem_hay_proceso_ready;
 sem_t sem_hay_cpu_libre;
+sem_t sem_hay_io_libre;
 pthread_mutex_t mutex_listas;
 
 
