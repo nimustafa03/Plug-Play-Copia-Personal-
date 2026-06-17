@@ -19,6 +19,7 @@ extern t_list* listaProcesosSuspReady;
 extern t_list* listaProcesosExit;
 extern t_list* listaCPUsLibres; // FDs de CPUs que están libres esperando un proceso
 extern t_list* listaIOsLibres;  // lo mismo que arriba
+extern t_list* listaMutex;
 
 // semáforos y mutex
 extern sem_t sem_hay_proceso_ready;
@@ -49,11 +50,17 @@ typedef struct {
     int quantum;
 } t_args_rr;
 
+typedef struct {
+    char* nombre;
+    uint32_t pid_tomador;  // PID que lo tiene tomado, -1 si esta libre
+    t_list* cola_bloqueados; // procesos esperando este mutex
+} t_mutex_ks;
+
 void inicializarListasProcesos();
 void* iniciar_planificador_largo_plazo();
 void* iniciar_planificador_corto_plazo();
 void actualizarEstadoProceso(Proceso* proceso, estado_proceso nuevoEstado);  // faltaba la declaración
-void  crear_proceso_inicial(char* path); // funcion nueva
+void crear_proceso_inicial(char* path); // funcion nueva
 void procesoAReady (Proceso* p); // faltaban las declaraciones de los helpers
 void procesoAExec (Proceso* p);
 void procesoAExit (Proceso* p);
@@ -61,5 +68,9 @@ void procesoABlock (Proceso* p);
 void procesoASuspBlock (Proceso* p);
 void procesoASuspReady (Proceso* p);
 void* timer_rr(void* arg);
+void mutex_create(char* nombre);
+void mutex_lock(char* nombre, Proceso* proceso);
+void mutex_unlock(char* nombre, Proceso* proceso);
+t_mutex_ks* buscar_mutex(char* nombre);
 
 #endif // FUNCIONES_KS_H

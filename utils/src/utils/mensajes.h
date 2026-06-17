@@ -52,6 +52,9 @@ typedef enum {
     // 22 usado en MSG_CONTEXTO_EJECUCION_CPU
     MSG_READ = 23, // Memory Stick cuando CPU le pide leer algo en memoria
     MSG_WRITE = 24, // Memory Stick cuando CPU le pide escribir algo en memoria
+    MSG_MUTEX_CREATE = 25,
+    MSG_MUTEX_LOCK = 26,
+    MSG_MUTEX_UNLOCK = 27,
 } op_code;
 
 #endif // MENSAJES_H

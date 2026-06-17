@@ -17,6 +17,7 @@ t_list* listaProcesosSuspReady = NULL;
 t_list* listaProcesosExit = NULL;
 t_list* listaCPUsLibres = NULL; // lista de FDs de CPUs libres 
 t_list* listaIOsLibres = NULL; // lo mismo que arriba, pero para IO
+t_list* listaMutex = NULL;
 
 // semáforos y mutex nuevos 
 sem_t sem_hay_proceso_ready;
@@ -35,6 +36,7 @@ void inicializarListasProcesos() {
   listaProcesosExit = list_create(); // faltaba crear esta linea
   listaCPUsLibres = list_create();
   listaIOsLibres = list_create();
+  listaMutex = list_create();
 
   // arrancan bloqueados
   sem_init(&sem_hay_proceso_ready, 0, 0);
@@ -316,4 +318,24 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
         }
     }
     pthread_mutex_unlock(&mutex_listas); // unlock al salir normalmente
+}
+
+t_mutex_ks* buscar_mutex(char* nombre) {
+  for (int i = 0; i < list_size(listaMutex); i++) {
+        t_mutex_ks* m = list_get(listaMutex, i);
+        if (strcmp(m->nombre, nombre) == 0) return m;
+    }
+    return NULL;
+}
+
+void mutex_create(char* nombre) {
+  // implementar (Santiago)
+}
+
+void mutex_lock(char* nombre, Proceso* proceso) {
+  // implementar (Santiago)
+}
+
+void mutex_unlock(char* nombre, Proceso* proceso) {
+  // implementar (Santiago)
 }
