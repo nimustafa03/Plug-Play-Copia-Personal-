@@ -9,12 +9,8 @@
 #include <string.h>
 #include "cpu.h"
 #include "utils/tipos.h"
+#include <sys/socket.h> // Para el recv() que tiene que recibir el MSG_DONTWAIT de esa biblioteca
 
-
-typedef struct {
-    uint32_t pid;
-    int motivo;
-} t_interrupcion;
 
 char* fetch(int fd_km, u_int32_t pid, t_registros* cpu){
 
@@ -30,16 +26,15 @@ char* fetch(int fd_km, u_int32_t pid, t_registros* cpu){
     if (*respuesta_km == MSG_ERROR){
         free(respuesta_km);
         return NULL;
+    }
     free(respuesta_km);
     // Recibe Instruccion
     int size_instruccion;
-    char* instruccion = (char*) recibir_mensaje(fd_km, &size_instruccion);
-    if (instruccion == NULL) {
-        return NULL;
-    }
+    char* instruccion = recibir_mensaje(fd_km, &size_instruccion);
+    if (instruccion == NULL) return NULL;
     return instruccion;
-    }
 }
+
 
 op_code_cpu decode(char* instruccion) {
     char codeop[32];

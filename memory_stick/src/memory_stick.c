@@ -84,14 +84,12 @@ void atender_cpu(int fd_cpu){
 
                 }
             }
-        }
-        
-        free(orden);
-    
 
+            free(orden);
+        }  
 }
 
-void esperar_cpu(void * arg){ 
+void* esperar_cpu(void * arg){ 
     int fd_cliente = *((int*)arg);
     free(arg);
     
@@ -145,7 +143,7 @@ int main(int argc, char*argv[]) {
 
 
     // DONE Nico M: reservar memoria con malloc(tamaño)
-    espacio_memoria = (size);
+    espacio_memoria = malloc(size);
  
     // DONE Nico M: conectarse a Kernel Memory
     char * KM_IP = config_get_string_value(config,"KM_IP");

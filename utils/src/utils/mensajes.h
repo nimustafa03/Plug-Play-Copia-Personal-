@@ -45,11 +45,13 @@ typedef enum {
     MSG_STDOUT = 19, // KS le pide a IO que imprima por pantalla
     MSG_SLEEP = 20, // KS le pide a IO que se pause
 
-    MSG_DONTWAIT = 21,
+    // MSG_DONTWAIT Lo saco, es una cte ya definida en <sys/socket.h> (hay que incluirla al usarla)
 
     // ── CP3 ──────────────────────────────────────────────────
-    MSG_READ = 22, // Memory Stick cuando CPU le pide leer algo en memoria
-    MSG_WRITE = 23, // Memory Stick cuando CPU le pide escribir algo en memoria
+    // 21 usado en MSG_DONE
+    // 22 usado en MSG_CONTEXTO_EJECUCION_CPU
+    MSG_READ = 23, // Memory Stick cuando CPU le pide leer algo en memoria
+    MSG_WRITE = 24, // Memory Stick cuando CPU le pide escribir algo en memoria
 } op_code;
 
 #endif // MENSAJES_H

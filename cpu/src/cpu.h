@@ -34,11 +34,11 @@ typedef struct {
 
 // CICLO DE INSTRUCCION
 
-char* fetch(int conexion_servidor,uint32_t pid,RegistrosCPU* cpu);
+char* fetch(int conexion_servidor,uint32_t pid, t_registros* cpu);
 
 op_code_cpu decode(char* instruccion);
 
-void execute(op_code_cpu codeop,char* instruccion,RegistrosCPU* cpu);
+void execute(op_code_cpu codeop,char* instruccion, t_registros* cpu);
 
 
 #endif

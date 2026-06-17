@@ -25,6 +25,11 @@ int conexionCPUKernelMemory (t_config* config) {
     char *km_port = config_get_string_value(config, "KM_PORT");
     char *km_ip = config_get_string_value(config, "KM_IP");
     int fd_km = crear_conexion(km_ip, km_port);
+    op_code hs = MSG_HANDSHAKE_CPU;
+    enviar_mensaje(fd_km, &hs, sizeof(op_code));
+    int size_ok;
+    op_code ok = recibir_mensaje(fd_km, &size_ok);
+    free(ok);
     return fd_km;
     }
 
@@ -32,6 +37,11 @@ int conexionCPUKernelScheduler (t_config* config) {
     char *ks_port = config_get_string_value(config, "KS_PORT");
     char *ks_ip = config_get_string_value(config, "KS_IP");
     int fd_ks = crear_conexion(ks_ip, ks_port);
+    op_code hs = MSG_HANDSHAKE_CPU;
+    enviar_mensaje(fd_ks, &hs, sizeof(op_code));
+    int size_ok; 
+    op_code* ok = recibir_mensaje(fd_ks, &size_ok);
+    free(ok);
     return fd_ks;
     }
 
@@ -39,6 +49,11 @@ int conexionCPUMemoryStick (t_config* config) {
     char *ms_port = config_get_string_value(config, "MS_PORT");
     char *ms_ip = config_get_string_value(config, "MS_IP");
     int fd_ms = crear_conexion(ms_ip, ms_port);
+    op_code hs = MSG_HANDSHAKE_CPU;
+    enviar_mensaje(fd_ms, &hs, sizeof(op_code));
+    int size_ok;
+    op_code ok = recibir_mensaje(fd_ms, &size_ok);
+    free(ok);
     return fd_ms;
     }
 
@@ -131,7 +146,7 @@ int main(int argc, char* argv[]) {
         while (1) {
             // FETCH
             char* instruccion = fetch(fd_km, pid, &contexto);
-            if (*instruccion = NULL) {
+            if (*instruccion == NULL) {
                 log_error(logger_cpu, "Error en FETCH");
                 break;}
 
@@ -139,7 +154,7 @@ int main(int argc, char* argv[]) {
             op_code_cpu codop = decode(instruccion);
 
             // EXECUTE
-            execute(codop,instruccion,&contexto);
+            execute(codop,instruccion,contexto);
             free(instruccion);
 
             // INTERRUPCIONES
@@ -149,40 +164,7 @@ int main(int argc, char* argv[]) {
 
             if (interrumpido)
                 break;
-                
             }
         free(contexto);
         }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // TODO Adriel: cargar config con config_create()
-   
-    // TODO Adriel: crear logger con log_create()
-    // OJO: el nombre del archivo de log tiene que incluir el identificador
-    // Ejemplo: "cpu_1.log" si el identificador es 1
- 
-    // TODO Adriel: conectarse a Kernel Scheduler
-    // int fd_ks = crear_conexion(KS_IP, KS_PORT);
-    // enviar handshake MSG_HANDSHAKE_CPU
- 
-    // TODO Adriel: conectarse a Kernel Memory
-    // int fd_km = crear_conexion(KM_IP, KM_PORT);
-    // enviar handshake MSG_HANDSHAKE_CPU
- 
-    // TODO Adriel: conectarse a cada Memory Stick
-    // int fd_ms = crear_conexion(MS_IP, MS_PORT);
-    // enviar handshake MSG_HANDSHAKE_CPU
- 
-    // CP2: ciclo de instrucción Fetch→Decode→Execute→Check Interrupt
