@@ -55,6 +55,9 @@ typedef enum {
     MSG_MUTEX_CREATE = 25,
     MSG_MUTEX_LOCK = 26,
     MSG_MUTEX_UNLOCK = 27,
+
+    MSG_SOLICITAR_COMPACTACION = 28 // KM cuando le pide a KS que desaloje CPUs para realizar compactación.
+    MSG_MEMORIA_CORRUPTA = 29 // KM cuando le informa a KS de una corrupción de memoria debido a una desconexión de un Memory Stick.
 } op_code;
 
 #endif // MENSAJES_H
