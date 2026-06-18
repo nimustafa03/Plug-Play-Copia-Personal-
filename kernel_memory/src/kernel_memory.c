@@ -40,6 +40,40 @@ int fd_swap         = -1;
 int swap_block_size = 0;
 int swap_total_size = 0;
 
+void solicitar_desalojo(){
+    op_code mensaje = MSG_SOLICITAR_COMPACTACION;
+    enviar_mensaje(fd_kernel_scheduler, &mensaje, sizeof(op_code));
+}
+
+void compactar(uint32_t pid_proceso){
+    // NICO M: Avisamos a KS que vamos a compactar y necesitamos que desaloje los CPUs.
+
+    solicitar_desalojo();
+
+    op_code mensaje_recibido;
+
+    while(!mensaje_recibido){
+        mensaje_recibido = recibir_mensaje(fd_kernel_scheduler,sizeof(op_code));
+    }
+    if (mensaje_recibido != MSG_DESALOJO_REALIZADO) { return } // NICO M: Estaria bueno logear bien el error.
+
+    char key_proceso[12];
+    snprintf(key_proceso,sizeof(key_proceso), "%lu", (unsigned long)pid_proceso); 
+    
+    t_contexto_ejecucion* proceso = dictionary_get(diccionario_procesos,key_proceso);
+
+    int cursor = 0;
+
+    for ( int i = 0; i<list_size(proceso->tabla_segmentos), i++){
+        /* if segmento.base != cursor:
+                movemos segmento a cursor
+                actualizamos base a valor de cursor
+            movemos cursor a fin de segmento (segmento.tamaño)
+        */
+    }
+
+    return
+}
 
 int espacio_libre_en_segmento(int id_Segmento){ 
     int espacio_libre = config_get_int_value(config,"ESPACIO_LIBRE_MOCK");
@@ -231,18 +265,22 @@ void* atender_cliente_km(void* arg) {
     switch (*codigo) {
 
         case MSG_HANDSHAKE_KS:
+            fd_kernel_scheduler = fd_cliente;
             atender_kernel_scheduler(fd_cliente);
             break;
 
         case MSG_HANDSHAKE_CPU:
+            fd_cpu = fd_cliente;
             atender_cpu(fd_cliente);
             break;
 
         case MSG_HANDSHAKE_MS:
+            fd_memory_stick = fd_cliente;
             atender_memory_stick(fd_cliente);
             break;
 
         case MSG_HANDSHAKE_SWAP:
+            fd_swap = fd_cliente;
             atender_swap(fd_cliente);
             break;
         // ─────────────────────────────────────────────────────
