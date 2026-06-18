@@ -322,20 +322,151 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
 
 t_mutex_ks* buscar_mutex(char* nombre) {
   for (int i = 0; i < list_size(listaMutex); i++) {
-        t_mutex_ks* m = list_get(listaMutex, i);
-        if (strcmp(m->nombre, nombre) == 0) return m;
-    }
-    return NULL;
+      t_mutex_ks* m = list_get(listaMutex, i);
+      if (strcmp(m->nombre, nombre) == 0) return m;
+  }
+  return NULL;
 }
 
 void mutex_create(char* nombre) {
-  // implementar (Santiago)
+  if (buscar_mutex(nombre) != NULL) {
+      log_warning(logger_ks, "## MUTEX_CREATE: mutex '%s' ya existe", nombre);
+      return;
+  }
+  t_mutex_ks* m = malloc(sizeof(t_mutex_ks));
+  m->nombre = strdup(nombre);
+  m->pid_tomador = -1;
+  m->cola_bloqueados = list_create();
+
+  pthread_mutex_lock(&mutex_listas);
+  list_add(listaMutex, m);
+  pthread_mutex_unlock(&mutex_listas);
+
+  log_info(logger_ks, "## MUTEX_CREATE: mutex '%s' creado", nombre);
 }
 
 void mutex_lock(char* nombre, Proceso* proceso) {
-  // implementar (Santiago)
+  pthread_mutex_lock(&mutex_listas);
+  t_mutex_ks* m = buscar_mutex(nombre);
+  if (m == NULL) {
+      log_error(logger_ks, "## MUTEX_LOCK: mutex '%s' no existe", nombre);
+      pthread_mutex_unlock(&mutex_listas);
+      return;
+  }
+
+  if (m->pid_tomador == -1) {
+      // libre, lo toma
+      m->pid_tomador = proceso->id_proceso;
+      log_info(logger_ks, "## (%d) Toma el Mutex %s", proceso->id_proceso, nombre);
+      pthread_mutex_unlock(&mutex_listas);
+      op_code ok = MSG_OK;
+      enviar_mensaje(proceso->fd_cpu, &ok, sizeof(op_code));
+  } else {
+      // ocupado, bloquear el proceso
+      log_info(logger_ks, "## (%d) MUTEX_LOCK: bloqueado esperando mutex '%s'", proceso->id_proceso, nombre);
+      list_add(m->cola_bloqueados, proceso);
+      pthread_mutex_unlock(&mutex_listas);
+      actualizarEstadoProceso(proceso, BLOCK);
+  }
 }
 
 void mutex_unlock(char* nombre, Proceso* proceso) {
-  // implementar (Santiago)
+  pthread_mutex_lock(&mutex_listas);
+  t_mutex_ks* m = buscar_mutex(nombre);
+  if (m == NULL) {
+      log_error(logger_ks, "## MUTEX_UNLOCK: mutex '%s' no existe", nombre);
+      pthread_mutex_unlock(&mutex_listas);
+      return;
+  }
+  if (m->pid_tomador != proceso->id_proceso) {
+      log_error(logger_ks, "## (%d) MUTEX_UNLOCK: no es dueño de '%s'", proceso->id_proceso, nombre);
+      pthread_mutex_unlock(&mutex_listas);
+      return;
+  }
+
+  log_info(logger_ks, "## (%d) Libera el Mutex %s", proceso->id_proceso, nombre);
+
+  if (list_is_empty(m->cola_bloqueados)) {
+      m->pid_tomador = -1;
+      pthread_mutex_unlock(&mutex_listas);
+  } else {
+      // desbloquear el primero de la cola
+      Proceso* siguiente = list_remove(m->cola_bloqueados, 0);
+      m->pid_tomador = siguiente->id_proceso;
+      pthread_mutex_unlock(&mutex_listas);
+      
+      log_info(logger_ks, "## (%d) Toma el Mutex %s", siguiente->id_proceso, nombre);
+      actualizarEstadoProceso(siguiente, READY);
+      sem_post(&sem_hay_proceso_ready);
+      op_code ok = MSG_OK;
+      enviar_mensaje(siguiente->fd_cpu, &ok, sizeof(op_code));
+  }
+}
+
+void atender_cpu_ks(int fd_cpu) {
+    while (1) {
+        int size;
+        op_code* codigo = recibir_mensaje(fd_cpu, &size);
+        if (codigo == NULL) {
+            log_warning(logger_ks, "CPU FD:%d desconectada", fd_cpu);
+            break;
+        }
+
+        switch (*codigo) {
+            case MSG_MUTEX_CREATE: {
+                char* nombre = recibir_mensaje(fd_cpu, &size);
+                uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
+                mutex_create(nombre);
+                op_code ok = MSG_OK;
+                enviar_mensaje(fd_cpu, &ok, sizeof(op_code));
+                free(nombre);
+                free(pid_ptr);
+                break;
+            }
+            case MSG_MUTEX_LOCK: {
+                char* nombre = recibir_mensaje(fd_cpu, &size);
+                uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
+                Proceso* proceso = buscar_proceso_por_pid(*pid_ptr);
+                free(pid_ptr);
+                mutex_lock(nombre, proceso);
+                // no respondemos acá — mutex_lock responde cuando corresponde
+                free(nombre);
+                break;
+            }
+            case MSG_MUTEX_UNLOCK: {
+                char* nombre = recibir_mensaje(fd_cpu, &size);
+                uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
+                Proceso* proceso = buscar_proceso_por_pid(*pid_ptr);
+                mutex_unlock(nombre, proceso);
+                op_code ok = MSG_OK;
+                enviar_mensaje(fd_cpu, &ok, sizeof(op_code));
+                free(nombre);
+                free(pid_ptr);
+                break;
+            }
+            default:
+                log_warning(logger_ks, "Syscall desconocida: %d", *codigo);
+                break;
+        }
+        free(codigo);
+    }
+}
+
+Proceso* buscar_proceso_por_pid(uint32_t pid) {
+    t_list* listas[] = {
+        listaProcesosNew, listaProcesosReady, listaProcesosExec,
+        listaProcesosBlock, listaProcesosSuspBlock, listaProcesosSuspReady
+    };
+    pthread_mutex_lock(&mutex_listas);
+    Proceso* resultado = NULL;
+    for (int l = 0; l < 6 && resultado == NULL; l++) {
+        for (int i = 0; i < list_size(listas[l]) && resultado == NULL; i++) {
+            Proceso* p = list_get(listas[l], i);
+            if (p->id_proceso == (int)pid) {
+                resultado = p;
+            }
+        }
+    }
+    pthread_mutex_unlock(&mutex_listas);
+    return resultado;
 }

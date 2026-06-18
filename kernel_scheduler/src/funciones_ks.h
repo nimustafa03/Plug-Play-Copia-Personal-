@@ -68,9 +68,11 @@ void procesoABlock (Proceso* p);
 void procesoASuspBlock (Proceso* p);
 void procesoASuspReady (Proceso* p);
 void* timer_rr(void* arg);
+t_mutex_ks* buscar_mutex(char* nombre);
 void mutex_create(char* nombre);
 void mutex_lock(char* nombre, Proceso* proceso);
 void mutex_unlock(char* nombre, Proceso* proceso);
-t_mutex_ks* buscar_mutex(char* nombre);
+void atender_cpu_ks(int fd_cpu);
+Proceso* buscar_proceso_por_pid(uint32_t pid);
 
 #endif // FUNCIONES_KS_H
