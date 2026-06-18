@@ -19,7 +19,7 @@
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
 #include <cpu.h>
-#include <tipos.h>
+#include <utils/tipos.h>
 
 int conexionCPUKernelMemory (t_config* config) {
     char *km_port = config_get_string_value(config, "KM_PORT");
@@ -145,7 +145,7 @@ int main(int argc, char* argv[]) {
         // WHILE CICLO DE INSTRUCCION
         while (1) {
             // FETCH
-            char* instruccion = fetch(fd_km, pid, &contexto);
+            char* instruccion = fetch(fd_km, pid, &contexto->registros);
             if (instruccion == NULL) {
                 log_error(logger_cpu, "Error en FETCH");
                 break;}
@@ -154,7 +154,7 @@ int main(int argc, char* argv[]) {
             op_code_cpu codop = decode(instruccion);
 
             // EXECUTE
-            execute(codop,instruccion,contexto);
+            execute(codop, instruccion, &contexto->registros, fd_ks, contexto->pid);
             free(instruccion);
 
             // INTERRUPCIONES

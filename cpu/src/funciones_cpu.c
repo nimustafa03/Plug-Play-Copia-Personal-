@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <string.h>
 #include "cpu.h"
-#include "utils/tipos.h"
+#include <utils/tipos.h>
 #include <sys/socket.h> // Para el recv() que tiene que recibir el MSG_DONTWAIT de esa biblioteca
 
 
@@ -56,11 +56,18 @@ op_code_cpu decode(char* instruccion) {
         return OP_JNZ;
     if (strcmp(codeop, "COPY_MEM") == 0) 
         return OP_COPY_MEM;
-    
+    // CP3
+    if (strcmp(codeop, "MUTEX_CREATE") == 0) 
+        return OP_MUTEX_CREATE;
+    if (strcmp(codeop, "MUTEX_LOCK")   == 0) 
+        return OP_MUTEX_LOCK;
+    if (strcmp(codeop, "MUTEX_UNLOCK") == 0) 
+        return OP_MUTEX_UNLOCK;
+        
     return OP_INVALID;
 }
 
-void execute(op_code_cpu codeop, char* instruccion, t_registros* cpu){
+void execute(op_code_cpu codeop, char* instruccion, t_registros* cpu, int fd_ks, uint32_t pid){
     switch (codeop){
     case OP_SET:
         set(instruccion, cpu);
@@ -85,6 +92,16 @@ void execute(op_code_cpu codeop, char* instruccion, t_registros* cpu){
         break;
     case OP_NOOP:
         noop(instruccion, cpu);
+        break;
+    // CP3:
+    case OP_MUTEX_CREATE:
+        syscall_mutex_create(instruccion, fd_ks, pid); 
+        break;
+    case OP_MUTEX_LOCK:
+        syscall_mutex_lock(instruccion, fd_ks, pid); 
+        break;
+    case OP_MUTEX_UNLOCK:
+        syscall_mutex_unlock(instruccion, fd_ks, pid);
         break;
     }
 }
@@ -133,4 +150,47 @@ int atender_interrupcion(int fd_ks,int fd_km,t_contexto_ejecucion* contexto){
     free(intr);
 
     return 1;
+}
+
+void syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid) {
+    char nombre[64];
+    sscanf(instruccion, "MUTEX_CREATE %s", nombre);
+
+    op_code cod = MSG_MUTEX_CREATE;
+    enviar_mensaje(fd_ks, &cod, sizeof(op_code));
+    enviar_mensaje(fd_ks, nombre, strlen(nombre) + 1);
+    enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
+
+    int size; 
+    op_code* ok = recibir_mensaje(fd_ks, &size);
+    free(ok);
+}
+
+void syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid) {
+    char nombre[64];
+    sscanf(instruccion, "MUTEX_LOCK %s", nombre);
+
+    op_code cod = MSG_MUTEX_LOCK;
+    enviar_mensaje(fd_ks, &cod, sizeof(op_code));
+    enviar_mensaje(fd_ks, nombre, strlen(nombre) + 1);
+    enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
+
+    // bloqueante — espera hasta que KS lo desbloquee
+    int size; 
+    op_code* ok = recibir_mensaje(fd_ks, &size);
+    free(ok);
+}
+
+void syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid) {
+    char nombre[64];
+    sscanf(instruccion, "MUTEX_UNLOCK %s", nombre);
+
+    op_code cod = MSG_MUTEX_UNLOCK;
+    enviar_mensaje(fd_ks, &cod, sizeof(op_code));
+    enviar_mensaje(fd_ks, nombre, strlen(nombre) + 1);
+    enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
+
+    int size; 
+    op_code* ok = recibir_mensaje(fd_ks, &size);
+    free(ok);
 }

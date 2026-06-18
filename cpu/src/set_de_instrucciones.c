@@ -11,7 +11,7 @@
 
 /*------------------------ MICRO OPERACIONES ------------------------*/
 
-uint32_t obtener_valor(char* registro, RegistrosCPU* cpu) {
+uint32_t obtener_valor(char* registro, t_registros* cpu) {
     if (strcmp(registro, "AX") == 0) return cpu->AX;
     if (strcmp(registro, "BX") == 0) return cpu->BX;
     if (strcmp(registro, "CX") == 0) return cpu->CX;
@@ -25,7 +25,7 @@ uint32_t obtener_valor(char* registro, RegistrosCPU* cpu) {
     return 0;
 }
 
-void escribir_registro(char* registro, RegistrosCPU* cpu, uint32_t valor) {
+void escribir_registro(char* registro, t_registros* cpu, uint32_t valor) {
     if (strcmp(registro, "AX") == 0) cpu->AX = (uint8_t)valor;
     else if (strcmp(registro, "BX") == 0) cpu->BX = (uint8_t)valor;
     else if (strcmp(registro, "CX") == 0) cpu->CX = (uint8_t)valor;
@@ -42,7 +42,7 @@ void escribir_registro(char* registro, RegistrosCPU* cpu, uint32_t valor) {
 
 // SUMA
 
-void sum(char* instruccion, RegistrosCPU* cpu) {
+void sum(char* instruccion, t_registros* cpu) {
     char registro_destino[32];
     char registro_origen[32];
     sscanf(instruccion, "%*s %s %s", registro_destino, registro_origen);
@@ -57,7 +57,7 @@ void sum(char* instruccion, RegistrosCPU* cpu) {
 
 // RESTA
 
-void sub(char* instruccion, RegistrosCPU* cpu) {
+void sub(char* instruccion, t_registros* cpu) {
     char registro_destino[32];
     char registro_origen[32];
     sscanf(instruccion, "%*s %s %s", registro_destino, registro_origen);
@@ -72,7 +72,7 @@ void sub(char* instruccion, RegistrosCPU* cpu) {
 
 // SET
 
-void set(char* instruccion, RegistrosCPU* cpu) {
+void set(char* instruccion, t_registros* cpu) {
     char registro_destino[32];
     char valor_str[32];
     sscanf(instruccion, "%*s %s %s", registro_destino, valor_str);
@@ -85,7 +85,7 @@ void set(char* instruccion, RegistrosCPU* cpu) {
 
 // JNZ
 
-void jnz(char* instruccion, RegistrosCPU* cpu) {
+void jnz(char* instruccion, t_registros* cpu) {
 
     char registro[32];
     char pc_str[32];
@@ -104,7 +104,7 @@ void jnz(char* instruccion, RegistrosCPU* cpu) {
 
 // NOOP
 
-void noop(char* instruccion, RegistrosCPU* cpu) {
+void noop(char* instruccion, t_registros* cpu) {
     cpu->PC++;
 }
 

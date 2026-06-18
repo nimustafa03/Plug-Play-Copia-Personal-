@@ -21,7 +21,10 @@ typedef enum {
     OP_SUB,
     OP_JNZ,
     OP_COPY_MEM,
-    OP_INVALID = -1
+    OP_MUTEX_CREATE,
+    OP_MUTEX_LOCK,
+    OP_MUTEX_UNLOCK,
+    OP_INVALID = -1,
 } op_code_cpu;
 
 // REQUEST FETCH
@@ -38,7 +41,19 @@ char* fetch(int conexion_servidor,uint32_t pid, t_registros* cpu);
 
 op_code_cpu decode(char* instruccion);
 
-void execute(op_code_cpu codeop,char* instruccion, t_registros* cpu);
+// CP3 -> Para las syscalls del mutex necesita tambien el fd_ks y el PID
+void execute(op_code_cpu codeop, char* instruccion, t_registros* cpu, int fd_ks, uint32_t pid);
 
+void set(char* instruccion, t_registros* cpu);
+void sum(char* instruccion, t_registros* cpu);
+void sub(char* instruccion, t_registros* cpu);
+void mov_in(char* instruccion, t_registros* cpu);
+void mov_out(char* instruccion, t_registros* cpu);
+void jnz(char* instruccion, t_registros* cpu);
+void copy_mem(char* instruccion, t_registros* cpu);
+void noop(char* instruccion, t_registros* cpu);
+void syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid);
+void syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid);
+void syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid);
 
 #endif
