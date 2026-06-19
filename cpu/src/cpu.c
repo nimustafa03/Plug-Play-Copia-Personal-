@@ -148,6 +148,10 @@ int main(int argc, char* argv[]) {
             char* instruccion = fetch(fd_km, pid, &contexto->registros);
             if (instruccion == NULL) {
                 log_error(logger_cpu, "Error en FETCH");
+                // CP2: aviso a KS que termino
+                op_code done = MSG_DONE;
+                enviar_mensaje(fd_ks, &done, sizeof(op_code));
+                enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
                 break;}
 
             // DECODE

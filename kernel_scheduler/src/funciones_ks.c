@@ -162,7 +162,7 @@ void* iniciar_planificador_corto_plazo() {
     // envia el PID a la CPU para que empiece a ejecutar
     enviar_mensaje(fd_cpu, &proceso->id_proceso, sizeof(uint32_t));
  
-    // Round Robin
+    // Round Robin: lanza el timer y atender_cpu_ks se encarga del resto.
     if (strcmp(algoritmo, "RR") == 0) {
         t_args_rr* args = malloc(sizeof(t_args_rr));
         args->fd_cpu = fd_cpu;
@@ -172,26 +172,6 @@ void* iniciar_planificador_corto_plazo() {
         pthread_t thread_timer;
         pthread_create(&thread_timer, NULL, timer_rr, args);
         pthread_detach(thread_timer);
-
-        int size;
-        op_code* respuesta = recibir_mensaje(fd_cpu, &size);
-        if (*respuesta == MSG_INTERRUPCION_ATENDIDA) {
-            // log obligatorio
-            log_info(logger_ks, "## (%d) - Desalojado por fin de quantum", proceso->id_proceso);
-
-            // CPU vuelve a estar libre
-            pthread_mutex_lock(&mutex_listas);
-            int* fd_libre = malloc(sizeof(int));
-            *fd_libre = fd_cpu;
-            list_add(listaCPUsLibres, fd_libre);
-            pthread_mutex_unlock(&mutex_listas);
-            sem_post(&sem_hay_cpu_libre);
-
-            // Proceso vuelve a READY (al final de la cola - FIFO dentro de RR)
-            actualizarEstadoProceso(proceso, READY);
-            sem_post(&sem_hay_proceso_ready);
-        }
-        free(respuesta);
     }
   }
 }
@@ -404,6 +384,14 @@ void mutex_unlock(char* nombre, Proceso* proceso) {
 }
 
 void atender_cpu_ks(int fd_cpu) {
+    // CPU recién conectada, entonces esta libre
+    pthread_mutex_lock(&mutex_listas);
+    int* fd_libre = malloc(sizeof(int));
+    *fd_libre = fd_cpu;
+    list_add(listaCPUsLibres, fd_libre);
+    pthread_mutex_unlock(&mutex_listas);
+    sem_post(&sem_hay_cpu_libre);
+    
     while (1) {
         int size;
         op_code* codigo = recibir_mensaje(fd_cpu, &size);
@@ -413,6 +401,42 @@ void atender_cpu_ks(int fd_cpu) {
         }
 
         switch (*codigo) {
+            case MSG_DONE: {
+                // CP2: proceso terminó normalmente
+                uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
+                Proceso* proceso = buscar_proceso_por_pid(*pid_ptr);
+                free(pid_ptr);
+                if (proceso) actualizarEstadoProceso(proceso, EXIT);
+
+                pthread_mutex_lock(&mutex_listas);
+                int* fd_libre2 = malloc(sizeof(int));
+                *fd_libre2 = fd_cpu;
+                list_add(listaCPUsLibres, fd_libre2);
+                pthread_mutex_unlock(&mutex_listas);
+                sem_post(&sem_hay_cpu_libre);
+                break;
+            }
+            case MSG_INTERRUPCION_ATENDIDA: {
+                // CP2: fin de quantum RR — CPU y proceso vuelven a estar libres
+                uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
+                int* motivo = recibir_mensaje(fd_cpu, &size);
+                Proceso* proceso = buscar_proceso_por_pid(*pid_ptr);
+                free(pid_ptr);
+                free(motivo);
+
+                log_info(logger_ks, "## (%d) - Desalojado por fin de quantum", proceso->id_proceso);
+
+                pthread_mutex_lock(&mutex_listas);
+                int* fd_libre3 = malloc(sizeof(int));
+                *fd_libre3 = fd_cpu;
+                list_add(listaCPUsLibres, fd_libre3);
+                pthread_mutex_unlock(&mutex_listas);
+                sem_post(&sem_hay_cpu_libre);
+
+                actualizarEstadoProceso(proceso, READY);
+                sem_post(&sem_hay_proceso_ready);
+                break;
+            }
             case MSG_MUTEX_CREATE: {
                 char* nombre = recibir_mensaje(fd_cpu, &size);
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);

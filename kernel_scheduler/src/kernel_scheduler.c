@@ -45,18 +45,8 @@ void* atender_cliente_ks(void* arg) {
         case MSG_HANDSHAKE_CPU:
             log_info(logger_ks, "CPU conectado - FD: %d", fd_cliente);
             enviar_mensaje(fd_cliente, &respuesta_ok, sizeof(op_code));
-
-            // registramos la CPU como libre para el planificador de corto plazo
-            pthread_mutex_lock(&mutex_listas);
-            int* fd_cpu_ptr = malloc(sizeof(int));
-            *fd_cpu_ptr = fd_cliente;
-            list_add(listaCPUsLibres, fd_cpu_ptr);
-            pthread_mutex_unlock(&mutex_listas);
-            // avisamos al planificador de corto plazo que hay CPU disponible
-            sem_post(&sem_hay_cpu_libre);
-
-            // CP3: loop para recibir syscalls
-            atender_cpu_ks(fd_cliente);  // función nueva, loop bloqueante
+            // CP2: listaCPUsLibres y sem_post se hacen dentro de atender_cpu_ks
+            atender_cpu_ks(fd_cliente);
             break;
  
         case MSG_HANDSHAKE_IO:
