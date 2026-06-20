@@ -23,7 +23,7 @@
 #include <commons/config.h>
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
-#include "funciones_ks.h"   // trae también gestor_ks.h 
+#include "funciones_ks.h"    // trae también gestor_ks.h 
  
 t_log*    logger_ks    = NULL;
 t_config* config       = NULL;
@@ -50,16 +50,11 @@ void* atender_cliente_ks(void* arg) {
             break;
  
         case MSG_HANDSHAKE_IO:
-            log_info(logger_ks, "IO conectada - FD: %d", fd_cliente);
             enviar_mensaje(fd_cliente, &respuesta_ok, sizeof(op_code));
-
-            pthread_mutex_lock(&mutex_listas);
-            int* fd_io_ptr = malloc(sizeof(int));
-            *fd_io_ptr = fd_cliente;
-            list_add(listaIOsLibres, fd_io_ptr);
-            pthread_mutex_unlock(&mutex_listas);
-
-            sem_post(&sem_hay_io_libre);
+            
+            // identificar_io_ks recibe el tipo (STDIN/STDOUT/SLEEP) y
+            // registra la IO como libre en listaIOsLibres, con su log propio
+            identificar_io_ks(fd_cliente);
             break;
  
         default:

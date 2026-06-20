@@ -63,6 +63,8 @@ op_code_cpu decode(char* instruccion) {
         return OP_MUTEX_LOCK;
     if (strcmp(codeop, "MUTEX_UNLOCK") == 0) 
         return OP_MUTEX_UNLOCK;
+    if (strcmp(codeop, "SLEEP") == 0) 
+        return OP_SLEEP;
         
     return OP_INVALID;
 }
@@ -95,13 +97,16 @@ void execute(op_code_cpu codeop, char* instruccion, t_registros* cpu, int fd_ks,
         break;
     // CP3:
     case OP_MUTEX_CREATE:
-        syscall_mutex_create(instruccion, fd_ks, pid); 
+        syscall_mutex_create(instruccion, fd_ks, pid, cpu); 
         break;
     case OP_MUTEX_LOCK:
-        syscall_mutex_lock(instruccion, fd_ks, pid); 
+        syscall_mutex_lock(instruccion, fd_ks, pid, cpu); 
         break;
     case OP_MUTEX_UNLOCK:
-        syscall_mutex_unlock(instruccion, fd_ks, pid);
+        syscall_mutex_unlock(instruccion, fd_ks, pid, cpu);
+        break;
+    case OP_SLEEP:
+        syscall_sleep(instruccion, fd_ks, pid, cpu);
         break;
     }
 }
@@ -152,7 +157,7 @@ int atender_interrupcion(int fd_ks,int fd_km,t_contexto_ejecucion* contexto){
     return 1;
 }
 
-void syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid) {
+void syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu) {
     char nombre[64];
     sscanf(instruccion, "MUTEX_CREATE %s", nombre);
 
@@ -164,9 +169,11 @@ void syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid) {
     int size; 
     op_code* ok = recibir_mensaje(fd_ks, &size);
     free(ok);
+
+    cpu->PC++;
 }
 
-void syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid) {
+void syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu) {
     char nombre[64];
     sscanf(instruccion, "MUTEX_LOCK %s", nombre);
 
@@ -179,9 +186,11 @@ void syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid) {
     int size; 
     op_code* ok = recibir_mensaje(fd_ks, &size);
     free(ok);
+
+    cpu->PC++;
 }
 
-void syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid) {
+void syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu) {
     char nombre[64];
     sscanf(instruccion, "MUTEX_UNLOCK %s", nombre);
 
@@ -193,4 +202,25 @@ void syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid) {
     int size; 
     op_code* ok = recibir_mensaje(fd_ks, &size);
     free(ok);
+
+    cpu->PC++;
+}
+
+// Bloquea hasta que KS responda (el proceso vuelve a READY y la CPU recién ahí recibe el MSG_OK que la destraba).
+void syscall_sleep(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu) {
+    char tiempo_str[32];
+    sscanf(instruccion, "SLEEP %s", tiempo_str);
+    int tiempo = atoi(tiempo_str);
+
+    op_code cod = MSG_SLEEP;
+    enviar_mensaje(fd_ks, &cod, sizeof(op_code));
+    enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
+    enviar_mensaje(fd_ks, &tiempo, sizeof(int));
+
+    // bloqueante - espera hasta que KS confirme que el sleep terminó
+    int size;
+    op_code* ok = recibir_mensaje(fd_ks, &size);
+    free(ok);
+
+    cpu->PC++;
 }

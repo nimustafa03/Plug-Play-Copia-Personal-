@@ -85,7 +85,11 @@ int main(int argc, char* argv[]) {
         log_info(logger, "## Conectado a Kernel Scheduler");
     }
     free(respuesta); // Liberar la memoria del mensaje recibido
- 
+    
+    // informamos a KS quE tipo de IO somos (STDIN/STDOUT/SLEEP),
+    // asi puede elegir la IO correcta para cada syscall
+    enviar_mensaje(fd_ks, tipo_io, strlen(tipo_io) + 1);
+
     // Quedarse esperando peticiones del KS
     while(1) {
         int size_orden;

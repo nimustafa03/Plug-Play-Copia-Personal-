@@ -6,7 +6,7 @@
 #include <utils/tipos.h>   
 
 
-char const* estadosProcesos[] = {"NEW", "READY", "EXEC", "BLOCK", "EXIT", "SUSP_READY", "SUSP_BLOCK"};
+char const* estadosProcesos[] = {"NEW", "READY", "EXEC", "BLOCK", "EXIT", "SUSP_BLOCK", "SUSP_READY"};
 
 t_list* listaProcesosNew = NULL;
 t_list* listaProcesosReady = NULL;
@@ -22,7 +22,9 @@ t_list* listaMutex = NULL;
 // semáforos y mutex nuevos 
 sem_t sem_hay_proceso_ready;
 sem_t sem_hay_cpu_libre;
-sem_t sem_hay_io_libre;
+sem_t sem_hay_sleep_libre; 
+sem_t sem_hay_stdin_libre;  
+sem_t sem_hay_stdout_libre; 
 pthread_mutex_t mutex_listas;
 
 
@@ -41,7 +43,9 @@ void inicializarListasProcesos() {
   // arrancan bloqueados
   sem_init(&sem_hay_proceso_ready, 0, 0);
   sem_init(&sem_hay_cpu_libre, 0, 0);
-  sem_init(&sem_hay_io_libre, 0, 0);
+  sem_init(&sem_hay_sleep_libre, 0, 0);
+  sem_init(&sem_hay_stdin_libre, 0, 0);
+  sem_init(&sem_hay_stdout_libre, 0, 0);
   // mutex para proteger acceso concurrente a las listas
   pthread_mutex_init(&mutex_listas, NULL);
 }
@@ -130,6 +134,30 @@ void* timer_rr(void* arg) {
     return NULL;
 }
 
+// Timer de suspensión - si al vencer SUSPENSION_TIMEOUT el proceso sigue en BLOCK, pasa a SUSP_BLOCK
+void* timer_suspension(void* arg) {
+    t_args_suspension* args = (t_args_suspension*) arg;
+
+    usleep(args->timeout * 1000); // SUSPENSION_TIMEOUT está en ms
+
+    Proceso* proceso = buscar_proceso_por_pid(args->pid);
+
+    if (proceso != NULL) {
+        pthread_mutex_lock(&mutex_listas);
+        estado_proceso estado_actual = proceso->estado;
+        pthread_mutex_unlock(&mutex_listas);
+
+        if (estado_actual == BLOCK) {
+            actualizarEstadoProceso(proceso, SUSP_BLOCK);
+        }
+        // si ya no está en BLOCK (se desbloqueó antes de vencer el timeout), no hacemos nada
+    }
+
+    free(args);
+    return NULL;
+}
+
+
 // Planif. Corto plazo: implementa FIFO y RR
 void* iniciar_planificador_corto_plazo() {
   log_info(logger_ks, "Planificador de Corto Plazo iniciado.");
@@ -181,6 +209,7 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
   pthread_mutex_lock(&mutex_listas); // evita race conditions entre planificadores
 
   Proceso* procesoEncontrado = NULL;
+  int lanzar_timer_suspension = 0; 
   log_debug(logger_ks, "Actualizando estado de Query %d de %s a %s", proceso->id_proceso, estadosProcesos[proceso->estado], estadosProcesos[nuevoEstado]);
   
   estado_proceso estado_anterior = proceso->estado;
@@ -273,6 +302,8 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
             case BLOCK:
                 procesoEncontrado->estado = BLOCK;
                 procesoABlock(procesoEncontrado);
+                // arranca el timer de suspensión por timeout
+                lanzar_timer_suspension = 1;
                 break;
             case SUSP_READY:
                 procesoEncontrado->estado = SUSP_READY;
@@ -298,6 +329,17 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
         }
     }
     pthread_mutex_unlock(&mutex_listas); // unlock al salir normalmente
+
+    // recien aca, con mutex_listas ya liberado, se crea el hilo del timer
+    if (lanzar_timer_suspension) {
+        t_args_suspension* args_susp = malloc(sizeof(t_args_suspension));
+        args_susp->pid = proceso->id_proceso;
+        args_susp->timeout = config_get_int_value(config, "SUSPENSION_TIMEOUT");
+
+        pthread_t thread_susp;
+        pthread_create(&thread_susp, NULL, timer_suspension, args_susp);
+        pthread_detach(thread_susp);
+    }
 }
 
 t_mutex_ks* buscar_mutex(char* nombre) {
@@ -468,6 +510,22 @@ void atender_cpu_ks(int fd_cpu) {
                 free(pid_ptr);
                 break;
             }
+            case MSG_SLEEP: {
+                uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
+                int* tiempo_ptr = recibir_mensaje(fd_cpu, &size);
+
+                t_args_sleep* args_sleep = malloc(sizeof(t_args_sleep));
+                args_sleep->fd_cpu = fd_cpu;
+                args_sleep->pid = *pid_ptr;
+                args_sleep->tiempo = *tiempo_ptr;
+                free(pid_ptr);
+                free(tiempo_ptr);
+
+                pthread_t thread_sleep;
+                pthread_create(&thread_sleep, NULL, atender_sleep_ks, args_sleep);
+                pthread_detach(thread_sleep);
+                break;
+            }
             default:
                 log_warning(logger_ks, "Syscall desconocida: %d", *codigo);
                 break;
@@ -493,4 +551,124 @@ Proceso* buscar_proceso_por_pid(uint32_t pid) {
     }
     pthread_mutex_unlock(&mutex_listas);
     return resultado;
+}
+
+// CheckPoint3: IO ------------------------------------------------------------
+
+// Devuelve el semáforo correspondiente al tipo de IO dado.
+sem_t* semaforo_io_por_tipo(char* tipo) {
+    if (strcmp(tipo, "SLEEP") == 0) return &sem_hay_sleep_libre;
+    if (strcmp(tipo, "STDIN") == 0) return &sem_hay_stdin_libre;
+    if (strcmp(tipo, "STDOUT") == 0) return &sem_hay_stdout_libre;
+    return NULL; // tipo desconocido — no debería pasar si IO manda un tipo válido
+}
+
+// Recibe el tipo de IO (segundo mensaje del handshake) y la registra como libre.
+// Se llama una sola vez, justo después del handshake MSG_HANDSHAKE_IO.
+void identificar_io_ks(int fd_io) {
+    int size;
+    char* tipo = recibir_mensaje(fd_io, &size);
+
+    t_io_ks* io = malloc(sizeof(t_io_ks));
+    io->fd = fd_io;
+    io->tipo = strdup(tipo);
+
+    pthread_mutex_lock(&mutex_listas);
+    list_add(listaIOsLibres, io);
+    pthread_mutex_unlock(&mutex_listas);
+
+    log_info(logger_ks, "## IO %s conectada - FD: %d", io->tipo, fd_io);
+
+    sem_t* sem = semaforo_io_por_tipo(tipo);
+    if (sem != NULL) sem_post(sem);
+    free(tipo);
+}
+
+// Busca la primera IO libre del tipo pedido y la remueve de listaIOsLibres.
+// Devuelve NULL si no hay ninguna libre de ese tipo (no debería pasar si se
+// llama justo después de un sem_wait del semáforo de ese mismo tipo).
+t_io_ks* sacar_io_libre_por_tipo(char* tipo) {
+    pthread_mutex_lock(&mutex_listas);
+    t_io_ks* encontrada = NULL;
+    for (int i = 0; i < list_size(listaIOsLibres); i++) {
+        t_io_ks* io = list_get(listaIOsLibres, i);
+        if (strcmp(io->tipo, tipo) == 0) {
+            encontrada = list_remove(listaIOsLibres, i);
+            break;
+        }
+    }
+    pthread_mutex_unlock(&mutex_listas);
+    return encontrada;
+}
+
+// Vuelve a dejar la IO disponible para la próxima syscall que la necesite,
+// posteando el semáforo específico de su tipo.
+void liberar_io(t_io_ks* io) {
+    pthread_mutex_lock(&mutex_listas);
+    list_add(listaIOsLibres, io);
+    pthread_mutex_unlock(&mutex_listas);
+
+    sem_t* sem = semaforo_io_por_tipo(io->tipo);
+    if (sem != NULL) sem_post(sem);
+}
+
+// Corre en su propio hilo: tramita un SLEEP de punta a punta.
+// 1) pasa el proceso a BLOCK (dispara timer de suspensión automáticamente)
+// 2) espera una IO de tipo SLEEP libre
+// 3) le manda la orden, espera el MSG_DONE
+// 4) libera la IO, pasa el proceso a READY/SUSP_READY, y recién ahí responde a la CPU
+void* atender_sleep_ks(void* arg) {
+    t_args_sleep* args = (t_args_sleep*) arg;
+
+    Proceso* proceso = buscar_proceso_por_pid(args->pid);
+    if (proceso == NULL) {
+        log_error(logger_ks, "## MSG_SLEEP: proceso %d no encontrado", args->pid);
+        free(args);
+        return NULL;
+    }
+
+    actualizarEstadoProceso(proceso, BLOCK);
+
+    // sem_hay_sleep_libre es exclusivo de IOs tipo SLEEP, así que un solo
+    // sem_wait + sacar_io_libre_por_tipo alcanza, sin loop de reintento
+    sem_wait(&sem_hay_sleep_libre);
+    t_io_ks* io = sacar_io_libre_por_tipo("SLEEP");
+
+    op_code cod_sleep = MSG_SLEEP;
+    enviar_mensaje(io->fd, &cod_sleep, sizeof(op_code));
+    enviar_mensaje(io->fd, &args->pid, sizeof(uint32_t));
+    enviar_mensaje(io->fd, &args->tiempo, sizeof(int));
+
+    int size;
+    op_code* respuesta = recibir_mensaje(io->fd, &size);
+    // se espera MSG_DONE; si la IO se desconectó (NULL) lo tratamos como error y
+    // de todas formas liberamos al proceso para no dejarlo colgado para siempre
+    if (respuesta != NULL) free(respuesta);
+
+    liberar_io(io);
+
+    // CP3: el SUSPENSION_TIMEOUT puede haber vencido mientras la IO estaba en
+    // curso, moviendo al proceso a SUSP_BLOCK. Si pasó eso, el destino correcto
+    // es SUSP_READY, no READY.
+    pthread_mutex_lock(&mutex_listas);
+    estado_proceso estado_actual = proceso->estado;
+    pthread_mutex_unlock(&mutex_listas);
+
+    if (estado_actual == SUSP_BLOCK) {
+        log_info(logger_ks, "## (%d) finalizó IO y pasa a SUSP. READY", proceso->id_proceso);
+        actualizarEstadoProceso(proceso, SUSP_READY);
+        // un proceso en SUSP_READY no tiene CPU asignada todavía — el
+        // planificador de mediano plazo es quien decide cuándo des-suspenderlo
+    } else {
+        log_info(logger_ks, "## (%d) finalizó IO y pasa a READY", proceso->id_proceso);
+        actualizarEstadoProceso(proceso, READY);
+        sem_post(&sem_hay_proceso_ready);
+    }
+
+    // recién ahora destrabamos a la CPU que pidió el sleep
+    op_code ok = MSG_OK;
+    enviar_mensaje(args->fd_cpu, &ok, sizeof(op_code));
+
+    free(args);
+    return NULL;
 }

@@ -24,6 +24,7 @@ typedef enum {
     OP_MUTEX_CREATE,
     OP_MUTEX_LOCK,
     OP_MUTEX_UNLOCK,
+    OP_SLEEP,
     OP_INVALID = -1,
 } op_code_cpu;
 
@@ -52,8 +53,9 @@ void mov_out(char* instruccion, t_registros* cpu);
 void jnz(char* instruccion, t_registros* cpu);
 void copy_mem(char* instruccion, t_registros* cpu);
 void noop(char* instruccion, t_registros* cpu);
-void syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid);
-void syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid);
-void syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid);
+void syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
+void syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
+void syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
+void syscall_sleep(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
 
 #endif

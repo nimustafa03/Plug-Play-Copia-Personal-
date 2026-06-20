@@ -24,7 +24,9 @@ extern t_list* listaMutex;
 // semáforos y mutex
 extern sem_t sem_hay_proceso_ready;
 extern sem_t sem_hay_cpu_libre;
-extern sem_t sem_hay_io_libre;
+extern sem_t sem_hay_sleep_libre;
+extern sem_t sem_hay_stdin_libre;  
+extern sem_t sem_hay_stdout_libre; 
 extern pthread_mutex_t mutex_listas;
 
 typedef enum {
@@ -44,11 +46,29 @@ typedef struct{
     int fd_cpu; //FD de la CPU que lo está ejecutando (-1 si ninguna)
 } Proceso;
 
+// representa una IO conectada y libre, con su tipo (STDIN/STDOUT/SLEEP)
+typedef struct {
+    int fd;
+    char* tipo; // STDIN, STDOUT o SLEEP
+} t_io_ks;
+
+
 typedef struct {
     int fd_cpu;
     uint32_t pid;
     int quantum;
 } t_args_rr;
+
+typedef struct {
+    uint32_t pid;
+    int timeout;
+} t_args_suspension;
+
+typedef struct {
+    int fd_cpu;     
+    uint32_t pid;
+    int tiempo;     
+} t_args_sleep;
 
 typedef struct {
     char* nombre;
@@ -68,11 +88,19 @@ void procesoABlock (Proceso* p);
 void procesoASuspBlock (Proceso* p);
 void procesoASuspReady (Proceso* p);
 void* timer_rr(void* arg);
+void* timer_suspension(void* arg); 
 t_mutex_ks* buscar_mutex(char* nombre);
 void mutex_create(char* nombre);
 void mutex_lock(char* nombre, Proceso* proceso);
 void mutex_unlock(char* nombre, Proceso* proceso);
 void atender_cpu_ks(int fd_cpu);
 Proceso* buscar_proceso_por_pid(uint32_t pid);
+
+// IO
+sem_t* semaforo_io_por_tipo(char* tipo); 
+void identificar_io_ks(int fd_io);
+t_io_ks* sacar_io_libre_por_tipo(char* tipo); 
+void liberar_io(t_io_ks* io); 
+void* atender_sleep_ks(void* arg); 
 
 #endif // FUNCIONES_KS_H
