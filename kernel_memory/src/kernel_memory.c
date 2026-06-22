@@ -23,6 +23,7 @@
 t_log*    logger;
 t_config* config;
 t_dictionary* diccionario_procesos;
+t_list tabla_segmentos_completa;
 
 // ── Variables de info del Kernel Scheduler ─────────────
 int fd_kernel_scheduler = 0;
@@ -45,7 +46,7 @@ void solicitar_desalojo(){
     enviar_mensaje(fd_kernel_scheduler, &mensaje, sizeof(op_code));
 }
 
-void compactar(uint32_t pid_proceso){
+void compactar(){
     // NICO M: Avisamos a KS que vamos a compactar y necesitamos que desaloje los CPUs.
 
     solicitar_desalojo();
@@ -57,24 +58,41 @@ void compactar(uint32_t pid_proceso){
     }
     if (mensaje_recibido != MSG_DESALOJO_REALIZADO) { return } // NICO M: Estaria bueno logear bien el error.
 
-    char key_proceso[12];
-    snprintf(key_proceso,sizeof(key_proceso), "%lu", (unsigned long)pid_proceso); 
-    
-    t_contexto_ejecucion* proceso = dictionary_get(diccionario_procesos,key_proceso);
+    int cursor;
 
-    int cursor = 0;
-
-    for ( int i = 0; i<list_size(proceso->tabla_segmentos), i++){
-        /* if segmento.base != cursor:
-                movemos segmento a cursor
-                actualizamos base a valor de cursor
-            movemos cursor a fin de segmento (segmento.tamaño)
+    for ( int i = 0; i<list_size(tabla_segmentos_completa), i++){
+        // t_segmento*segmento = list_get(i,tabla_segmentos_completa);
+        /* if segmento->base != cursor:
+                list_get(segmento->base,tabla_segmentos_completa)->base = cursor;
+                actualizar_segmento(segmento);
+            cursor += segmento->tamanio;
         */
     }
-
+    
     return
 }
+/*
+void actualizar_segmento(t_segmento*segmento) {
+    int final = segmento->base + segmento->tamanio;
 
+    crear lista de ids de memory sticks
+    por cada elemento de la lista de memory_sticks
+        if memory_stick->base <= segmento->base && memory_stick->base+tamanio >= segmento->final // ¿Empezas y terminas entre mi base y mi fin?
+            añadir memory_stick->id a lista
+            break; // Terminamos el loop para evitar repeticiones.
+        if segmento->base >= memory_stick->base && segmento->base <= memory_stick->base+tamanio // ¿No? ¿Entonces empezas entre mi base y mi fin?
+            añadir memory_stick->id a lista
+        if final >= memory_stick->base && final <= memory_stick->base+tamanio // ¿Entonces terminas entre mi base y mi fin?
+            añadir memory_stick->id a lista
+
+    // Si ninguna de las condiciones se cumplieron, quiere decir que el segmento no se encuentra ni total ni parcialmente en el memory stick iterado.
+    eliminar lista de ids del segmento.
+    asignamos como su nueva lista la lista que creamos en la funcion
+    return;
+}
+
+
+*/
 int espacio_libre_en_segmento(int id_Segmento){ 
     int espacio_libre = config_get_int_value(config,"ESPACIO_LIBRE_MOCK");
     return espacio_libre;

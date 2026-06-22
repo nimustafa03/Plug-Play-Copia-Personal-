@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <commons/string.h>   // string_itoa
 #include <commons/collections/dictionary.h>
+#include <commons/collections/list.h>
 #include "kernel_memory.h"
 
 t_contexto_ejecucion* crear_proceso(uint32_t pid, char*path, t_dictionary*diccionario){
@@ -61,4 +62,14 @@ char* devolver_instruccion(uint32_t pc, char** lista_instrucciones) {
     if (lista_instrucciones == NULL || lista_instrucciones[pc] == NULL)
         return NULL;
     return strdup(lista_instrucciones[pc]);
+}
+
+void encontrar_proximo_espacio_vacio_en_memoria(int&cursor, t_list tabla_segmentos) {
+    // t_segmento*segmento;
+
+    /* while(segmento = list_get(lista_instrucciones,cursor)){
+        cursor += segmento->tamanio;
+    }
+
+    */
 }
