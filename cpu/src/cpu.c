@@ -148,18 +148,35 @@ int main(int argc, char* argv[]) {
             char* instruccion = fetch(fd_km, pid, &contexto->registros);
             if (instruccion == NULL) {
                 log_error(logger_cpu, "Error en FETCH");
-                // CP2: aviso a KS que termino
-                op_code done = MSG_DONE;
-                enviar_mensaje(fd_ks, &done, sizeof(op_code));
-                enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
                 break;}
 
             // DECODE
-            op_code_cpu codop = decode(instruccion);
+            bool hubo_busqueda_destino = false; 
+            bool hubo_busqueda_origen = false; 
+
+            t_instruccion_traducida* instruccion_traducida = traducir_instruccion(instruccion);
+            free(instruccion);
+            if (instruccion_traducida == NULL) {
+                    op_code sf = MSG_SEG_FAULT;
+                    log_error(logger_cpu, "SEG_FAULT PID=%d", pid);
+                    enviar_mensaje(fd_ks, &sf, sizeof(op_code)); //envia MSG_SEGMENTATION_FAUL al KS
+            }
+            codeop = instruccion_traducida->opcode;
+
+            if (hubo_busqueda_destino == true){                         //si hubo traduccion, se pide el dato a km
+                int dato_destino = busqueda_dato(instruccion_traducida->destino,fd_ms);
+                if (dato_destino == NULL){//mensaje no esta en memoria
+                } 
+            }
+            if (hubo_busqueda_origen == true){                         
+                int dato_origen = busqueda_dato(instruccion_traducida->origen,fd_ms);
+                if (dato_origen == NULL){//mensaje no esta en memoria
+                }
+            }
 
             // EXECUTE
-            execute(codop, instruccion, &contexto->registros, fd_ks, contexto->pid);
-            free(instruccion);
+            execute(codeop, dato_destino, dato_origen, &contexto->registros, fd_ks, contexto->pid);
+            
 
             // INTERRUPCIONES
             

@@ -34,13 +34,19 @@ typedef struct {
     uint32_t pc;
 } t_fetch;
 
+typedef struct {
+    op_code_cpu opcode;
+    char destino[64];
+    char origen[64];
+} t_instruccion_traducida;
+
 // INTERRUPCIONES -> tipos.h
 
 // CICLO DE INSTRUCCION
 
 char* fetch(int conexion_servidor,uint32_t pid, t_registros* cpu);
-
-op_code_cpu decode(char* instruccion);
+char* traducir_instruccion(char* instruccion);
+op_code_cpu decode(char instruccion);
 
 // CP3 -> Para las syscalls del mutex necesita tambien el fd_ks y el PID
 void execute(op_code_cpu codeop, char* instruccion, t_registros* cpu, int fd_ks, uint32_t pid);

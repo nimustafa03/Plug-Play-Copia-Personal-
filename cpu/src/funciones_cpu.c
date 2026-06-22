@@ -224,3 +224,45 @@ void syscall_sleep(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu)
 
     cpu->PC++;
 }
+
+int memory_management_unit(direccion_logica){
+    int segmento = direccion_logica / //tamanio segmento;
+    int desplazamiento = direccion_logica % //tamanio segmento;
+    int direccion_fisica = segmento + desplazamiento;
+    if direccion_fisica > //tamanio segmento{
+        return MMU_ERROR
+    return direccion_fisica;
+}
+
+t_instruccion_traducida* traducir_instruccion(char* instruccion) {
+    t_instruccion_traducida* inst =malloc(sizeof(t_instruccion_traducida));
+
+    inst->destino[0] = '\0';
+    inst->origen[0] = '\0';
+    char opcode_texto[64] = "";
+    sscanf(instruccion,"%63s %63s %63s",opcode_texto,inst->destino,inst->origen);
+
+    inst->opcode = decode(opcode_texto);
+
+    if (strchr(inst->destino, '[') != NULL) {
+        int dir_fisica_destino =memory_management_unit(inst->destino);
+
+        if (dir_fisica_destino == MMU_ERROR) {
+            free(inst);
+            return NULL;
+        }
+        hubo_busqueda_destino = true;
+        sprintf(inst->destino,"%d",dir_fisica_destino);
+    }
+
+    if (strchr(inst->origen, '[') != NULL) {
+        int dir_fisica_origen = memory_management_unit(inst->origen);
+        if (dir_fisica_origen == MMU_ERROR) {
+            free(inst);
+            return NULL;
+        }
+        hubo_busqueda_origen = true;
+        sprintf(inst->origen,"%d",dir_fisica_origen);
+    }
+    return inst;
+}
