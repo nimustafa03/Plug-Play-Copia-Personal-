@@ -18,15 +18,15 @@ extern t_list* listaProcesosSuspBlock;
 extern t_list* listaProcesosSuspReady;
 extern t_list* listaProcesosExit;
 extern t_list* listaCPUsLibres; // FDs de CPUs que están libres esperando un proceso
-extern t_list* listaIOsLibres;  // lo mismo que arriba
+extern t_list* listaIOsLibres; // lo mismo que arriba
 extern t_list* listaMutex;
 
 // semáforos y mutex
 extern sem_t sem_hay_proceso_ready;
 extern sem_t sem_hay_cpu_libre;
-extern sem_t sem_hay_sleep_libre;
-extern sem_t sem_hay_stdin_libre;  
-extern sem_t sem_hay_stdout_libre; 
+extern sem_t sem_hay_sleep_libre; // IO de tipo SLEEP libre
+extern sem_t sem_hay_stdin_libre; // IO de tipo STDIN libre
+extern sem_t sem_hay_stdout_libre;// IO de tipo STDOUT libre
 extern pthread_mutex_t mutex_listas;
 
 typedef enum {
@@ -42,16 +42,16 @@ typedef enum {
 typedef struct{
     int id_proceso;
     estado_proceso estado;
-    int prioridad; // lo usa CMN
+    int prioridad; // lo usa CMN (puede cambiar por herencia)
+    int prioridad_original; // prioridad base, para restaurar tras herencia
     int fd_cpu; //FD de la CPU que lo está ejecutando (-1 si ninguna)
 } Proceso;
 
 // representa una IO conectada y libre, con su tipo (STDIN/STDOUT/SLEEP)
 typedef struct {
     int fd;
-    char* tipo; // STDIN, STDOUT o SLEEP
+    char* tipo; // "STDIN", "STDOUT" o "SLEEP"
 } t_io_ks;
-
 
 typedef struct {
     int fd_cpu;
@@ -59,15 +59,17 @@ typedef struct {
     int quantum;
 } t_args_rr;
 
+// argumentos para el timer de suspension por timeout
 typedef struct {
     uint32_t pid;
     int timeout;
 } t_args_suspension;
 
+// argumentos para el hilo que tramita un SLEEP de punta a punta
 typedef struct {
-    int fd_cpu;     
+    int fd_cpu; // CPU que pidio el sleep, bloqueada esperando respuesta
     uint32_t pid;
-    int tiempo;     
+    int tiempo; // ms a dormir
 } t_args_sleep;
 
 typedef struct {
@@ -88,7 +90,7 @@ void procesoABlock (Proceso* p);
 void procesoASuspBlock (Proceso* p);
 void procesoASuspReady (Proceso* p);
 void* timer_rr(void* arg);
-void* timer_suspension(void* arg); 
+void* timer_suspension(void* arg);
 t_mutex_ks* buscar_mutex(char* nombre);
 void mutex_create(char* nombre);
 void mutex_lock(char* nombre, Proceso* proceso);
@@ -97,10 +99,19 @@ void atender_cpu_ks(int fd_cpu);
 Proceso* buscar_proceso_por_pid(uint32_t pid);
 
 // IO
-sem_t* semaforo_io_por_tipo(char* tipo); 
-void identificar_io_ks(int fd_io);
-t_io_ks* sacar_io_libre_por_tipo(char* tipo); 
-void liberar_io(t_io_ks* io); 
-void* atender_sleep_ks(void* arg); 
+sem_t* semaforo_io_por_tipo(char* tipo); // resuelve que semaforo corresponde a un tipo de IO
+void identificar_io_ks(int fd_io); // recibe el tipo y registra la IO como libre
+t_io_ks* sacar_io_libre_por_tipo(char* tipo); // busca y remueve una IO libre del tipo dado
+void liberar_io(t_io_ks* io); // vuelve a poner la IO en listaIOsLibres
+void* atender_sleep_ks(void* arg); // arg es t_args_sleep*; corre en hilo propio
+
+// CMN
+extern t_list** colasMultinivel;
+extern char** algoritmosColas;
+extern int cantidadColas;
+Proceso* seleccionar_proceso_a_ejecutar(char* algoritmo, int* nivel_out);
+void desalojar_por_prioridad(Proceso* proceso_entrante);
+void cambiar_prioridad(Proceso* proceso, int nueva_prioridad); // herencia
+Proceso* buscar_proceso_por_pid_sin_lock(uint32_t pid); // version sin lock (ya adentro de mutex_listas)
 
 #endif // FUNCIONES_KS_H

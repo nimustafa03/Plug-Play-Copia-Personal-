@@ -6,6 +6,7 @@
 #include <utils/tipos.h>   
 
 
+// orden corregido para matchear el enum estado_proceso (estaba invertido SUSP_BLOCK/SUSP_READY)
 char const* estadosProcesos[] = {"NEW", "READY", "EXEC", "BLOCK", "EXIT", "SUSP_BLOCK", "SUSP_READY"};
 
 t_list* listaProcesosNew = NULL;
@@ -18,6 +19,13 @@ t_list* listaProcesosExit = NULL;
 t_list* listaCPUsLibres = NULL; // lista de FDs de CPUs libres 
 t_list* listaIOsLibres = NULL; // lo mismo que arriba, pero para IO
 t_list* listaMutex = NULL;
+
+// Colas Multinivel (CMN) - solo se usan cuando PLANIFICATION_ALGORITHM=CMN.
+// colasMultinivel[i] es la cola de READY de prioridad i (0 = mas prioritaria).
+// algoritmosColas[i] es el string del algoritmo de esa cola ("FIFO" o "RR").
+t_list** colasMultinivel = NULL;
+char** algoritmosColas = NULL;
+int cantidadColas = 0;
 
 // semáforos y mutex nuevos 
 sem_t sem_hay_proceso_ready;
@@ -48,6 +56,19 @@ void inicializarListasProcesos() {
   sem_init(&sem_hay_stdout_libre, 0, 0);
   // mutex para proteger acceso concurrente a las listas
   pthread_mutex_init(&mutex_listas, NULL);
+
+  // inicializar colas multinivel a partir de QUEUES_ALGORITHMS.
+  // config_get_array_value devuelve un char** terminado en NULL.
+  algoritmosColas = config_get_array_value(config, "QUEUES_ALGORITHMS");
+  cantidadColas = 0;
+  while (algoritmosColas[cantidadColas] != NULL) {
+      cantidadColas++;
+  }
+  colasMultinivel = malloc(sizeof(t_list*) * cantidadColas);
+  for (int i = 0; i < cantidadColas; i++) {
+      colasMultinivel[i] = list_create();
+  }
+  log_info(logger_ks, "CMN: %d colas de prioridad inicializadas", cantidadColas);
 }
 
 // crea el proceso PID 0 desde argv[2] y lo mete en NEW
@@ -56,6 +77,7 @@ void crear_proceso_inicial(char* path) {
     p->id_proceso = 0;
     p->estado = NEW;
     p->prioridad = 0;   // máxima prioridad
+    p->prioridad_original = 0; // base para herencia
     p->fd_cpu = -1;  // sin CPU asignada todavía
  
     // log obligatorio
@@ -66,9 +88,60 @@ void crear_proceso_inicial(char* path) {
     pthread_mutex_unlock(&mutex_listas);
 }
 
+// desalojo por cola mas prioritaria (QUEUE_PREEMPTION).
+// Si el proceso que entra a READY es mas prioritario que el proceso EXEC menos
+// prioritario, lo desaloja mandandole una interrupción a su CPU.
+// Debe llamarse con mutex_listas YA tomado.
+void desalojar_por_prioridad(Proceso* proceso_entrante) {
+  if (strcmp(config_get_string_value(config, "QUEUE_PREEMPTION"), "TRUE") != 0) return;
+  if (strcmp(config_get_string_value(config, "PLANIFICATION_ALGORITHM"), "CMN") != 0) return;
+
+  // buscar el proceso en EXEC menos prioritario (mayor numero de prioridad)
+  Proceso* victima = NULL;
+  for (int i = 0; i < list_size(listaProcesosExec); i++) {
+    Proceso* p = list_get(listaProcesosExec, i);
+    if (victima == NULL || p->prioridad > victima->prioridad) {
+      victima = p;
+    }
+  }
+
+  // solo desaloja si el entrante es estrictamente mas prioritario (numero menor)
+  if (victima == NULL || proceso_entrante->prioridad >= victima->prioridad) return;
+
+  log_info(logger_ks,
+    "## (%d) Prioridad: %d - Desalojado por cola más prioritaria por el proceso %d con prioridad %d",
+    victima->id_proceso, victima->prioridad, proceso_entrante->id_proceso, proceso_entrante->prioridad);
+
+  // interrumpir la CPU de la victima (mismo patron que timer_rr, motivo 1 = prioridad)
+  op_code interrupcion = MSG_INTERRUPT;
+  enviar_mensaje(victima->fd_cpu, &interrupcion, sizeof(op_code));
+
+  t_interrupcion intr;
+  intr.pid = victima->id_proceso;
+  intr.motivo = 1; // 1 = desalojo por prioridad (0 = fin de quantum)
+  enviar_mensaje(victima->fd_cpu, &intr, sizeof(t_interrupcion));
+  // el resto (proceso vuelve a READY, CPU liberada) lo maneja MSG_INTERRUPCION_ATENDIDA
+}
+
 void procesoAReady(Proceso* proceso){
-  list_add(listaProcesosReady, proceso);
-  log_info(logger_ks, "proceso %d agregado a lista READY", proceso->id_proceso);
+  char* algoritmo = config_get_string_value(config, "PLANIFICATION_ALGORITHM");
+
+  if (strcmp(algoritmo, "CMN") == 0) {
+    // encolar en la cola de su prioridad. La consigna dice que no se
+    // planifican procesos con prioridad fuera del rango de colas configuradas.
+    if (proceso->prioridad < 0 || proceso->prioridad >= cantidadColas) {
+      log_error(logger_ks, "## (%d) prioridad %d fuera de rango [0..%d], no se encola",
+                proceso->id_proceso, proceso->prioridad, cantidadColas - 1);
+      return;
+    }
+    list_add(colasMultinivel[proceso->prioridad], proceso);
+    log_info(logger_ks, "proceso %d agregado a cola CMN de prioridad %d",
+             proceso->id_proceso, proceso->prioridad);
+    desalojar_por_prioridad(proceso);
+  } else {
+    list_add(listaProcesosReady, proceso);
+    log_info(logger_ks, "proceso %d agregado a lista READY", proceso->id_proceso);
+  }
 }
 
 void procesoAExec(Proceso* proceso){
@@ -134,7 +207,7 @@ void* timer_rr(void* arg) {
     return NULL;
 }
 
-// Timer de suspensión - si al vencer SUSPENSION_TIMEOUT el proceso sigue en BLOCK, pasa a SUSP_BLOCK
+// timer de suspensión - si al vencer SUSPENSION_TIMEOUT el proceso sigue en BLOCK, pasa a SUSP_BLOCK
 void* timer_suspension(void* arg) {
     t_args_suspension* args = (t_args_suspension*) arg;
 
@@ -157,8 +230,31 @@ void* timer_suspension(void* arg) {
     return NULL;
 }
 
+// selecciona el proximo proceso a ejecutar segun el algoritmo activo.
+// Debe llamarse con mutex_listas YA tomado.
+// Para CMN, ademas devuelve por parametro el nivel/cola del que salio el proceso
+// (para saber que algoritmo — FIFO o RR — aplicarle). Para FIFO/RR, nivel = -1.
+// Devuelve NULL si no hay ningun proceso disponible.
+Proceso* seleccionar_proceso_a_ejecutar(char* algoritmo, int* nivel_out) {
+    *nivel_out = -1;
 
-// Planif. Corto plazo: implementa FIFO y RR
+    if (strcmp(algoritmo, "CMN") == 0) {
+        // recorre las colas de mayor a menor prioridad (0 es la mas prioritaria)
+        for (int i = 0; i < cantidadColas; i++) {
+            if (!list_is_empty(colasMultinivel[i])) {
+                *nivel_out = i;
+                return list_remove(colasMultinivel[i], 0);
+            }
+        }
+        return NULL; // todas las colas vacias
+    }
+
+    // FIFO / RR: una sola cola
+    if (list_is_empty(listaProcesosReady)) return NULL;
+    return list_remove(listaProcesosReady, 0);
+}
+
+// Planif. Corto plazo: implementa FIFO, RR y CMN
 void* iniciar_planificador_corto_plazo() {
   log_info(logger_ks, "Planificador de Corto Plazo iniciado.");
  
@@ -171,13 +267,18 @@ void* iniciar_planificador_corto_plazo() {
  
     pthread_mutex_lock(&mutex_listas);
  
-    if (list_is_empty(listaProcesosReady) || list_is_empty(listaCPUsLibres)) {
+    if (list_is_empty(listaCPUsLibres)) {
       pthread_mutex_unlock(&mutex_listas);
       continue;
     }
- 
-    // FIFO y RR toman el primero de READY
-    Proceso* proceso = list_remove(listaProcesosReady, 0);
+
+    int nivel = -1;
+    Proceso* proceso = seleccionar_proceso_a_ejecutar(algoritmo, &nivel);
+    if (proceso == NULL) {
+      pthread_mutex_unlock(&mutex_listas);
+      continue;
+    }
+
     int* fd_cpu_ptr = list_remove(listaCPUsLibres, 0);
     int  fd_cpu = *fd_cpu_ptr;
     free(fd_cpu_ptr);
@@ -190,8 +291,15 @@ void* iniciar_planificador_corto_plazo() {
     // envia el PID a la CPU para que empiece a ejecutar
     enviar_mensaje(fd_cpu, &proceso->id_proceso, sizeof(uint32_t));
  
-    // Round Robin: lanza el timer y atender_cpu_ks se encarga del resto.
-    if (strcmp(algoritmo, "RR") == 0) {
+    // Determina si hay que lanzar timer de quantum:
+    // - FIFO/RR plano: segun PLANIFICATION_ALGORITHM
+    // - CMN: segun el algoritmo de la cola de la que salio el proceso
+    char* algoritmo_efectivo = algoritmo;
+    if (strcmp(algoritmo, "CMN") == 0 && nivel >= 0) {
+        algoritmo_efectivo = algoritmosColas[nivel];
+    }
+
+    if (strcmp(algoritmo_efectivo, "RR") == 0) {
         t_args_rr* args = malloc(sizeof(t_args_rr));
         args->fd_cpu = fd_cpu;
         args->pid = proceso->id_proceso;
@@ -209,7 +317,7 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
   pthread_mutex_lock(&mutex_listas); // evita race conditions entre planificadores
 
   Proceso* procesoEncontrado = NULL;
-  int lanzar_timer_suspension = 0; 
+  int lanzar_timer_suspension = 0; // se decide adentro del lock, se ejecuta afuera
   log_debug(logger_ks, "Actualizando estado de Query %d de %s a %s", proceso->id_proceso, estadosProcesos[proceso->estado], estadosProcesos[nuevoEstado]);
   
   estado_proceso estado_anterior = proceso->estado;
@@ -224,12 +332,26 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
           }
           break;
         case READY:
-          for(int i = 0; i < list_size(listaProcesosReady); i++) {
-              Proceso* procesoTemporal= list_get(listaProcesosReady, i);
-              if(procesoTemporal->id_proceso == proceso->id_proceso) {
-                procesoEncontrado = list_remove(listaProcesosReady, i);
-                break;
+          // con CMN el proceso puede estar en cualquiera de las colas
+          // multinivel; con FIFO/RR esta en listaProcesosReady.
+          if (strcmp(config_get_string_value(config, "PLANIFICATION_ALGORITHM"), "CMN") == 0) {
+            for (int c = 0; c < cantidadColas && procesoEncontrado == NULL; c++) {
+              for (int i = 0; i < list_size(colasMultinivel[c]); i++) {
+                Proceso* procesoTemporal = list_get(colasMultinivel[c], i);
+                if (procesoTemporal->id_proceso == proceso->id_proceso) {
+                  procesoEncontrado = list_remove(colasMultinivel[c], i);
+                  break;
+                }
               }
+            }
+          } else {
+            for(int i = 0; i < list_size(listaProcesosReady); i++) {
+                Proceso* procesoTemporal= list_get(listaProcesosReady, i);
+                if(procesoTemporal->id_proceso == proceso->id_proceso) {
+                  procesoEncontrado = list_remove(listaProcesosReady, i);
+                  break;
+                }
+            }
           }
           break;
         case EXEC:
@@ -302,7 +424,10 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
             case BLOCK:
                 procesoEncontrado->estado = BLOCK;
                 procesoABlock(procesoEncontrado);
-                // arranca el timer de suspensión por timeout
+
+                // NO lanzamos el hilo aca - todavia estamos con mutex_listas tomado.
+                // Solo marcamos la bandera; el pthread_create real pasa
+                // a hacerse despues de soltar el lock, al final de la funcion.
                 lanzar_timer_suspension = 1;
                 break;
             case SUSP_READY:
@@ -330,7 +455,10 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
     }
     pthread_mutex_unlock(&mutex_listas); // unlock al salir normalmente
 
-    // recien aca, con mutex_listas ya liberado, se crea el hilo del timer
+    // recien aca, con mutex_listas ya liberado, creamos el hilo del timer.
+    // Usamos proceso->id_proceso (no procesoEncontrado): el struct sigue vivo
+    // en memoria - nada en este código hace free() de un Proceso* - asi que
+    // es seguro leerlo fuera del lock.
     if (lanzar_timer_suspension) {
         t_args_suspension* args_susp = malloc(sizeof(t_args_suspension));
         args_susp->pid = proceso->id_proceso;
@@ -367,6 +495,15 @@ void mutex_create(char* nombre) {
   log_info(logger_ks, "## MUTEX_CREATE: mutex '%s' creado", nombre);
 }
 
+// cambia la prioridad de un proceso con el log obligatorio.
+// Debe llamarse con mutex_listas YA tomado.
+void cambiar_prioridad(Proceso* proceso, int nueva_prioridad) {
+  if (proceso->prioridad == nueva_prioridad) return;
+  log_info(logger_ks, "## %d Cambio de prioridad: %d - %d",
+           proceso->id_proceso, proceso->prioridad, nueva_prioridad);
+  proceso->prioridad = nueva_prioridad;
+}
+
 void mutex_lock(char* nombre, Proceso* proceso) {
   pthread_mutex_lock(&mutex_listas);
   t_mutex_ks* m = buscar_mutex(nombre);
@@ -387,6 +524,15 @@ void mutex_lock(char* nombre, Proceso* proceso) {
       // ocupado, bloquear el proceso
       log_info(logger_ks, "## (%d) MUTEX_LOCK: bloqueado esperando mutex '%s'", proceso->id_proceso, nombre);
       list_add(m->cola_bloqueados, proceso);
+
+      // herencia de prioridades - si el proceso que se bloquea es más
+      // prioritario (numero menor) que el tomador actual, el tomador hereda
+      // esa prioridad para liberar el mutex cuanto antes.
+      Proceso* tomador = buscar_proceso_por_pid_sin_lock(m->pid_tomador);
+      if (tomador != NULL && proceso->prioridad < tomador->prioridad) {
+          cambiar_prioridad(tomador, proceso->prioridad);
+      }
+
       pthread_mutex_unlock(&mutex_listas);
       actualizarEstadoProceso(proceso, BLOCK);
   }
@@ -407,6 +553,11 @@ void mutex_unlock(char* nombre, Proceso* proceso) {
   }
 
   log_info(logger_ks, "## (%d) Libera el Mutex %s", proceso->id_proceso, nombre);
+
+  // restaurar la prioridad original del que libera (por si habia heredado).
+  if (proceso->prioridad != proceso->prioridad_original) {
+      cambiar_prioridad(proceso, proceso->prioridad_original);
+  }
 
   if (list_is_empty(m->cola_bloqueados)) {
       m->pid_tomador = -1;
@@ -463,10 +614,13 @@ void atender_cpu_ks(int fd_cpu) {
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
                 int* motivo = recibir_mensaje(fd_cpu, &size);
                 Proceso* proceso = buscar_proceso_por_pid(*pid_ptr);
+                if (*motivo == 1) {
+                    log_info(logger_ks, "## (%d) - Desalojado por cola más prioritaria", proceso->id_proceso);
+                } else {
+                    log_info(logger_ks, "## (%d) - Desalojado por fin de quantum", proceso->id_proceso);
+                }
                 free(pid_ptr);
                 free(motivo);
-
-                log_info(logger_ks, "## (%d) - Desalojado por fin de quantum", proceso->id_proceso);
 
                 pthread_mutex_lock(&mutex_listas);
                 int* fd_libre3 = malloc(sizeof(int));
@@ -511,6 +665,9 @@ void atender_cpu_ks(int fd_cpu) {
                 break;
             }
             case MSG_SLEEP: {
+                // CPU pide SLEEP. No respondemos nada por este socket todavia -
+                // atender_sleep_ks se encarga de hablar con la IO y recien al final
+                // manda la respuesta a fd_cpu para destrabarla.
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
                 int* tiempo_ptr = recibir_mensaje(fd_cpu, &size);
 
@@ -534,12 +691,12 @@ void atender_cpu_ks(int fd_cpu) {
     }
 }
 
-Proceso* buscar_proceso_por_pid(uint32_t pid) {
+// Version sin lock: debe llamarse con mutex_listas YA tomado.
+Proceso* buscar_proceso_por_pid_sin_lock(uint32_t pid) {
     t_list* listas[] = {
         listaProcesosNew, listaProcesosReady, listaProcesosExec,
         listaProcesosBlock, listaProcesosSuspBlock, listaProcesosSuspReady
     };
-    pthread_mutex_lock(&mutex_listas);
     Proceso* resultado = NULL;
     for (int l = 0; l < 6 && resultado == NULL; l++) {
         for (int i = 0; i < list_size(listas[l]) && resultado == NULL; i++) {
@@ -549,11 +706,26 @@ Proceso* buscar_proceso_por_pid(uint32_t pid) {
             }
         }
     }
+    // con CMN los procesos READY viven en colasMultinivel.
+    for (int c = 0; c < cantidadColas && resultado == NULL; c++) {
+        for (int i = 0; i < list_size(colasMultinivel[c]) && resultado == NULL; i++) {
+            Proceso* p = list_get(colasMultinivel[c], i);
+            if (p->id_proceso == (int)pid) {
+                resultado = p;
+            }
+        }
+    }
+    return resultado;
+}
+
+Proceso* buscar_proceso_por_pid(uint32_t pid) {
+    pthread_mutex_lock(&mutex_listas);
+    Proceso* resultado = buscar_proceso_por_pid_sin_lock(pid);
     pthread_mutex_unlock(&mutex_listas);
     return resultado;
 }
 
-// CheckPoint3: IO ------------------------------------------------------------
+// CP3: IO ------------------------------------------------------------
 
 // Devuelve el semáforo correspondiente al tipo de IO dado.
 sem_t* semaforo_io_por_tipo(char* tipo) {
@@ -616,7 +788,7 @@ void liberar_io(t_io_ks* io) {
 // 1) pasa el proceso a BLOCK (dispara timer de suspensión automáticamente)
 // 2) espera una IO de tipo SLEEP libre
 // 3) le manda la orden, espera el MSG_DONE
-// 4) libera la IO, pasa el proceso a READY/SUSP_READY, y recién ahí responde a la CPU
+// 4) libera la IO, pasa el proceso a READY, y recien ahi responde a la CPU
 void* atender_sleep_ks(void* arg) {
     t_args_sleep* args = (t_args_sleep*) arg;
 
