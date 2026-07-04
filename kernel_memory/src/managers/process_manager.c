@@ -36,6 +36,8 @@ static t_contexto* crear_contexto_inicial(void) {
   contexto->registros.si = 0;
   contexto->registros.di = 0;
 
+  contexto->tabla_segmentos = list_create();
+
   return contexto;
 }
 
@@ -51,7 +53,7 @@ bool crear_proceso(uint32_t pid, char* script_path) {
 
   proceso->pid = pid;
   proceso->script_path = strdup(script_path);
-  proceso->tabla_segmentos = list_create();
+  
   proceso->contexto = crear_contexto_inicial();
 
   dictionary_put(administrador.procesos_por_pid, key, proceso);
@@ -85,8 +87,8 @@ t_segmento* obtener_segmento(uint32_t pid, uint32_t id_segmento) {
     return NULL;
   }
 
-  for (int i = 0; i < list_size(proceso->tabla_segmentos); i++) {
-    t_segmento* segmento = list_get(proceso->tabla_segmentos, i);
+  for (int i = 0; i < list_size(proceso->contexto->tabla_segmentos); i++) {
+    t_segmento* segmento = list_get(proceso->contexto->tabla_segmentos, i);
 
     if (segmento->id_segmento == id_segmento) {
       return segmento;
@@ -112,7 +114,7 @@ t_resultado_crear_segmento crear_segmento(uint32_t pid, uint32_t id_segmento, ui
   }
 
   if (!hay_hueco_contiguo(tamanio)) {
-    if (requiere_compactacion(tamanio)) {
+    if (requiere_compactacion(tamanio)) {  // Nico M: ¿No estamos chequeando dos veces lo mismo? requiere_compactacion() ya chequea si hay hueco contiguo.
       return CREAR_SEGMENTO_REQUIERE_COMPACTACION;
     }
     return CREAR_SEGMENTO_SIN_MEMORIA;
@@ -130,32 +132,32 @@ t_resultado_crear_segmento crear_segmento(uint32_t pid, uint32_t id_segmento, ui
   segmento->base = base;
   segmento->tamanio = tamanio;
 
-  list_add(proceso->tabla_segmentos, segmento);
+  list_add(proceso->contexto->tabla_segmentos, segmento);
 
   return CREAR_SEGMENTO_OK;
 }
 
 t_list* obtener_todos_los_segmentos(void) {
   t_list* segmentos_ocupados = list_create();
-  t_list* pids = dictionary_keys(administrador.procesos_por_pid);
+  t_list* pids = dictionary_keys(administrador.procesos_por_pid); // Obtenemos una lista de los pids de los procesos.
 
-  for (int i = 0; i < list_size(pids); i++) {
+  for (int i = 0; i < list_size(pids); i++) { // Por cada proceso indexado en el diccionario de procesos...
     char* key = list_get(pids, i);
-    t_proceso_memoria* proceso = dictionary_get(administrador.procesos_por_pid, key);
+    t_proceso_memoria* proceso = dictionary_get(administrador.procesos_por_pid, key); // Obtenemos un puntero al proceso correspondiente a cada pid.
 
-    for (int j = 0; j < list_size(proceso->tabla_segmentos); j++) {
+    for (int j = 0; j < list_size(proceso->tabla_segmentos); j++) {  // Por cada segmento de la tabla de segmentos de cada proceso...
       t_segmento* segmento = list_get(proceso->tabla_segmentos, j);
 
       t_segmento_ocupado* ocupado = malloc(sizeof(t_segmento_ocupado));
-      ocupado->proceso = proceso;
+      ocupado->proceso = proceso; // Indexamos un puntero al segmento y otro al proceso al que pertenece.
       ocupado->segmento = segmento;
 
-      list_add(segmentos_ocupados, ocupado);
+      list_add(segmentos_ocupados, ocupado); // Añadimos el indice del segmento a la lista.
     }
   }
 
-  list_destroy(pids);
-  return segmentos_ocupados;
+  list_destroy(pids); // Eliminamos de memoria la lista de pids pero no liberamos sus elementos.
+  return segmentos_ocupados; // Devolvemos la lista de cada segmento ocupado en memoria.
 }
 
 bool destruir_proceso(uint32_t pid) {

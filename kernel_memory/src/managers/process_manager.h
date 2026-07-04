@@ -25,6 +25,6 @@ t_resultado_crear_segmento crear_segmento(
 bool eliminar_segmento(uint32_t pid, uint32_t id_segmento);
 
 t_segmento* obtener_segmento(uint32_t pid, uint32_t id_segmento);
-t_list* obtener_todos_los_segmentos(void);
+t_list* obtener_todos_los_segmentos(void); // Devuelve una lista con punteros a indices que guardan punteros a cada segmento en memoria y otro puntero a su proceso.
 
 #endif

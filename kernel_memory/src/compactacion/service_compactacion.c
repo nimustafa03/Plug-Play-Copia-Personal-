@@ -22,18 +22,18 @@ static void destruir_segmento_ocupado(void* elemento) {
 }
 
 void ejecutar_compactacion(void) {
-  t_list* segmentos_ocupados = obtener_todos_los_segmentos();
+  t_list* segmentos_ocupados = obtener_todos_los_segmentos(); // Obtenemos una lista de punteros a indices de segmentos y sus procesos.
 
-  list_sort(segmentos_ocupados, segmento_ocupado_menor_base);
+  list_sort(segmentos_ocupados, segmento_ocupado_menor_base); // Los ordenamos de menor a mayor base.
 
   uint32_t cursor = 0;
 
-  for (int i = 0; i < list_size(segmentos_ocupados); i++) {
+  for (int i = 0; i < list_size(segmentos_ocupados); i++) { // Por cada segmento...
     t_segmento_ocupado* ocupado = list_get(segmentos_ocupados, i);
     t_segmento* segmento = ocupado->segmento;
 
-    segmento->base = cursor;
-    cursor += segmento->tamanio;
+    segmento->base = cursor; // Establecemos su base al valor del cursor.
+    cursor += segmento->tamanio; // Movemos el cursor al final del segmento.
   }
 
   reconstruir_huecos_desde(cursor);

@@ -43,12 +43,12 @@ typedef struct {
 
 typedef struct {
     t_registros registros;
+    t_list* tabla_segmentos;
 } t_contexto;
 
 typedef struct {
     uint32_t pid;
     char* script_path;
-    t_list* tabla_segmentos;
     t_contexto* contexto;
 } t_proceso_memoria;
 
