@@ -60,6 +60,8 @@ typedef enum {
     MSG_MEMORIA_CORRUPTA = 29, // KM cuando le informa a KS de una corrupción de memoria debido a una desconexión de un Memory Stick.
     MSG_SOLICITAR_DESALOJO = 30, // KM cuando le pide a KS que desaloje CPUs para realizar compactación.
     MSG_DESALOJO_REALIZADO = 31, // KS Le informa a KM que desalojó las CPUs.
+    MSG_MEM_ALLOC = 32, // KS Le informa A KM que quiere crear un nuevo segmento.
+    MSG_MEM_FREE = 33,  // KS Le informa a KM que quiere eliminar un segmento.
     
 } op_code;
 

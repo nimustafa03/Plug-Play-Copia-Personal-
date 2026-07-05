@@ -114,7 +114,7 @@ t_resultado_crear_segmento crear_segmento(uint32_t pid, uint32_t id_segmento, ui
   }
 
   if (!hay_hueco_contiguo(tamanio)) {
-    if (requiere_compactacion(tamanio)) {  // Nico M: ¿No estamos chequeando dos veces lo mismo? requiere_compactacion() ya chequea si hay hueco contiguo.
+    if (requiere_compactacion(tamanio)) {
       return CREAR_SEGMENTO_REQUIERE_COMPACTACION;
     }
     return CREAR_SEGMENTO_SIN_MEMORIA;
@@ -145,8 +145,8 @@ t_list* obtener_todos_los_segmentos(void) {
     char* key = list_get(pids, i);
     t_proceso_memoria* proceso = dictionary_get(administrador.procesos_por_pid, key); // Obtenemos un puntero al proceso correspondiente a cada pid.
 
-    for (int j = 0; j < list_size(proceso->tabla_segmentos); j++) {  // Por cada segmento de la tabla de segmentos de cada proceso...
-      t_segmento* segmento = list_get(proceso->tabla_segmentos, j);
+    for (int j = 0; j < list_size(proceso->contexto->tabla_segmentos); j++) {  // Por cada segmento de la tabla de segmentos de cada proceso...
+      t_segmento* segmento = list_get(proceso->contexto->tabla_segmentos, j);
 
       t_segmento_ocupado* ocupado = malloc(sizeof(t_segmento_ocupado));
       ocupado->proceso = proceso; // Indexamos un puntero al segmento y otro al proceso al que pertenece.
@@ -169,8 +169,8 @@ bool destruir_proceso(uint32_t pid) {
 
   if (proceso == NULL) return false;
 
-  for (int i = 0; i < list_size(proceso->tabla_segmentos); i++) {
-    t_segmento* segmento = list_get(proceso->tabla_segmentos, i);
+  for (int i = 0; i < list_size(proceso->contexto->tabla_segmentos); i++) {
+    t_segmento* segmento = list_get(proceso->contexto->tabla_segmentos, i);
     liberar_espacio(segmento->base, segmento->tamanio);
   }
 
@@ -187,11 +187,11 @@ bool eliminar_segmento(uint32_t pid, uint32_t id_segmento)
     return false;
   }
 
-  for (int i = 0; i < list_size(proceso->tabla_segmentos); i++) {
-    t_segmento* segmento = list_get(proceso->tabla_segmentos, i);
+  for (int i = 0; i < list_size(proceso->contexto->tabla_segmentos); i++) {
+    t_segmento* segmento = list_get(proceso->contexto->tabla_segmentos, i);
 
     if (segmento->id_segmento == id_segmento) {
-      list_remove(proceso->tabla_segmentos, i);
+      list_remove(proceso->contexto->tabla_segmentos, i);
 
       liberar_espacio(segmento->base, segmento->tamanio);
       free(segmento);
@@ -224,7 +224,7 @@ static void destruir_proceso_memoria(void* elemento) {
 
   free(proceso->script_path);
 
-  list_destroy_and_destroy_elements(proceso->tabla_segmentos, destruir_segmento);
+  list_destroy_and_destroy_elements(proceso->contexto->tabla_segmentos, destruir_segmento);
 
   destruir_contexto(proceso->contexto);
 
