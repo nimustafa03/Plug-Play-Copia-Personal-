@@ -292,10 +292,8 @@ bool eliminar_segmento(uint32_t pid, uint32_t id_segmento)
 
 void destruir_segmento_ocupado(void* elemento)
 {
-    free(elemento);
+  free(elemento);
 }
-
-list_destroy_and_destroy_elements(segmentos_ocupados, destruir_segmento_ocupado);
 
 
 
