@@ -63,13 +63,3 @@ char* devolver_instruccion(uint32_t pc, char** lista_instrucciones) {
         return NULL;
     return strdup(lista_instrucciones[pc]);
 }
-
-void encontrar_proximo_espacio_vacio_en_memoria(int&cursor, t_list tabla_segmentos) {
-    // t_segmento*segmento;
-
-    /* while(segmento = list_get(lista_instrucciones,cursor)){
-        cursor += segmento->tamanio;
-    }
-
-    */
-}
