@@ -24,6 +24,6 @@ void conectar_memory_stick(uint32_t tamanio, int socket);
 static t_hueco* buscar_best_fit(uint32_t tamanio);
 static t_hueco* buscar_worst_fit(uint32_t tamanio);
 
-void reconstruir_huecos_desde(uint32_t base);
+void reconstruir_huecos_desde(uint32_t base); // Marca todo el espacio de memoria desde la base hasta el fin de memoria como hueco libre.
 
 #endif

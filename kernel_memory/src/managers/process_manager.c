@@ -1,14 +1,19 @@
-#include "process_manager.h"
-
+#include "../estructuras.h"
 #include <stdlib.h>
 #include <commons/collections/dictionary.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
+#include <commons/log.h>
 #include <commons/string.h>
 #include <commons/collections/list.h>
+#include "../handlers/handler_cpu.h"
 #include "memory_manager.h"
 
+#include "process_manager.h"
+
 static t_administrador_procesos administrador;
+extern t_log*logger;
 
 void inicializar_administrador_procesos(void) {
   administrador.procesos_por_pid = dictionary_create();
@@ -41,11 +46,62 @@ static t_contexto* crear_contexto_inicial(void) {
   return contexto;
 }
 
-bool crear_proceso(uint32_t pid, char* script_path) {
+char*devolver_instruccion(uint32_t pc,char*lista_instrucciones){
+    char*instruccion;
+    int contador = 0; // NICO M: Según los ejemplos, el PC tomaría la primera linea de una lista de instrucciones como 1.
+    char*copia_lista_instrucciones = string_duplicate(lista_instrucciones); // NICO M: CREO que string_split() rompe el string que se le pase. No queremos que la lista de instrucciones se rompa.
+    char** tokenizado = string_split(copia_lista_instrucciones,"\n"); 
+    free(copia_lista_instrucciones);
+    do
+    {
+        instruccion = tokenizado[contador-1];
+        contador++;
+    } while (contador-1 != pc && tokenizado[contador-1] != NULL); // NICO M: Nos movemos por el array tokenizado hasta donde nos indique el PC, siempre y cuando no nos encontremos en un espacio inválido, lo que indicaría que el PC se sale del rango de la lista.
+    string_array_destroy(tokenizado); // NICO M: Eliminamos el tokenizado, para liberar memoria.
+
+    return instruccion;
+}
+
+void*manejar_proceso(void*arg){
+  t_args_proceso*args = (t_args_proceso*) arg;
+  int fd_cpu = args->fd_cpu;
+  t_proceso_memoria*proceso = args->proceso;
+
+  char * instrucciones = proceso->script_path;
+  log_info(logger, "## PID: %d - Imprimiendo lista de instrucciones para el proceso...", proceso->pid);
+  log_info(logger,instrucciones);
+
+  while (proceso->contexto->proximo_a_detener){
+    if (esperar_pedido_de_instruccion(fd_cpu)){
+      uint32_t pc = recibir_pc(fd_cpu);
+
+      char*proxima_instruccion = devolver_instruccion(pc, instrucciones);
+
+      if (proxima_instruccion == NULL)
+      {
+        log_error(logger, "## PID: %d - Obtener instruccion: %d - INSTRUCCION FUERA DE RANGO.", proceso->pid, pc);
+        enviar_confirmacion_a_CPU(fd_cpu,false);
+
+      }
+      else
+      {
+        log_info(logger,"## PID: %d - Obtener instrucción: %d - Instrucción: %s", proceso->pid,pc,proxima_instruccion);
+        enviar_confirmacion_a_CPU(fd_cpu,true);
+        enviar_proxima_instruccion_a_cpu(fd_cpu,proxima_instruccion);
+      }
+    }
+  }
+  destruir_proceso(proceso->pid);
+  int*returnval = malloc(sizeof(1));
+  pthread_exit(returnval);
+}
+
+bool crear_proceso(uint32_t pid, char* script_path, int fd_cpu) {
   char* key = pid_to_key(pid);
 
   if (dictionary_has_key(administrador.procesos_por_pid, key)) {
     free(key);
+    log_warning(logger, "## ERROR: LA PID %d CORRESPONDE A UN PROCESO YA EXISTENTE.", *key);
     return false;
   }
 
@@ -57,6 +113,15 @@ bool crear_proceso(uint32_t pid, char* script_path) {
   proceso->contexto = crear_contexto_inicial();
 
   dictionary_put(administrador.procesos_por_pid, key, proceso);
+
+  t_args_proceso*args = malloc(sizeof(t_args_proceso));
+  args->fd_cpu = fd_cpu;
+  args->proceso = proceso;
+  pthread_t nuevo_poceso;
+  pthread_create(&nuevo_poceso, NULL, manejar_proceso,args);
+  free(args);
+
+  enviar_contexto_ejecucion_a_cpu(fd_cpu, *proceso->contexto);
 
   free(key);
   return true;
@@ -160,6 +225,27 @@ t_list* obtener_todos_los_segmentos(void) {
   return segmentos_ocupados; // Devolvemos la lista de cada segmento ocupado en memoria.
 }
 
+static void destruir_segmento(void* elemento) {
+  t_segmento* segmento = elemento;
+  free(segmento);
+}
+
+static void destruir_contexto(t_contexto* contexto) {
+  free(contexto);
+}
+
+static void destruir_proceso_memoria(void* elemento) {
+  t_proceso_memoria* proceso = elemento;
+
+  free(proceso->script_path);
+
+  list_destroy_and_destroy_elements(proceso->contexto->tabla_segmentos, destruir_segmento);
+
+  destruir_contexto(proceso->contexto);
+
+  free(proceso);
+}
+
 bool destruir_proceso(uint32_t pid) {
   char* key = pid_to_key(pid);
 
@@ -203,10 +289,6 @@ bool eliminar_segmento(uint32_t pid, uint32_t id_segmento)
   return false;
 }
 
-static void destruir_segmento(void* elemento) {
-  t_segmento* segmento = elemento;
-  free(segmento);
-}
 
 void destruir_segmento_ocupado(void* elemento)
 {
@@ -215,21 +297,7 @@ void destruir_segmento_ocupado(void* elemento)
 
 list_destroy_and_destroy_elements(segmentos_ocupados, destruir_segmento_ocupado);
 
-static void destruir_contexto(t_contexto* contexto) {
-  free(contexto);
-}
 
-static void destruir_proceso_memoria(void* elemento) {
-  t_proceso_memoria* proceso = elemento;
-
-  free(proceso->script_path);
-
-  list_destroy_and_destroy_elements(proceso->contexto->tabla_segmentos, destruir_segmento);
-
-  destruir_contexto(proceso->contexto);
-
-  free(proceso);
-}
 
 void destruir_administrador_procesos(void) {
   dictionary_destroy_and_destroy_elements( administrador.procesos_por_pid, destruir_proceso_memoria);

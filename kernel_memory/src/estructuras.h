@@ -44,6 +44,7 @@ typedef struct {
 typedef struct {
     t_registros registros;
     t_list* tabla_segmentos;
+    bool proximo_a_detener;
 } t_contexto;
 
 typedef struct {
@@ -95,5 +96,10 @@ typedef struct
     t_proceso_memoria* proceso;
     t_segmento* segmento;
 } t_segmento_ocupado;
+
+typedef struct {
+    int fd_cpu;
+    t_proceso_memoria* proceso;
+} t_args_proceso;
 
 #endif
