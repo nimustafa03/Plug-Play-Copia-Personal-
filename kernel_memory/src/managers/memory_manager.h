@@ -3,8 +3,9 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "../estructuras.h" // t_estrategia_asignacion
 
-void inicializar_administrador_memoria(char* estrategia);
+void inicializar_administrador_memoria(t_estrategia_asignacion estrategia);
 void destruir_administrador_memoria(void);
 
 void conectar_memory_stick(uint32_t tamanio, int socket);
@@ -18,11 +19,6 @@ bool requiere_compactacion(uint32_t tamanio);
 
 uint32_t obtener_memoria_total(void);
 uint32_t obtener_memoria_libre_total(void);
-
-void conectar_memory_stick(uint32_t tamanio, int socket);
-
-static t_hueco* buscar_best_fit(uint32_t tamanio);
-static t_hueco* buscar_worst_fit(uint32_t tamanio);
 
 void reconstruir_huecos_desde(uint32_t base); // Marca todo el espacio de memoria desde la base hasta el fin de memoria como hueco libre.
 

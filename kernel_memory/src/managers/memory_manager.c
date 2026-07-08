@@ -10,6 +10,12 @@
 
 static t_administrador_memoria administrador;
 
+// forward declarations de funciones static (se usan antes de definirse)
+static void registrar_hueco(uint32_t base, uint32_t tamanio);
+static void insertar_hueco_ordenado(t_hueco* nuevo_hueco);
+static void consolidar_huecos_contiguos(void);
+static void destruir_hueco(void* elemento);
+
 void inicializar_administrador_memoria(t_estrategia_asignacion estrategia) {
   administrador.memory_sticks = list_create();
   administrador.huecos_libres = list_create();
