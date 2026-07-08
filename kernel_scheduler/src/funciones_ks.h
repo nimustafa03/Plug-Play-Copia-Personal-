@@ -4,9 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>          // para uint32_t en Proceso
+#include <stdbool.h>         // bool en_compactacion, retorno de km_mem_*
 #include <pthread.h>
 #include <semaphore.h>       // para sem_t
 #include <commons/collections/list.h>
+#include <utils/mensajes.h>  // op_code (nombre_syscall)
 #include "gestor_ks.h"       // trae logger_ks, config, fd_km, fd_servidor_ks
 
 
@@ -26,8 +28,15 @@ extern sem_t sem_hay_proceso_ready;
 extern sem_t sem_hay_cpu_libre;
 extern sem_t sem_hay_sleep_libre; // IO de tipo SLEEP libre
 extern sem_t sem_hay_stdin_libre; // IO de tipo STDIN libre
-extern sem_t sem_hay_stdout_libre;// IO de tipo STDOUT libre
+extern sem_t sem_hay_stdout_libre; // IO de tipo STDOUT libre
 extern pthread_mutex_t mutex_listas;
+
+// comunicacion KS->KM. fd_km es UN solo socket, asi que todo request a KM
+// (MEM_ALLOC/MEM_FREE/EXIT) se serializa con este mutex para no intercalar mensajes.
+extern pthread_mutex_t mutex_km;
+extern int contador_pids; // generador incremental de PIDs (PID 0 = proceso inicial)
+extern volatile bool en_compactacion; // el corto plazo no despacha mientras se compacta
+extern sem_t sem_desalojo_confirmado; // 1 post por cada CPU que confirma el desalojo por compactación
 
 typedef enum {
   NEW,
@@ -45,6 +54,7 @@ typedef struct{
     int prioridad; // lo usa CMN (puede cambiar por herencia)
     int prioridad_original; // prioridad base, para restaurar tras herencia
     int fd_cpu; //FD de la CPU que lo está ejecutando (-1 si ninguna)
+    long orden_suspension; // orden en que se suspendio (desempate de mediano plazo: menor = mas viejo)
 } Proceso;
 
 // representa una IO conectada y libre, con su tipo (STDIN/STDOUT/SLEEP)
@@ -71,6 +81,14 @@ typedef struct {
     uint32_t pid;
     int tiempo; // ms a dormir
 } t_args_sleep;
+
+// argumentos para los hilos que tramitan STDIN / STDOUT de punta a punta
+typedef struct {
+    int fd_cpu; // CPU bloqueada esperando el MSG_OK final
+    uint32_t pid;
+    uint32_t dir_logica; // dirección logica donde leer/escribir en memoria de usuario
+    uint32_t tamanio; // cantidad de bytes
+} t_args_io_mem;
 
 typedef struct {
     char* nombre;
@@ -113,5 +131,32 @@ Proceso* seleccionar_proceso_a_ejecutar(char* algoritmo, int* nivel_out);
 void desalojar_por_prioridad(Proceso* proceso_entrante);
 void cambiar_prioridad(Proceso* proceso, int nueva_prioridad); // herencia
 Proceso* buscar_proceso_por_pid_sin_lock(uint32_t pid); // version sin lock (ya adentro de mutex_listas)
+
+// Creacion de procesos y PIDs
+uint32_t generar_pid();
+void crear_proceso(char* path, int prioridad); // generaliza crear_proceso_inicial (INIT_PROC)
+
+// Finalizacion de proceso (EXIT / SEG_FAULT): avisa a KM y loguea el fin
+void finalizar_proceso(Proceso* proceso, char* motivo);
+
+// Comunicacion con Kernel Memory (todo serializado con mutex_km)
+bool km_mem_alloc(uint32_t pid, uint32_t id_segmento, uint32_t tamanio);
+bool km_mem_free(uint32_t pid, uint32_t id_segmento);
+void km_notificar_exit(uint32_t pid);
+void manejar_solicitud_desalojo(uint32_t pid_issuer); // desalojo por compactacion (inline en MEM_ALLOC)
+
+// Planificacion de mediano plazo (des-suspensión SUSP_READY -> READY)
+void intentar_desuspender_procesos();
+
+// Planificacion de largo plazo - BSOD por memoria corrupta
+void bsod();
+
+// IO STDIN / STDOUT (bloquean el proceso y responden a la CPU al finalizar)
+void* atender_stdin_ks(void* arg);   // arg es t_args_io_mem*
+void* atender_stdout_ks(void* arg);  // arg es t_args_io_mem*
+void finalizar_io_y_desbloquear(Proceso* proceso); // SUSP_BLOCK->SUSP_READY o READY
+
+// Log obligatorio "## (<PID>) - Solicito syscall: <NOMBRE>"
+const char* nombre_syscall(op_code cod);
 
 #endif // FUNCIONES_KS_H

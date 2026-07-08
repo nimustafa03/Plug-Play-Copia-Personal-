@@ -62,7 +62,10 @@ typedef enum {
     MSG_DESALOJO_REALIZADO = 31, // KS Le informa a KM que desalojó las CPUs.
     MSG_MEM_ALLOC = 32, // KS Le informa A KM que quiere crear un nuevo segmento.
     MSG_MEM_FREE = 33,  // KS Le informa a KM que quiere eliminar un segmento.
-    
+
+    MSG_SEG_FAULT = 34, // CPU informa a KS que el proceso debe finalizar por Segmentation Fault.
+    MSG_INIT_PROC = 35, // CPU pide a KS crear un nuevo proceso (syscall INIT_PROC).
+
 } op_code;
 
 #endif // MENSAJES_H
