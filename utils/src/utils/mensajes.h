@@ -65,7 +65,9 @@ typedef enum {
 
     MSG_SEG_FAULT = 34, // CPU informa a KS que el proceso debe finalizar por Segmentation Fault.
     MSG_INIT_PROC = 35, // CPU pide a KS crear un nuevo proceso (syscall INIT_PROC).
-
+    MSG_SWAP_WRITE = 37, // KM -> SWAP, escribir un bloque
+    MSG_SWAP_READ  = 38, // KM -> SWAP, leer un bloque
+    
 } op_code;
 
 #endif // MENSAJES_H

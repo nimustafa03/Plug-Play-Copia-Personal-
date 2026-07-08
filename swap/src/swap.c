@@ -1,106 +1,116 @@
 // =============================================================
-//  swap.c  —  Módulo SWAP
-//  Cómo ejecutar: ./bin/swap swap.config
-//
-//  CP1: conectarse a Kernel Memory e informar BLOCK_SIZE y tamaño
-//
-//  Responsable CP1: Santiago
-//    - Cliente: SWAP → KM (conexión 3, lado cliente)
+//  swap.c  —  Módulo SWAP  (completo)
+//  
+//  Para eajecutar: ./bin/swap swap.config
 // =============================================================
- 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <commons/log.h>
 #include <commons/config.h>
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
- 
+
 t_log*    logger;
 t_config* config;
- 
+
+int   swap_fd;        // fd del archivo de swap
+int   block_size;
+
 int main(int argc, char* argv[]) {
- 
-    // ---------------------------------------------------------
-    // 1. Verificar argumentos
-    // ---------------------------------------------------------
     if (argc < 2) {
         printf("Uso: ./bin/swap [archivo_config]\n");
         return EXIT_FAILURE;
     }
- 
-    // ---------------------------------------------------------
-    // 2. Cargar configuración
-    // ---------------------------------------------------------
+
     config = config_create(argv[1]);
     if (config == NULL) {
-        printf("Error: no se pudo abrir el archivo de configuracion: %s\n", argv[1]);
+        printf("Error: no se pudo abrir el config: %s\n", argv[1]);
         return EXIT_FAILURE;
     }
- 
-    // ---------------------------------------------------------
-    // 3. Crear logger
-    // ---------------------------------------------------------
-    logger = log_create("swap.log",
-                        "SWAP",
-                        true,
-                        log_level_from_string(
-                            config_get_string_value(config, "LOG_LEVEL")));
-    if (logger == NULL) {
-        printf("Error: no se pudo crear el logger\n");
+
+    logger = log_create("swap.log", "SWAP", true,
+                        log_level_from_string(config_get_string_value(config, "LOG_LEVEL")));
+    if (logger == NULL) { printf("Error: no se pudo crear el logger\n"); return EXIT_FAILURE; }
+
+    char* km_ip    = config_get_string_value(config, "KM_IP");
+    char* km_port  = config_get_string_value(config, "KM_PORT");
+    char* path     = config_get_string_value(config, "SWAP_FILE_PATH");
+    int   swap_size = config_get_int_value(config, "SWAP_FILE_SIZE");
+    block_size     = config_get_int_value(config, "BLOCK_SIZE");
+
+    // archivo de swap: se crea al tamaño total. Se asume vacío (no hace falta limpiarlo).
+    swap_fd = open(path, O_RDWR | O_CREAT, 0644);
+    if (swap_fd == -1) {
+        log_error(logger, "No se pudo abrir/crear el archivo de swap: %s", path);
         return EXIT_FAILURE;
     }
- 
-    // ---------------------------------------------------------
-    // 4. Leer parámetros del config
-    // ---------------------------------------------------------
-    char* km_ip      = config_get_string_value(config, "KM_IP");
-    char* km_port    = config_get_string_value(config, "KM_PORT");
-    int   block_size = config_get_int_value(config, "BLOCK_SIZE");
-    int   swap_size  = config_get_int_value(config, "SWAP_FILE_SIZE");
- 
-    // ---------------------------------------------------------
-    // 5. Conectarse a Kernel Memory
-    // ---------------------------------------------------------
-    log_info(logger, "Conectando a Kernel Memory en %s:%s...", km_ip, km_port);
- 
+    if (ftruncate(swap_fd, swap_size) != 0) {
+        log_error(logger, "No se pudo dimensionar el archivo de swap a %d bytes", swap_size);
+        return EXIT_FAILURE;
+    }
+
+    // conexión a KM + handshake (informa block_size y tamaño total)
     int fd_km = crear_conexion(km_ip, km_port);
- 
     if (fd_km == -1) {
-        log_error(logger, "No se pudo conectar a Kernel Memory en %s:%s",
-                  km_ip, km_port);
+        log_error(logger, "No se pudo conectar a Kernel Memory en %s:%s", km_ip, km_port);
         return EXIT_FAILURE;
     }
- 
-    // ---------------------------------------------------------
-    // 6. Identificarse ante KM y enviar BLOCK_SIZE + tamaño total
-    // ---------------------------------------------------------
     op_code codigo = MSG_HANDSHAKE_SWAP;
     enviar_mensaje(fd_km, &codigo, sizeof(op_code));
     enviar_mensaje(fd_km, &block_size, sizeof(int));
     enviar_mensaje(fd_km, &swap_size,  sizeof(int));
-     
-    // ---------------------------------------------------------
-    // 7. Esperar OK de KM y loguear conexión exitosa (log obligatorio)
-    // ---------------------------------------------------------
+
     int size_resp;
     op_code* respuesta = recibir_mensaje(fd_km, &size_resp);
-    if (*respuesta == MSG_OK)
+    if (respuesta != NULL && *respuesta == MSG_OK)
         log_info(logger, "## Conectado a Kernel Memory");
     free(respuesta);
 
- 
-    // ---------------------------------------------------------
-    // 8. Esperar operaciones de KM
-    //    TODO CP3: loop de lectura/escritura de bloques
-    // ---------------------------------------------------------
-    log_info(logger, "SWAP listo. Esperando operaciones de Kernel Memory...");
-    pause();
- 
-    // ---------------------------------------------------------
-    // 9. Limpieza
-    // ---------------------------------------------------------
+    // loop de operaciones de bloque (siempre 1 bloque por operación)
+    while (1) {
+        int size;
+        op_code* orden = recibir_mensaje(fd_km, &size);
+        if (orden == NULL) {
+            log_warning(logger, "## Kernel Memory se desconectó");
+            break;
+        }
+
+        int* nro_ptr = recibir_mensaje(fd_km, &size);
+        int nro_bloque = *nro_ptr;
+        free(nro_ptr);
+        off_t offset = (off_t) nro_bloque * block_size;
+
+        switch (*orden) {
+            case MSG_SWAP_WRITE: {
+                int size_datos;
+                void* datos = recibir_mensaje(fd_km, &size_datos);
+                pwrite(swap_fd, datos, block_size, offset);
+                log_info(logger, "## Escritura del bloque: %d", nro_bloque);
+                op_code ok = MSG_OK;
+                enviar_mensaje(fd_km, &ok, sizeof(op_code));
+                free(datos);
+                break;
+            }
+            case MSG_SWAP_READ: {
+                void* buffer = malloc(block_size);
+                pread(swap_fd, buffer, block_size, offset);
+                log_info(logger, "## Lectura del bloque: %d", nro_bloque);
+                enviar_mensaje(fd_km, buffer, block_size);
+                free(buffer);
+                break;
+            }
+            default:
+                log_warning(logger, "## Operación desconocida: %d", *orden);
+                break;
+        }
+        free(orden);
+    }
+
+    close(swap_fd);
     config_destroy(config);
     log_destroy(logger);
- 
     return EXIT_SUCCESS;
 }
