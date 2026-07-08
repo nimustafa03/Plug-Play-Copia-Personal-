@@ -12,6 +12,8 @@
  
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 #include <pthread.h>
 #include <commons/log.h>
 #include <commons/config.h>
@@ -87,6 +89,57 @@ void atender_cpu(int fd_cpu){
 
             free(orden);
         }  
+}
+
+// CP3: la consigna (Módulo Memory Stick) indica que el MS atiende R/W "de las CPUs
+// o del Kernel Memory". Este hilo sirve MSG_READ/MSG_WRITE sobre el socket con KM,
+// con el mismo protocolo que atender_cpu (dir física local, arranca en 0).
+void* atender_km(void* arg){
+    int fd_km = *((int*) arg);
+    free(arg);
+
+    while(1){
+        int size_orden;
+        op_code* orden = recibir_mensaje(fd_km, &size_orden);
+        if (orden == NULL) {
+            log_warning(logger, "## Kernel Memory se desconectó del Memory Stick");
+            break;
+        }
+
+        int size_dir;
+        int* dir_ptr = recibir_mensaje(fd_km, &size_dir);
+        int direccion_fisica = *dir_ptr;
+        free(dir_ptr);
+
+        usleep(memory_delay * 1000);
+
+        switch(*orden){
+            case MSG_WRITE: {
+                int size_datos;
+                void* datos = recibir_mensaje(fd_km, &size_datos);
+                memcpy(espacio_memoria + direccion_fisica, datos, size_datos);
+                log_info(logger, "## Escritura de %d bytes", size_datos);
+                op_code done = MSG_DONE;
+                enviar_mensaje(fd_km, &done, sizeof(op_code));
+                free(datos);
+                break;
+            }
+            case MSG_READ: {
+                int size_tam;
+                int* tam_ptr = recibir_mensaje(fd_km, &size_tam);
+                int tamanio_a_leer = *tam_ptr;
+                free(tam_ptr);
+                void* buffer = malloc(tamanio_a_leer);
+                memcpy(buffer, espacio_memoria + direccion_fisica, tamanio_a_leer);
+                log_info(logger, "## Lectura de %d bytes", tamanio_a_leer);
+                enviar_mensaje(fd_km, buffer, tamanio_a_leer);
+                free(buffer);
+                break;
+            }
+        }
+        free(orden);
+    }
+    return NULL;
 }
 
 void* esperar_cpu(void * arg){ 
@@ -165,6 +218,13 @@ int main(int argc, char*argv[]) {
     else
         log_warning(logger, "## ATENCION. NO FUE POSIBLE CONECTARSE A KERNEL MEMORY.");
     free(respuesta);
+
+    // CP3: hilo que atiende las lecturas/escrituras que pide Kernel Memory (STDIN/STDOUT).
+    int* fd_km_ptr = malloc(sizeof(int));
+    *fd_km_ptr = fd_km;
+    pthread_t hilo_km;
+    pthread_create(&hilo_km, NULL, atender_km, fd_km_ptr);
+    pthread_detach(hilo_km);
 
     // TODO Nico M: levantar servidor para CPUs
     

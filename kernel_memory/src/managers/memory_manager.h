@@ -26,4 +26,8 @@ static t_hueco* buscar_worst_fit(uint32_t tamanio);
 
 void reconstruir_huecos_desde(uint32_t base); // Marca todo el espacio de memoria desde la base hasta el fin de memoria como hueco libre.
 
+// CP3: lectura/escritura física a los Memory Sticks (partiendo por stick si hace falta)
+bool escribir_memoria_fisica(uint32_t dir_global, uint32_t tamanio, void* datos);
+bool leer_memoria_fisica(uint32_t dir_global, uint32_t tamanio, void* buffer_out);
+
 #endif

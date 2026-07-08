@@ -8,6 +8,7 @@
 
 #include "../estructuras.h"
 #include "../managers/process_manager.h"
+#include "../managers/memory_manager.h"
 #include "../compactacion/service_compactacion.h"
 
 extern t_log* logger;
@@ -141,13 +142,65 @@ void atender_kernel_scheduler(int fd) {
           // 4. responder OK / ERROR
           break;
 
-        case MSG_STDIN:
-          enviar_mensaje(fd_kernel_scheduler, codigo_recibido, sizeof(op_code));
-          break;
+        case MSG_STDIN: {
+          // CP3: escribir en memoria de usuario. KS envía: pid + dir_logica + tamanio + datos.
+          uint32_t* pid = recibir_mensaje(fd_kernel_scheduler, &size);
+          uint32_t* dir = recibir_mensaje(fd_kernel_scheduler, &size);
+          uint32_t* tam = recibir_mensaje(fd_kernel_scheduler, &size);
+          void* datos  = recibir_mensaje(fd_kernel_scheduler, &size);
 
-        case MSG_STDOUT:
-          enviar_mensaje(fd_kernel_scheduler, codigo_recibido, sizeof(op_code));
+          uint32_t dir_global;
+          int tr = traducir_direccion(*pid, *dir, *tam, &dir_global);
+
+          if (tr == TRADUCCION_SEG_FAULT) {
+            respuesta = MSG_SEG_FAULT;
+          } else if (tr == TRADUCCION_INEXISTENTE || !escribir_memoria_fisica(dir_global, *tam, datos)) {
+            respuesta = MSG_ERROR;
+          } else {
+            log_info(logger, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %.*s",
+                     *pid, dir_global, (int) *tam, (char*) datos);
+            respuesta = MSG_OK;
+          }
+          enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
+
+          free(pid); free(dir); free(tam); free(datos);
           break;
+        }
+
+        case MSG_STDOUT: {
+          // CP3: leer de memoria de usuario. KS envía: pid + dir_logica + tamanio.
+          // Respondemos MSG_OK + los bytes leídos, o MSG_SEG_FAULT / MSG_ERROR.
+          uint32_t* pid = recibir_mensaje(fd_kernel_scheduler, &size);
+          uint32_t* dir = recibir_mensaje(fd_kernel_scheduler, &size);
+          uint32_t* tam = recibir_mensaje(fd_kernel_scheduler, &size);
+
+          uint32_t dir_global;
+          int tr = traducir_direccion(*pid, *dir, *tam, &dir_global);
+
+          if (tr == TRADUCCION_SEG_FAULT) {
+            respuesta = MSG_SEG_FAULT;
+            enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
+          } else if (tr == TRADUCCION_INEXISTENTE) {
+            respuesta = MSG_ERROR;
+            enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
+          } else {
+            void* buffer = malloc(*tam);
+            if (!leer_memoria_fisica(dir_global, *tam, buffer)) {
+              respuesta = MSG_ERROR;
+              enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
+            } else {
+              log_info(logger, "PID: %d - Acción: LEER - Dirección Física: %d - Valor: %.*s",
+                       *pid, dir_global, (int) *tam, (char*) buffer);
+              respuesta = MSG_OK;
+              enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
+              enviar_mensaje(fd_kernel_scheduler, buffer, (int) *tam);
+            }
+            free(buffer);
+          }
+
+          free(pid); free(dir); free(tam);
+          break;
+        }
 
         default:
           log_warning(logger, "Código desconocido recibido de Kernel Scheduler: %d", *codigo_recibido);

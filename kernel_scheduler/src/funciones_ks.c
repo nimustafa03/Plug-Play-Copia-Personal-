@@ -1,7 +1,7 @@
 #include "funciones_ks.h"
 
-#include <string.h> // strcmp, strdup (evita implicit-declaration)
-#include <unistd.h> // usleep
+#include <string.h>            // strcmp, strdup (evita implicit-declaration)
+#include <unistd.h>           // usleep
 #include <commons/log.h>
 #include <utils/conexiones.h>  
 #include <utils/mensajes.h>    
@@ -38,11 +38,11 @@ sem_t sem_hay_stdout_libre;
 pthread_mutex_t mutex_listas;
 
 // CP3
-pthread_mutex_t mutex_km; // serializa toda comunicación KS->KM
-int contador_pids = 0; // próximo PID a asignar (arranca en 0 = proceso inicial)
+pthread_mutex_t mutex_km;              // serializa toda comunicación KS->KM
+int contador_pids = 0;                 // próximo PID a asignar (arranca en 0 = proceso inicial)
 volatile bool en_compactacion = false; // gate del corto plazo durante compactación
-sem_t sem_desalojo_confirmado; // confirmaciones de CPUs desalojadas por compactación
-static long reloj_suspension = 0; // sello incremental para desempatar por antigüedad de suspensión
+sem_t sem_desalojo_confirmado;         // confirmaciones de CPUs desalojadas por compactación
+static long reloj_suspension = 0;      // sello incremental para desempatar por antigüedad de suspensión
 
 
 void inicializarListasProcesos() {
@@ -84,7 +84,7 @@ void inicializarListasProcesos() {
   log_info(logger_ks, "CMN: %d colas de prioridad inicializadas", cantidadColas);
 }
 
-// genera el próximo PID de forma segura. El primero es 0 (proceso inicial).
+// CP3: genera el próximo PID de forma segura. El primero es 0 (proceso inicial).
 uint32_t generar_pid() {
     pthread_mutex_lock(&mutex_listas);
     uint32_t pid = contador_pids++;
@@ -92,9 +92,9 @@ uint32_t generar_pid() {
     return pid;
 }
 
-// crea un proceso con la prioridad dada y lo mete en NEW.
+// CP3: crea un proceso con la prioridad dada y lo mete en NEW.
 // El "path" (archivo de instrucciones) lo administra Kernel Memory al pedir el
-// contexto por PID. KS solo trackea el ciclo de vida del proceso.
+// contexto por PID; KS sólo trackea el ciclo de vida del proceso.
 // NOTA(coordinación con KM): para que KM asocie este PID nuevo con su archivo de
 // instrucciones falta un mensaje KS->KM "crear proceso con path". Hoy no existe.
 void crear_proceso(char* path, int prioridad) {
@@ -115,7 +115,7 @@ void crear_proceso(char* path, int prioridad) {
     pthread_mutex_unlock(&mutex_listas);
 }
 
-// crea el proceso PID 0 desde argv[2] y lo mete en NEW (prioridad maxima = 0)
+// crea el proceso PID 0 desde argv[2] y lo mete en NEW (prioridad máxima = 0)
 void crear_proceso_inicial(char* path) {
     crear_proceso(path, 0);
 }
@@ -192,13 +192,13 @@ void procesoABlock(Proceso* proceso){
 }
 
 void procesoASuspBlock(Proceso* proceso){
-  proceso->orden_suspension = reloj_suspension++; // antiguedad de suspension
+  proceso->orden_suspension = reloj_suspension++; // CP3: antigüedad de suspensión
   list_add(listaProcesosSuspBlock, proceso);
   log_info(logger_ks, "Proceso %d agregado a lista SUSP BLOCK", proceso->id_proceso);
 }
 
 void procesoASuspReady(Proceso* proceso){
-  // conserva el orden_suspension original si venia de SUSP_BLOCK; si entra directo, lo sella
+  // conserva el orden_suspension original si venía de SUSP_BLOCK; si entra directo, lo sella
   if (proceso->orden_suspension == 0) proceso->orden_suspension = reloj_suspension++;
   list_add(listaProcesosSuspReady, proceso);
   log_info(logger_ks, "Proceso %d agregado a lista SUSP READY", proceso->id_proceso);
@@ -296,7 +296,7 @@ void* iniciar_planificador_corto_plazo() {
   char* algoritmo = config_get_string_value(config, "PLANIFICATION_ALGORITHM");
  
   while (1) {
-    // durante una compactacion no se despacha ningun proceso nuevo
+    // CP3: durante una compactación no se despacha ningún proceso nuevo
     while (en_compactacion) usleep(1000);
 
     // bloquea hasta que haya proceso en READY Y cpu libre
@@ -307,7 +307,7 @@ void* iniciar_planificador_corto_plazo() {
  
     if (list_is_empty(listaCPUsLibres)) {
       pthread_mutex_unlock(&mutex_listas);
-      // no consumimos nada util -> devolvemos los tokens para no starvar
+      // CP3: no consumimos nada útil -> devolvemos los tokens para no starvar
       sem_post(&sem_hay_proceso_ready);
       sem_post(&sem_hay_cpu_libre);
       continue;
@@ -317,7 +317,7 @@ void* iniciar_planificador_corto_plazo() {
     Proceso* proceso = seleccionar_proceso_a_ejecutar(algoritmo, &nivel);
     if (proceso == NULL) {
       pthread_mutex_unlock(&mutex_listas);
-      // habia token de ready pero ningun proceso despachable (p.ej. prioridad
+      // CP3: había token de ready pero ningún proceso despachable (p.ej. prioridad
       // fuera de rango en CMN) -> devolvemos ambos tokens
       sem_post(&sem_hay_proceso_ready);
       sem_post(&sem_hay_cpu_libre);
@@ -640,11 +640,11 @@ void atender_cpu_ks(int fd_cpu) {
 
         switch (*codigo) {
             case MSG_DONE: {
-                // proceso termino (fin de instrucciones o syscall EXIT)
+                // CP2/CP3: proceso terminó (fin de instrucciones o syscall EXIT)
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
                 Proceso* proceso = buscar_proceso_por_pid(*pid_ptr);
                 free(pid_ptr);
-                // finalizar_proceso avisa a KM (libera memoria) + log obligatorio de fin
+                // CP3: finalizar_proceso avisa a KM (libera memoria) + log obligatorio de fin
                 if (proceso) finalizar_proceso(proceso, "EXIT");
 
                 pthread_mutex_lock(&mutex_listas);
@@ -656,7 +656,7 @@ void atender_cpu_ks(int fd_cpu) {
                 break;
             }
             case MSG_SEG_FAULT: {
-                // la CPU detecto un Segmentation Fault -> se finaliza el proceso
+                // CP3: la CPU detectó un Segmentation Fault -> se finaliza el proceso
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
                 Proceso* proceso = buscar_proceso_por_pid(*pid_ptr);
                 free(pid_ptr);
@@ -671,8 +671,8 @@ void atender_cpu_ks(int fd_cpu) {
                 break;
             }
             case MSG_INTERRUPCION_ATENDIDA: {
-                // la CPU atendio una interrupcion. motivo: 0=fin de quantum,
-                // 1=cola mas prioritaria, 2=desalojo por compactacion (CP3).
+                // CP2/CP3: la CPU atendió una interrupción. motivo: 0=fin de quantum,
+                // 1=cola más prioritaria, 2=desalojo por compactación (CP3).
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
                 int* motivo_ptr = recibir_mensaje(fd_cpu, &size);
                 Proceso* proceso = buscar_proceso_por_pid(*pid_ptr);
@@ -689,7 +689,7 @@ void atender_cpu_ks(int fd_cpu) {
                 sem_post(&sem_hay_cpu_libre);
 
                 if (motivo == 2) {
-                    // desalojo por compactacion -> el proceso va al FRENTE de READY
+                    // CP3: desalojo por compactación -> el proceso va al FRENTE de READY
                     pthread_mutex_lock(&mutex_listas);
                     for (int i = 0; i < list_size(listaProcesosExec); i++) {
                         Proceso* pp = list_get(listaProcesosExec, i);
@@ -773,7 +773,7 @@ void atender_cpu_ks(int fd_cpu) {
                 break;
             }
             case MSG_MEM_ALLOC: {
-                // opcode + pid + id_segmento + tamanio (tres uint32_t)
+                // CP3: opcode + pid + id_segmento + tamanio (tres uint32_t)
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
                 uint32_t* id_ptr  = recibir_mensaje(fd_cpu, &size);
                 uint32_t* tam_ptr = recibir_mensaje(fd_cpu, &size);
@@ -786,7 +786,7 @@ void atender_cpu_ks(int fd_cpu) {
                 break;
             }
             case MSG_MEM_FREE: {
-                // opcode + pid + id_segmento
+                // CP3: opcode + pid + id_segmento
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
                 uint32_t* id_ptr  = recibir_mensaje(fd_cpu, &size);
                 log_info(logger_ks, "## (%d) - Solicitó syscall: MEM_FREE", *pid_ptr);
@@ -794,13 +794,13 @@ void atender_cpu_ks(int fd_cpu) {
                 bool ok = km_mem_free(*pid_ptr, *id_ptr);
                 op_code r = ok ? MSG_OK : MSG_ERROR;
                 enviar_mensaje(fd_cpu, &r, sizeof(op_code));
-                // se libero memoria -> intentar des-suspender procesos (mediano plazo)
+                // se liberó memoria -> intentar des-suspender procesos (mediano plazo)
                 if (ok) intentar_desuspender_procesos();
                 free(pid_ptr); free(id_ptr);
                 break;
             }
             case MSG_INIT_PROC: {
-                // opcode + pid(padre) + prioridad(int) + path(string)
+                // CP3: opcode + pid(padre) + prioridad(int) + path(string)
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
                 int* prio_ptr = recibir_mensaje(fd_cpu, &size);
                 char* path = recibir_mensaje(fd_cpu, &size);
@@ -813,7 +813,7 @@ void atender_cpu_ks(int fd_cpu) {
                 break;
             }
             case MSG_STDIN: {
-                // opcode + pid + dir_logica + tamanio
+                // CP3: opcode + pid + dir_logica + tamanio
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
                 uint32_t* dir_ptr = recibir_mensaje(fd_cpu, &size);
                 uint32_t* tam_ptr = recibir_mensaje(fd_cpu, &size);
@@ -828,7 +828,7 @@ void atender_cpu_ks(int fd_cpu) {
                 break;
             }
             case MSG_STDOUT: {
-                // opcode + pid + dir_logica + tamanio
+                // CP3: opcode + pid + dir_logica + tamanio
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
                 uint32_t* dir_ptr = recibir_mensaje(fd_cpu, &size);
                 uint32_t* tam_ptr = recibir_mensaje(fd_cpu, &size);
@@ -978,7 +978,7 @@ void* atender_sleep_ks(void* arg) {
 
     liberar_io(io);
 
-    // el SUSPENSION_TIMEOUT puede haber vencido mientras la IO estaba en
+    // CP3: el SUSPENSION_TIMEOUT puede haber vencido mientras la IO estaba en
     // curso (SUSP_BLOCK). El helper decide el destino correcto (SUSP_READY o READY).
     finalizar_io_y_desbloquear(proceso);
 
@@ -990,7 +990,7 @@ void* atender_sleep_ks(void* arg) {
     return NULL;
 }
 
-// ======================= helpers nuevos =======================
+// ======================= CP3: helpers nuevos =======================
 
 // Al terminar una IO, desbloquea el proceso contemplando que el SUSPENSION_TIMEOUT
 // lo haya movido a SUSP_BLOCK mientras la IO estaba en curso.
@@ -1014,23 +1014,23 @@ void finalizar_io_y_desbloquear(Proceso* proceso) {
 const char* nombre_syscall(op_code cod) {
     switch (cod) {
         case MSG_MUTEX_CREATE: return "MUTEX_CREATE";
-        case MSG_MUTEX_LOCK: return "MUTEX_LOCK";
+        case MSG_MUTEX_LOCK:   return "MUTEX_LOCK";
         case MSG_MUTEX_UNLOCK: return "MUTEX_UNLOCK";
-        case MSG_MEM_ALLOC: return "MEM_ALLOC";
-        case MSG_MEM_FREE: return "MEM_FREE";
-        case MSG_SLEEP: return "SLEEP";
-        case MSG_STDIN: return "STDIN";
-        case MSG_STDOUT: return "STDOUT";
-        case MSG_INIT_PROC: return "INIT_PROC";
-        case MSG_DONE: return "EXIT";
-        case MSG_SEG_FAULT: return "SEG_FAULT";
-        default: return "DESCONOCIDA";
+        case MSG_MEM_ALLOC:    return "MEM_ALLOC";
+        case MSG_MEM_FREE:     return "MEM_FREE";
+        case MSG_SLEEP:        return "SLEEP";
+        case MSG_STDIN:        return "STDIN";
+        case MSG_STDOUT:       return "STDOUT";
+        case MSG_INIT_PROC:    return "INIT_PROC";
+        case MSG_DONE:         return "EXIT";
+        case MSG_SEG_FAULT:    return "SEG_FAULT";
+        default:               return "DESCONOCIDA";
     }
 }
 
-// ---------------------- comunicacion con KM ----------------------
+// ---------------------- comunicación con KM ----------------------
 
-// Avisa a KM que el proceso termino para que libere su memoria.
+// Avisa a KM que el proceso terminó para que libere su memoria.
 void km_notificar_exit(uint32_t pid) {
     pthread_mutex_lock(&mutex_km);
     op_code cod = MSG_DONE;
@@ -1053,8 +1053,8 @@ void finalizar_proceso(Proceso* proceso, char* motivo) {
 }
 
 // Pide a KM crear un segmento. KM puede intercalar un pedido de desalojo por
-// compactacion (MSG_SOLICITAR_DESALOJO) en el MISMO socket antes de la respuesta
-// final; lo manejamos inline. Devuelve true si el segmento se creo OK.
+// compactación (MSG_SOLICITAR_DESALOJO) en el MISMO socket antes de la respuesta
+// final; lo manejamos inline. Devuelve true si el segmento se creó OK.
 bool km_mem_alloc(uint32_t pid, uint32_t id_segmento, uint32_t tamanio) {
     pthread_mutex_lock(&mutex_km);
     op_code cod = MSG_MEM_ALLOC;
@@ -1106,10 +1106,10 @@ bool km_mem_free(uint32_t pid, uint32_t id_segmento) {
     return ok;
 }
 
-// ---------------------- desalojo por compactacion ----------------------
+// ---------------------- desalojo por compactación ----------------------
 
-// KM pidio compactar. Desalojamos todas las CPUs que esten ejecutando (menos la
-// que disparo el MEM_ALLOC, que esta bloqueada en su propia syscall), esperamos
+// KM pidió compactar. Desalojamos todas las CPUs que estén ejecutando (menos la
+// que disparó el MEM_ALLOC, que está bloqueada en su propia syscall), esperamos
 // que confirmen y le avisamos a KM que puede compactar. Se llama con mutex_km
 // tomado (desde km_mem_alloc).
 void manejar_solicitud_desalojo(uint32_t pid_issuer) {
@@ -1121,18 +1121,18 @@ void manejar_solicitud_desalojo(uint32_t pid_issuer) {
     for (int i = 0; i < list_size(listaProcesosExec); i++) {
         Proceso* p = list_get(listaProcesosExec, i);
         if (p->fd_cpu < 0) continue;
-        if (p->id_proceso == (int) pid_issuer) continue; // su CPU esta en la syscall, no la interrumpimos
+        if (p->id_proceso == (int) pid_issuer) continue; // su CPU está en la syscall, no la interrumpimos
         op_code intr = MSG_INTERRUPT;
         enviar_mensaje(p->fd_cpu, &intr, sizeof(op_code));
         t_interrupcion t;
         t.pid = p->id_proceso;
-        t.motivo = 2; // 2 = desalojo por compactacion
+        t.motivo = 2; // 2 = desalojo por compactación
         enviar_mensaje(p->fd_cpu, &t, sizeof(t_interrupcion));
         a_esperar++;
     }
     pthread_mutex_unlock(&mutex_listas);
 
-    // esperar la confirmacion de cada CPU (MSG_INTERRUPCION_ATENDIDA motivo=2)
+    // esperar la confirmación de cada CPU (MSG_INTERRUPCION_ATENDIDA motivo=2)
     for (int i = 0; i < a_esperar; i++)
         sem_wait(&sem_desalojo_confirmado);
 
@@ -1141,12 +1141,11 @@ void manejar_solicitud_desalojo(uint32_t pid_issuer) {
     // en_compactacion se apaga en km_mem_alloc al recibir la respuesta final
 }
 
-// ---------------------- mediano plazo: des-suspension ----------------------
+// ---------------------- mediano plazo: des-suspensión ----------------------
 
-// Recorre SUSP_READY por prioridad (menor numero = más prioritario) y, a igual
-// prioridad, por antiguedad de suspension, moviendolos a READY.
-
-// NOTA(coordinación con KM): la consigna pide des-suspender solo si hay espacio
+// Recorre SUSP_READY por prioridad (menor número = más prioritario) y, a igual
+// prioridad, por antigüedad de suspensión, moviéndolos a READY.
+// NOTA(coordinación con KM): la consigna pide des-suspender sólo si hay espacio
 // para recrear los segmentos SIN compactar. Eso requiere un mensaje "¿hay espacio
 // para el PID X?" a KM que hoy no existe -> por ahora es best-effort (mueve todos).
 void intentar_desuspender_procesos() {
@@ -1173,11 +1172,9 @@ void intentar_desuspender_procesos() {
 
 // ---------------------- largo plazo: BSOD ----------------------
 
-// Memoria corrupta (desconexion de Memory Stick): finaliza todos los procesos y
-// termina el KS. 
-
-// NOTA: KM todavia no envia MSG_MEMORIA_CORRUPTA, asi que esto no
-// se dispara aun; queda listo para cuando KM lo emita.
+// Memoria corrupta (desconexión de Memory Stick): finaliza todos los procesos y
+// termina el KS. NOTA: KM todavía no envía MSG_MEMORIA_CORRUPTA, así que esto no
+// se dispara aún; queda listo para cuando KM lo emita.
 void bsod() {
     log_error(logger_ks, "## Se detectó corrupción de memoria - Blue Screen of Death (BSOD)");
 
@@ -1201,7 +1198,7 @@ void bsod() {
 // ---------------------- IO: STDIN / STDOUT ----------------------
 
 // Corre en su propio hilo. Bloquea el proceso, le pide a una IO STDIN que lea del
-// usuario, y escribe lo leido en la direccion logica pedida. (PENDIENTE KM) 
+// usuario, y (pendiente KM) escribe lo leído en la dirección lógica pedida.
 void* atender_stdin_ks(void* arg) {
     t_args_io_mem* a = (t_args_io_mem*) arg;
 
@@ -1224,15 +1221,34 @@ void* atender_stdin_ks(void* arg) {
     enviar_mensaje(io->fd, &cant, sizeof(int));
 
     int size;
-    char* texto = recibir_mensaje(io->fd, &size); // la cadena leida (a->tamanio bytes)
+    char* texto = recibir_mensaje(io->fd, &size); // la cadena leída (a->tamanio bytes)
     liberar_io(io);
 
-    // Depende de KM: escribir `texto` en memoria de usuario en a->dir_logica (a->tamanio bytes).
-    // El modulo KM aun tiene STDIN/STDOUT como stub, asi que la escritura queda pendiente.
+    // CP3: pedirle a KM que escriba lo leído en memoria de usuario (a->dir_logica).
+    // Serializado con mutex_km porque fd_km es un único socket compartido.
+    pthread_mutex_lock(&mutex_km);
+    op_code cod_km = MSG_STDIN;
+    enviar_mensaje(fd_km, &cod_km, sizeof(op_code));
+    enviar_mensaje(fd_km, &a->pid, sizeof(uint32_t));
+    enviar_mensaje(fd_km, &a->dir_logica, sizeof(uint32_t));
+    enviar_mensaje(fd_km, &a->tamanio, sizeof(uint32_t));
+    enviar_mensaje(fd_km, texto, (int) a->tamanio);
+    int size_resp;
+    op_code* resp = recibir_mensaje(fd_km, &size_resp);
+    op_code resultado = (resp != NULL) ? *resp : MSG_ERROR;
+    free(resp);
+    pthread_mutex_unlock(&mutex_km);
     if (texto != NULL) free(texto);
 
-    finalizar_io_y_desbloquear(proceso);
+    if (resultado == MSG_SEG_FAULT) {
+        // KM detectó que la escritura se pasa del segmento -> finalizar el proceso
+        finalizar_proceso(proceso, "SEG_FAULT");
+    } else {
+        finalizar_io_y_desbloquear(proceso);
+    }
 
+    // destrabamos a la CPU (ver nota del modelo de bloqueo: en SEG_FAULT igual
+    // la liberamos para que no quede colgada; el proceso ya fue finalizado)
     op_code ok = MSG_OK;
     enviar_mensaje(a->fd_cpu, &ok, sizeof(op_code));
     free(a);
@@ -1240,7 +1256,7 @@ void* atender_stdin_ks(void* arg) {
 }
 
 // Corre en su propio hilo. Bloquea el proceso, (pendiente KM) lee los bytes de la
-// direccion logica y se los manda a una IO STDOUT para que los imprima.
+// dirección lógica y se los manda a una IO STDOUT para que los imprima.
 void* atender_stdout_ks(void* arg) {
     t_args_io_mem* a = (t_args_io_mem*) arg;
 
@@ -1253,18 +1269,45 @@ void* atender_stdout_ks(void* arg) {
 
     actualizarEstadoProceso(proceso, BLOCK);
 
-    // Depeande de KM: pedir a KM los a->tamanio bytes en a->dir_logica. KM es stub todavia,
-    // asi que por ahora mandamos un marcador para ejercitar el camino KS<->IO STDOUT.
-    char* contenido = strdup("(contenido pendiente de KM)");
+    // CP3: pedirle a KM los a->tamanio bytes en a->dir_logica (serializado con mutex_km).
+    pthread_mutex_lock(&mutex_km);
+    op_code cod = MSG_STDOUT;
+    enviar_mensaje(fd_km, &cod, sizeof(op_code));
+    enviar_mensaje(fd_km, &a->pid, sizeof(uint32_t));
+    enviar_mensaje(fd_km, &a->dir_logica, sizeof(uint32_t));
+    enviar_mensaje(fd_km, &a->tamanio, sizeof(uint32_t));
+    int size_resp;
+    op_code* resp = recibir_mensaje(fd_km, &size_resp);
+    op_code resultado = (resp != NULL) ? *resp : MSG_ERROR;
+    free(resp);
+
+    char* contenido = NULL;
+    if (resultado == MSG_OK) {
+        int size_datos;
+        contenido = recibir_mensaje(fd_km, &size_datos); // a->tamanio bytes
+    }
+    pthread_mutex_unlock(&mutex_km);
+
+    if (resultado == MSG_SEG_FAULT) {
+        finalizar_proceso(proceso, "SEG_FAULT");
+        op_code ok_sf = MSG_OK;
+        enviar_mensaje(a->fd_cpu, &ok_sf, sizeof(op_code));
+        free(a);
+        return NULL;
+    }
+
+    // aseguramos terminador para que la IO STDOUT lo imprima como cadena
+    char* texto = calloc(1, a->tamanio + 1);
+    if (contenido != NULL) { memcpy(texto, contenido, a->tamanio); free(contenido); }
 
     sem_wait(&sem_hay_stdout_libre);
     t_io_ks* io = sacar_io_libre_por_tipo("STDOUT");
 
-    op_code cod = MSG_STDOUT;
-    enviar_mensaje(io->fd, &cod, sizeof(op_code));
+    op_code cod_io = MSG_STDOUT;
+    enviar_mensaje(io->fd, &cod_io, sizeof(op_code));
     enviar_mensaje(io->fd, &a->pid, sizeof(uint32_t));
-    enviar_mensaje(io->fd, contenido, strlen(contenido) + 1);
-    free(contenido);
+    enviar_mensaje(io->fd, texto, strlen(texto) + 1);
+    free(texto);
 
     int size;
     op_code* done = recibir_mensaje(io->fd, &size); // se espera MSG_DONE

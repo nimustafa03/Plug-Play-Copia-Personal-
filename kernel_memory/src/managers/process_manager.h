@@ -30,4 +30,13 @@ bool eliminar_segmento(uint32_t pid, uint32_t id_segmento);
 t_segmento* obtener_segmento(uint32_t pid, uint32_t id_segmento);
 t_list* obtener_todos_los_segmentos(void); // Devuelve una lista con punteros a indices que guardan punteros a cada segmento en memoria y otro puntero a su proceso.
 
+// CP3: traducción de dirección lógica a física (STDIN/STDOUT)
+typedef enum {
+  TRADUCCION_OK,
+  TRADUCCION_SEG_FAULT,
+  TRADUCCION_INEXISTENTE
+} t_resultado_traduccion;
+
+int traducir_direccion(uint32_t pid, uint32_t dir_logica, uint32_t tamanio, uint32_t* dir_global_out);
+
 #endif

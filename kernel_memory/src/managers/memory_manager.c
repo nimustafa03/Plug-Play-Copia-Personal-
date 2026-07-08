@@ -5,6 +5,8 @@
 #include "../estructuras.h"
 #include <string.h>
 #include <stdint.h>
+#include <utils/conexiones.h> // CP3: R/W físico a los Memory Sticks
+#include <utils/mensajes.h>
 
 static t_administrador_memoria administrador;
 
@@ -196,6 +198,84 @@ void reconstruir_huecos_desde(uint32_t base) {
   registrar_hueco(base, tamanio_libre);
 }
 
+// CP3: devuelve el Memory Stick que contiene la dirección global dada (o NULL).
+static t_memory_stick* stick_de_direccion(uint32_t dir_global) {
+  for (int i = 0; i < list_size(administrador.memory_sticks); i++) {
+    t_memory_stick* s = list_get(administrador.memory_sticks, i);
+    if (dir_global >= s->base_global && dir_global < s->base_global + s->tamanio)
+      return s;
+  }
+  return NULL;
+}
+
+// CP3: escribe `tamanio` bytes desde `datos` a partir de la dir global, partiendo
+// el pedido entre los Memory Sticks involucrados (cada stick direcciona desde 0).
+bool escribir_memoria_fisica(uint32_t dir_global, uint32_t tamanio, void* datos) {
+  uint32_t restante = tamanio;
+  uint32_t cursor = dir_global;
+  uint8_t* origen = datos;
+
+  while (restante > 0) {
+    t_memory_stick* s = stick_de_direccion(cursor);
+    if (s == NULL) return false;
+
+    uint32_t offset_local = cursor - s->base_global;
+    uint32_t espacio_en_stick = s->tamanio - offset_local;
+    uint32_t a_escribir = restante < espacio_en_stick ? restante : espacio_en_stick;
+
+    op_code orden = MSG_WRITE;
+    enviar_mensaje(s->socket, &orden, sizeof(op_code));
+    int dir_fisica = (int) offset_local;
+    enviar_mensaje(s->socket, &dir_fisica, sizeof(int));
+    enviar_mensaje(s->socket, origen, (int) a_escribir);
+
+    int size;
+    op_code* done = recibir_mensaje(s->socket, &size);
+    if (done == NULL || *done != MSG_DONE) { free(done); return false; }
+    free(done);
+
+    cursor += a_escribir;
+    origen += a_escribir;
+    restante -= a_escribir;
+  }
+  return true;
+}
+
+// CP3: lee `tamanio` bytes a partir de la dir global hacia `buffer_out`, partiendo
+// el pedido entre los Memory Sticks involucrados y consolidando el resultado.
+bool leer_memoria_fisica(uint32_t dir_global, uint32_t tamanio, void* buffer_out) {
+  uint32_t restante = tamanio;
+  uint32_t cursor = dir_global;
+  uint8_t* destino = buffer_out;
+
+  while (restante > 0) {
+    t_memory_stick* s = stick_de_direccion(cursor);
+    if (s == NULL) return false;
+
+    uint32_t offset_local = cursor - s->base_global;
+    uint32_t espacio_en_stick = s->tamanio - offset_local;
+    uint32_t a_leer = restante < espacio_en_stick ? restante : espacio_en_stick;
+
+    op_code orden = MSG_READ;
+    enviar_mensaje(s->socket, &orden, sizeof(op_code));
+    int dir_fisica = (int) offset_local;
+    enviar_mensaje(s->socket, &dir_fisica, sizeof(int));
+    int len = (int) a_leer;
+    enviar_mensaje(s->socket, &len, sizeof(int));
+
+    int size;
+    void* datos = recibir_mensaje(s->socket, &size);
+    if (datos == NULL) return false;
+    memcpy(destino, datos, a_leer);
+    free(datos);
+
+    cursor += a_leer;
+    destino += a_leer;
+    restante -= a_leer;
+  }
+  return true;
+}
+
 static void destruir_memory_stick(void* elemento) {
   t_memory_stick* stick = elemento;
   free(stick);
@@ -214,5 +294,3 @@ void destruir_administrador_memoria(void) {
   administrador.memoria_total = 0;
   administrador.proximo_id_stick = 0;
 }
-
-

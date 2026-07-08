@@ -5,6 +5,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <commons/log.h>
+#include <commons/config.h>
 #include <commons/string.h>
 #include <commons/collections/list.h>
 #include "../handlers/handler_cpu.h"
@@ -14,6 +15,28 @@
 
 static t_administrador_procesos administrador;
 extern t_log*logger;
+extern t_config* config; // CP3: para leer SEGMENT_MAX_SIZE en la traducción
+
+// CP3: traduce (pid, dir_logica) a dirección física global. Retorna:
+//   TRADUCCION_OK        y deja la dir global en *dir_global_out
+//   TRADUCCION_SEG_FAULT si el desplazamiento + tamanio se pasa del segmento
+//   TRADUCCION_INEXISTENTE si el proceso o el segmento no existen
+// Esquema (consigna): num_segmento = dir_logica / SEGMENT_MAX_SIZE;
+//                     desplazamiento = dir_logica % SEGMENT_MAX_SIZE;
+//                     fisica = base_del_segmento + desplazamiento.
+int traducir_direccion(uint32_t pid, uint32_t dir_logica, uint32_t tamanio, uint32_t* dir_global_out) {
+  int seg_max = config_get_int_value(config, "SEGMENT_MAX_SIZE");
+  uint32_t num_segmento = dir_logica / seg_max;
+  uint32_t desplazamiento = dir_logica % seg_max;
+
+  t_segmento* segmento = obtener_segmento(pid, num_segmento);
+  if (segmento == NULL) return TRADUCCION_INEXISTENTE;
+
+  if (desplazamiento + tamanio > segmento->tamanio) return TRADUCCION_SEG_FAULT;
+
+  *dir_global_out = segmento->base + desplazamiento;
+  return TRADUCCION_OK;
+}
 
 void inicializar_administrador_procesos(void) {
   administrador.procesos_por_pid = dictionary_create();
