@@ -144,8 +144,7 @@ int main(int argc, char* argv[]) {
             log_error(logger_cpu, "Error al recibir contexto");
             break;
         }
-        t_list* tabla = contexto->tabla_segmentos;
-        log_info(logger_cpu, "Inicia ejecucion de proceso: %u", pid);
+        log_info(logger_cpu, "Inicia ejecucion de proceso: %d", pid);
 
         // WHILE CICLO DE INSTRUCCION
         op_exit = false;
@@ -170,6 +169,10 @@ int main(int argc, char* argv[]) {
                 break;
             } else if (operacion == 1)
                 op_exit = true;
+            else if (operacion == -2){
+                log_error(logger_cpu, "Operacion invalida en proceso %d", pid);
+                exit(EXIT_FAILURE);
+            }
 
             // INTERRUPCIONES
             int atender = atender_interrupcion(fd_ks, fd_km, contexto);
@@ -178,7 +181,11 @@ int main(int argc, char* argv[]) {
                 break;
             }
             else if (atender == -1){
-                log_info(logger_cpu, "Error en la atencion de interrupcion del proceso %d", pid);
+                log_error(logger_cpu, "Error (-1) en la atencion de interrupcion del proceso %d", pid);
+                exit(EXIT_FAILURE);
+            }
+            else if (atender == -2){
+                log_error(logger_cpu, "Error (-2) en la atencion de interrupcion del proceso %d", pid);
                 exit(EXIT_FAILURE);
             }
             free(instruccion);

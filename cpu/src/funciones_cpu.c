@@ -10,7 +10,6 @@
 #include "cpu.h"
 #include <utils/tipos.h>
 #include <sys/socket.h> // Para el recv() que tiene que recibir el MSG_DONTWAIT de esa biblioteca
-#include <estructuras.h>
 #include <errno.h>
 
 #define MMU_ERROR (-1)
@@ -91,7 +90,7 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             jnz(instruccion, registros);
             break;
         case OP_COPY_MEM:
-            if (copy_mem(instruccion, registro, fd_ms, tabla_segmentos) == -1) {
+            if (copy_mem(instruccion, registros, fd_ms, tabla_segmentos) == -1) {
                 op_code codigo = MSG_SEG_FAULT;     //falta escribir msj
                 enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
                 enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
@@ -112,7 +111,7 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             syscall_mutex_unlock(instruccion, fd_ks, pid, registros);
             break;
         case OP_INIT_PROC:
-            syscall_init_proc(instruccion, registros, fd_ks,); 
+            syscall_init_proc(instruccion, registros, fd_ks); 
             break;
         case OP_SLEEP:
             syscall_sleep(instruccion, fd_ks, pid, registros); 
@@ -123,9 +122,17 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
         case OP_MEM_FREE:
             syscall_mem_free(instruccion, registros, fd_ks, pid); 
             break;
+        case OP_STDIN:
+            syscall_stdin(instruccion, registros, fd_ks, pid);
+            break;
+        case OP_STDOUT:
+            syscall_stdout(instruccion, registros, fd_ks, pid);
+            break;
         case OP_EXIT:
             int op_exit = syscall_exit(registros, fd_ks, pid);
             return op_exit;
+        case OP_INVALID:
+            return -2;
     }
     return 0;
 }
@@ -177,6 +184,7 @@ int atender_interrupcion(int fd_ks,int fd_km,t_contexto_ejecucion* contexto){
 
         return 0;
     }
+    return -2;
 }
 
 int memory_management_unit(uint32_t direccion_logica, uint32_t tamanio_acceso, t_list* tabla_segmentos) {
