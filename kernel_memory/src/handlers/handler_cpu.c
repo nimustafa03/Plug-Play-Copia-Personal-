@@ -2,15 +2,14 @@
 
 #include <string.h>
 #include <unistd.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <commons/log.h>
 #include <commons/config.h>
 
-#include "../estructuras.h"
 #include "../../utils/src/utils/mensajes.h"
 #include "../../utils/src/utils/conexiones.h"
 #include "../src/managers/process_manager.h"
+#include "../../utils/src/utils/tipos.h"
 
 
 extern t_log*logger;

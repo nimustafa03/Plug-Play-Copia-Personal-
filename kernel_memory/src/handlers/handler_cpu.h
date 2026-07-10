@@ -2,6 +2,7 @@
 #define HANDLER_CPU_H_
 
 #include "../estructuras.h"
+#include "../../utils/src/utils/tipos.h"
 #include <stdint.h>
 
 void atender_cpu(int fd_cpu);

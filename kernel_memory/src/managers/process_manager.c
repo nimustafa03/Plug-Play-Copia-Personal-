@@ -9,6 +9,7 @@
 #include <commons/string.h>
 #include <commons/collections/list.h>
 #include "../handlers/handler_cpu.h"
+#include "../../utils/src/utils/tipos.h"
 #include "memory_manager.h"
 
 #include "process_manager.h"

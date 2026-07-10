@@ -10,6 +10,7 @@
 #include "../managers/process_manager.h"
 #include "../managers/memory_manager.h"
 #include "../compactacion/service_compactacion.h"
+#include "../../utils/src/utils/tipos.h"
 
 extern t_log* logger;
 

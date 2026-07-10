@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <commons/collections/list.h>
 #include <commons/collections/dictionary.h>
+#include "../../utils/src/utils/tipos.h"
 
 typedef struct {
     uint32_t id_segmento;
@@ -24,34 +25,6 @@ typedef struct {
     int socket;
 } t_memory_stick;
 
-typedef struct {
-    uint32_t pc;
-
-    uint8_t ax;
-    uint8_t bx;
-    uint8_t cx;
-    uint8_t dx;
-
-    uint32_t eax;
-    uint32_t ebx;
-    uint32_t ecx;
-    uint32_t edx;
-
-    uint32_t si;
-    uint32_t di;
-} t_registros;
-
-typedef struct {
-    t_registros registros;
-    t_list* tabla_segmentos;
-    bool proximo_a_detener;
-} t_contexto;
-
-typedef struct {
-    uint32_t pid;
-    char* script_path;
-    t_contexto* contexto;
-} t_proceso_memoria;
 
 typedef enum {
     CREAR_SEGMENTO_OK,
@@ -97,9 +70,6 @@ typedef struct
     t_segmento* segmento;
 } t_segmento_ocupado;
 
-typedef struct {
-    int fd_cpu;
-    t_proceso_memoria* proceso;
-} t_args_proceso;
+
 
 #endif

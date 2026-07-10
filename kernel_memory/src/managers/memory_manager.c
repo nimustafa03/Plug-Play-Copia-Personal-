@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <utils/conexiones.h> // CP3: R/W físico a los Memory Sticks
 #include <utils/mensajes.h>
+#include "../../utils/src/utils/tipos.h"
 
 static t_administrador_memoria administrador;
 
