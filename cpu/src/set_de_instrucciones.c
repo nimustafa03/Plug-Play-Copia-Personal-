@@ -9,6 +9,8 @@
 #include <string.h>
 #include <cpu.h>
 
+#define MMU_ERROR -1
+
 uint32_t obtener_valor(char* posicion, t_registros* registro) {
     if (strcmp(posicion, "AX") == 0) return registro->AX;
     if (strcmp(posicion, "BX") == 0) return registro->BX;
@@ -115,7 +117,7 @@ void noop(t_registros* registros) {
 }
 
 // INIT_PROC
-void syscall_init_proc(char* instruccion, t_registros registro, int fd_ks,){
+void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks){
     char archivo[256];
     int prioridad;
     sscanf(instruccion, "%*s %255s %d", archivo, &prioridad);
@@ -126,7 +128,7 @@ void syscall_init_proc(char* instruccion, t_registros registro, int fd_ks,){
     enviar_mensaje(fd_ks, archivo, strlen(archivo) + 1);
     enviar_mensaje(fd_ks, &prioridad, sizeof(int));
 
-    registros->PC++;
+    registro->PC++;
 }
 
 // MOV_IN
@@ -139,9 +141,8 @@ int mov_in (char* instruccion, t_registros* registro, int fd_ms, t_list* tabla_s
     uint32_t direccion_logica = registro->SI;
 
     int direccion_fisica = memory_management_unit(direccion_logica, tamanio_acceso, tabla_segmentos);
-    if (direccion_fisica == MMU_ERROR) {
+    if (direccion_fisica == MMU_ERROR)
         return -1;
-    }
 
     int dato = lectura_ms(direccion_fisica, fd_ms);
     escribir_registro(registro_destino, registro, dato);

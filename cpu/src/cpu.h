@@ -52,6 +52,11 @@ typedef struct {
     uint32_t pid;
     uint32_t pc;
 } t_fetch;
+typedef struct {
+    uint32_t id_segmento;
+    uint32_t base;
+    uint32_t tamanio;
+} t_segmento;
 
 
 // INTERRUPCIONES -> tipos.h
@@ -60,8 +65,9 @@ typedef struct {
 
 char* fetch(int conexion_servidor,uint32_t pid, t_registros* cpu);
 operacion decode(char* instruccion);
+int memory_management_unit(uint32_t direccion_logica, uint32_t tamanio_acceso, t_list* tabla_segmentos);
 int lectura_ms (int direccion, int fd_ms);
-void escritura_ms (int direccion, int dato, int fd_ms);
+int escritura_ms(int direccion, uint32_t dato, uint32_t tamanio, int fd_ms);
 int atender_interrupcion(int fd_ks,int fd_km,t_contexto_ejecucion* contexto);
 
 // CP3 -> Para las syscalls del mutex necesita tambien el fd_ks y el PID
@@ -75,7 +81,7 @@ int mov_out(char* instruccion, t_registros* registro, int fd_ms,t_list* tabla_se
 void jnz(char* instruccion, t_registros* registro);
 int copy_mem(char* instruccion, t_registros* registro, int fd_ms,t_list* tabla_segmentos);
 void noop(t_registros* registro);
-void syscall_init_proc(char* instruccion, t_registros registro, int fd_ks,);
+void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks);
 void syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
 void syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
 void syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
@@ -84,6 +90,6 @@ void syscall_stdin(char* instruccion,t_registros* registro, int fd_ks, uint32_t 
 void syscall_stdout(char* instruccion,t_registros* registro, int fd_ks, uint32_t pid);
 void syscall_mem_alloc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid);
 void syscall_mem_free(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid);
-int syscall_exit(t_registros* registro, int fd_ks, int fd_km, uint32_t pid);
+int syscall_exit(t_registros* registro, int fd_ks, uint32_t pid);
 
 #endif
