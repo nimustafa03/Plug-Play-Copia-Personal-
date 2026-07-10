@@ -1,6 +1,9 @@
 #ifndef HANDLER_CPU_H_
 #define HANDLER_CPU_H_
 
+#include "../estructuras.h"
+#include <stdint.h>
+
 void atender_cpu(int fd_cpu);
 void enviar_contexto_ejecucion_a_cpu(int fd_cpu, t_contexto contexto);
 bool esperar_pedido_de_instruccion(int fd_cpu);

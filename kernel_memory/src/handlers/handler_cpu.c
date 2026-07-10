@@ -1,4 +1,3 @@
-#include "../estructuras.h"
 #include "handler_cpu.h"
 
 #include <string.h>
@@ -8,6 +7,7 @@
 #include <commons/log.h>
 #include <commons/config.h>
 
+#include "../estructuras.h"
 #include "../../utils/src/utils/mensajes.h"
 #include "../../utils/src/utils/conexiones.h"
 #include "../src/managers/process_manager.h"
