@@ -11,6 +11,7 @@
 #include "../../utils/src/utils/mensajes.h"
 #include "../../utils/src/utils/conexiones.h"
 #include "../src/managers/process_manager.h"
+#include "../estructuras.h"
 
 
 extern t_log*logger;
