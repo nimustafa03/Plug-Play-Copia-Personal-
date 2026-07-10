@@ -11,7 +11,6 @@
 #include "../../utils/src/utils/mensajes.h"
 #include "../../utils/src/utils/conexiones.h"
 #include "../src/managers/process_manager.h"
-#include "../estructuras.h"
 
 
 extern t_log*logger;
@@ -63,4 +62,11 @@ bool esperar_pedido_de_instruccion(int fd_cpu){
         return true;
     }
     return false;
+}
+
+uint32_t recibir_pc(int fd_cpu){
+    int size;
+    uint32_t * pc = recibir_mensaje(fd_cpu, &size);
+
+    return *pc;
 }
