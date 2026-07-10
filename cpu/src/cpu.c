@@ -64,8 +64,7 @@ int esperar_pid(int fd_ks, t_log* logger_cpu) {
         uint32_t* pid_ptr = recibir_mensaje(fd_ks, &size);
 
         if (pid_ptr == NULL) {
-            log_error(logger_cpu, "Error al recibir PID");
-            continue;
+            return -1;
         }
         uint32_t pid = *pid_ptr;
         free(pid_ptr);
@@ -123,27 +122,34 @@ int main(int argc, char* argv[]) {
     log_error(logger_cpu, "Error al conectar con Memory Stick");
     exit(EXIT_FAILURE);
     }
-
+    bool op_exit;  
     //WHILE PID
     while (1) {
         
         // CPU espera la llegada de un pid por parte del KS
-        int pid = esperar_pid(fd_ks, logger_cpu); 
+        int pid = esperar_pid(fd_ks, logger_cpu);
+        if (pid == -1) {
+            log_error(logger_cpu, "Error al recibir pid");
+            exit(EXIT_FAILURE);
+        }
+        
         // Aviso de inicio de proceso al KM
         op_code codigo_init = MSG_INIT_CPU;
         enviar_mensaje(fd_km,&codigo_init,sizeof(op_code));
         // Se envia pid a KM
         enviar_mensaje(fd_km, &pid, sizeof(pid));
-        // KM envia contexto
         int size;
-        t_contexto_ejecucion* contexto = recibir_mensaje(fd_km, &size);
+        t_contexto_ejecucion* contexto = recibir_mensaje(fd_km, &size);         // KM envia contexto
         if (contexto == NULL) {
             log_error(logger_cpu, "Error al recibir contexto");
             break;
         }
+        t_list* tabla = contexto->tabla_segmentos;
+        log_info(logger_cpu, "Inicia ejecucion de proceso: %u", pid);
 
         // WHILE CICLO DE INSTRUCCION
-        while (1) {
+        op_exit = false;
+        while (op_exit != true) {
             // FETCH
             char* instruccion = fetch(fd_km, pid, &contexto->registros);
             if (instruccion == NULL) {
@@ -151,41 +157,34 @@ int main(int argc, char* argv[]) {
                 break;}
 
             // DECODE
-            bool hubo_busqueda_destino = false; 
-            bool hubo_busqueda_origen = false; 
-
-            t_instruccion_traducida* instruccion_traducida = traducir_instruccion(instruccion);
-            free(instruccion);
-            if (instruccion_traducida == NULL) {
-                    op_code sf = MSG_SEG_FAULT;
-                    log_error(logger_cpu, "SEG_FAULT PID=%d", pid);
-                    enviar_mensaje(fd_ks, &sf, sizeof(op_code)); //envia MSG_SEGMENTATION_FAUL al KS
-            }
-            codeop = instruccion_traducida->opcode;
-
-            if (hubo_busqueda_destino == true){                         //si hubo traduccion, se pide el dato a km
-                int dato_destino = busqueda_dato(instruccion_traducida->destino,fd_ms);
-                if (dato_destino == NULL){//mensaje no esta en memoria
-                } 
-            }
-            if (hubo_busqueda_origen == true){                         
-                int dato_origen = busqueda_dato(instruccion_traducida->origen,fd_ms);
-                if (dato_origen == NULL){//mensaje no esta en memoria
-                }
-            }
+            operacion codigo = decode(instruccion);
 
             // EXECUTE
-            execute(codeop, dato_destino, dato_origen, &contexto->registros, fd_ks, contexto->pid);
-            
+            int operacion = execute(codigo, instruccion, &contexto->registros, fd_ks, fd_km, fd_ms, contexto->pid, contexto->tabla_segmentos);
+
+            if (operacion == -1) {                                  //en caso de SEG FAULT en las operaciones MOV y COPY
+                op_code guardar_contexto = MSG_SEG_FAULT;
+                enviar_mensaje(fd_km, &guardar_contexto, sizeof(op_code));
+                enviar_mensaje(fd_km, contexto, sizeof(t_contexto_ejecucion));
+                free(instruccion);
+                break;
+            } else if (operacion == 1)
+                op_exit = true;
 
             // INTERRUPCIONES
-            
-            op_code op;
-            int interrumpido = atender_interrupcion(fd_ks, fd_km, contexto);
-
-            if (interrumpido)
+            int atender = atender_interrupcion(fd_ks, fd_km, contexto);
+            if (atender == 0){
+                free(instruccion);
                 break;
             }
-        free(contexto);
+            else if (atender == -1){
+                log_info(logger_cpu, "Error en la atencion de interrupcion del proceso %d", pid);
+                exit(EXIT_FAILURE);
+            }
+            free(instruccion);
         }
+        if (op_exit == true)    
+            log_info(logger_cpu, "Concluyo proceso %d con EXIT", pid);
+        free(contexto);
+    }
 }

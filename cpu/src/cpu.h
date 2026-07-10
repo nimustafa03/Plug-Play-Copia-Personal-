@@ -11,7 +11,7 @@
 #include <utils/tipos.h>  // t_interrupcion viene de acá
 
 
-// OPCODES CPU
+// OPCODES
 typedef enum {
     OP_NOOP,
     OP_SET,
@@ -25,8 +25,27 @@ typedef enum {
     OP_MUTEX_LOCK,
     OP_MUTEX_UNLOCK,
     OP_SLEEP,
-    OP_INVALID = -1,
-} op_code_cpu;
+    OP_STDIN,
+    OP_STDOUT,
+    OP_INVALID,
+    OP_MEM_ALLOC,
+    OP_MEM_FREE,
+    OP_INIT_PROC,
+    OP_EXIT,
+} operacion;
+
+// STRUCT
+
+typedef struct {
+    uint32_t pid;
+    uint32_t id_segmento;
+    uint32_t tamanio;
+} t_mem_alloc;
+
+typedef struct {
+    uint32_t pid;
+    uint32_t id_segmento;
+} t_mem_free;
 
 // REQUEST FETCH
 typedef struct {
@@ -34,34 +53,37 @@ typedef struct {
     uint32_t pc;
 } t_fetch;
 
-typedef struct {
-    op_code_cpu opcode;
-    char destino[64];
-    char origen[64];
-} t_instruccion_traducida;
 
 // INTERRUPCIONES -> tipos.h
 
 // CICLO DE INSTRUCCION
 
 char* fetch(int conexion_servidor,uint32_t pid, t_registros* cpu);
-char* traducir_instruccion(char* instruccion);
-op_code_cpu decode(char instruccion);
+operacion decode(char* instruccion);
+int lectura_ms (int direccion, int fd_ms);
+void escritura_ms (int direccion, int dato, int fd_ms);
+int atender_interrupcion(int fd_ks,int fd_km,t_contexto_ejecucion* contexto);
 
 // CP3 -> Para las syscalls del mutex necesita tambien el fd_ks y el PID
-void execute(op_code_cpu codeop, char* instruccion, t_registros* cpu, int fd_ks, uint32_t pid);
+int execute(operacion codigo, char* instruccion, t_registros* cpu, int fd_ks, int fd_km, int fd_ms, uint32_t pid, t_list* tabla_segmentos);
 
-void set(char* instruccion, t_registros* cpu);
-void sum(char* instruccion, t_registros* cpu);
-void sub(char* instruccion, t_registros* cpu);
-void mov_in(char* instruccion, t_registros* cpu);
-void mov_out(char* instruccion, t_registros* cpu);
-void jnz(char* instruccion, t_registros* cpu);
-void copy_mem(char* instruccion, t_registros* cpu);
-void noop(char* instruccion, t_registros* cpu);
+void set(char* instruccion, t_registros* registro);
+void sum(char* instruccion, t_registros* registro);
+void sub(char* instruccion, t_registros* registro);
+int mov_in(char* instruccion, t_registros* registro, int fd_ms,t_list* tabla_segmentos);
+int mov_out(char* instruccion, t_registros* registro, int fd_ms,t_list* tabla_segmentos);
+void jnz(char* instruccion, t_registros* registro);
+int copy_mem(char* instruccion, t_registros* registro, int fd_ms,t_list* tabla_segmentos);
+void noop(t_registros* registro);
+void syscall_init_proc(char* instruccion, t_registros registro, int fd_ks,);
 void syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
 void syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
 void syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
 void syscall_sleep(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
+void syscall_stdin(char* instruccion,t_registros* registro, int fd_ks, uint32_t pid);
+void syscall_stdout(char* instruccion,t_registros* registro, int fd_ks, uint32_t pid);
+void syscall_mem_alloc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid);
+void syscall_mem_free(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid);
+int syscall_exit(t_registros* registro, int fd_ks, int fd_km, uint32_t pid);
 
 #endif
