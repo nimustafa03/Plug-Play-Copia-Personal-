@@ -9,7 +9,6 @@
 #include "../../utils/src/utils/mensajes.h"
 #include "../../utils/src/utils/conexiones.h"
 #include "../src/managers/process_manager.h"
-#include "../../utils/src/utils/tipos.h"
 
 
 extern t_log*logger;
@@ -32,7 +31,7 @@ void atender_cpu(int fd_cpu){
         if (*codigo == MSG_INIT_CPU) {
             uint32_t*pid = recibir_mensaje(fd_cpu,&size);
             char*path = recibir_mensaje(fd_cpu, &size);
-            crear_proceso(*pid,path, fd_cpu);
+            inicializar_proceso(*pid, fd_cpu);
             free(pid); free(path);
         }
     }

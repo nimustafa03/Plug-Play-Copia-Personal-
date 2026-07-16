@@ -70,6 +70,27 @@ static t_contexto* crear_contexto_inicial(void) {
   return contexto;
 }
 
+bool crear_proceso(uint32_t pid, char*path){
+  char* key = pid_to_key(pid);
+
+  if (dictionary_has_key(administrador.procesos_por_pid, key)) {
+    free(key);
+    log_warning(logger, "## ERROR: LA PID %d CORRESPONDE A UN PROCESO YA EXISTENTE.", *key);
+    return false;
+  }
+
+  t_proceso_memoria* proceso = malloc(sizeof(t_proceso_memoria));
+
+  proceso->pid = pid;
+  proceso->script_path = strdup(path);
+  
+  proceso->contexto = crear_contexto_inicial();
+
+  dictionary_put(administrador.procesos_por_pid, key, proceso);
+
+  return true;
+}
+
 char*devolver_instruccion(uint32_t pc,char*lista_instrucciones){
     char*instruccion;
     int contador = 0; // NICO M: Según los ejemplos, el PC tomaría la primera linea de una lista de instrucciones como 1.
@@ -120,23 +141,12 @@ void*manejar_proceso(void*arg){
   pthread_exit(returnval);
 }
 
-bool crear_proceso(uint32_t pid, char* script_path, int fd_cpu) {
+bool inicializar_proceso(uint32_t pid, int fd_cpu) {
   char* key = pid_to_key(pid);
-
-  if (dictionary_has_key(administrador.procesos_por_pid, key)) {
-    free(key);
-    log_warning(logger, "## ERROR: LA PID %d CORRESPONDE A UN PROCESO YA EXISTENTE.", *key);
-    return false;
-  }
 
   t_proceso_memoria* proceso = malloc(sizeof(t_proceso_memoria));
 
-  proceso->pid = pid;
-  proceso->script_path = strdup(script_path);
-  
-  proceso->contexto = crear_contexto_inicial();
-
-  dictionary_put(administrador.procesos_por_pid, key, proceso);
+  proceso = dictionary_get(administrador.procesos_por_pid, key);
 
   t_args_proceso*args = malloc(sizeof(t_args_proceso));
   args->fd_cpu = fd_cpu;
