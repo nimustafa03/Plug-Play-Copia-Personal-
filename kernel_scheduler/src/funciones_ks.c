@@ -92,13 +92,28 @@ uint32_t generar_pid() {
     return pid;
 }
 
+// CP3: le pide a KM que registre el proceso (pid + path) apenas KS lo crea, tanto
+// para el proceso inicial como para cada INIT_PROC. Serializado con mutex_km porque
+// fd_km es un único socket compartido; leemos el ack para no desincronizar el stream.
+void km_crear_proceso(uint32_t pid, char* path) {
+    pthread_mutex_lock(&mutex_km);
+    op_code cod = MSG_CREAR_PROCESO;
+    enviar_mensaje(fd_km, &cod, sizeof(op_code));
+    enviar_mensaje(fd_km, &pid, sizeof(uint32_t));
+    enviar_mensaje(fd_km, path, strlen(path) + 1);
+
+    int size;
+    op_code* resp = recibir_mensaje(fd_km, &size);
+    if (resp == NULL || *resp != MSG_OK)
+        log_error(logger_ks, "## KM no confirmó la creación del PID %d", pid);
+    free(resp);
+    pthread_mutex_unlock(&mutex_km);
+}
+
 // CP3: crea un proceso con la prioridad dada y lo mete en NEW.
 // El "path" (archivo de instrucciones) lo administra Kernel Memory al pedir el
 // contexto por PID; KS sólo trackea el ciclo de vida del proceso.
-// NOTA(coordinación con KM): para que KM asocie este PID nuevo con su archivo de
-// instrucciones falta un mensaje KS->KM "crear proceso con path". Hoy no existe.
 void crear_proceso(char* path, int prioridad) {
-    (void) path;
     Proceso* p = malloc(sizeof(Proceso));
     p->id_proceso = generar_pid();
     p->estado = NEW;
@@ -109,6 +124,10 @@ void crear_proceso(char* path, int prioridad) {
 
     // log obligatorio
     log_info(logger_ks, "## (%d) Se crea el proceso - Estado: NEW", p->id_proceso);
+
+    // registrar el proceso (con su path) en KM antes de que pueda despacharse,
+    // así KM ya tiene las instrucciones cuando la CPU le pida el contexto por PID.
+    km_crear_proceso(p->id_proceso, path);
 
     pthread_mutex_lock(&mutex_listas);
     list_add(listaProcesosNew, p);

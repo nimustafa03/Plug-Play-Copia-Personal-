@@ -135,6 +135,7 @@ Proceso* buscar_proceso_por_pid_sin_lock(uint32_t pid); // version sin lock (ya 
 // Creacion de procesos y PIDs
 uint32_t generar_pid();
 void crear_proceso(char* path, int prioridad); // generaliza crear_proceso_inicial (INIT_PROC)
+void km_crear_proceso(uint32_t pid, char* path); // KS->KM registrar proceso (pid + path)
 
 // Finalizacion de proceso (EXIT / SEG_FAULT): avisa a KM y loguea el fin
 void finalizar_proceso(Proceso* proceso, char* motivo);
