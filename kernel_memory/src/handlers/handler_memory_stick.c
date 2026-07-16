@@ -24,6 +24,14 @@ void atender_memory_stick(int fd_memory_stick) {
 
   conectar_memory_stick((uint32_t) memory_stick_size, fd_memory_stick);
 
+
+  if (!notificar_mapa_memory_sticks_a_cpu()) {
+      log_warning(
+          logger,
+          "El Memory Stick fue registrado, pero CPU no recibió el mapa actualizado"
+      );
+  }
+
   log_info(logger, "## Memory Stick de %d bytes Conectada", memory_stick_size);
 
   op_code ok = MSG_OK;

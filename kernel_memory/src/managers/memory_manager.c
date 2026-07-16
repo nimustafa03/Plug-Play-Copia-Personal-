@@ -25,21 +25,51 @@ void inicializar_administrador_memoria(t_estrategia_asignacion estrategia) {
   administrador.estrategia = estrategia;
 }
 
-void conectar_memory_stick(uint32_t tamanio, int socket)
-{
-    uint32_t base = administrador.memoria_total;
+void conectar_memory_stick(
+    const char* ip,
+    const char* puerto,
+    uint32_t tamanio,
+    int socket
+) {
+  uint32_t base = administrador.memoria_total;
 
-    t_memory_stick* stick = malloc(sizeof(t_memory_stick));
-    stick->id = administrador.proximo_id_stick++;
-    stick->base_global = base;
-    stick->tamanio = tamanio;
-    stick->socket = socket;
+  t_memory_stick* stick = malloc(sizeof(t_memory_stick));
 
-    list_add(administrador.memory_sticks, stick);
+  stick->id = administrador.proximo_id_stick++;
+  stick->ip = strdup(ip);
+  stick->puerto = strdup(puerto);
+  stick->base_global = base;
+  stick->tamanio = tamanio;
+  stick->socket = socket;
 
-    administrador.memoria_total += tamanio;
+  list_add(administrador.memory_sticks, stick);
 
-    registrar_hueco(base, tamanio);
+  administrador.memoria_total += tamanio;
+
+  registrar_hueco(base, tamanio);
+}
+
+bool obtener_info_memory_stick(
+    uint32_t indice,
+    t_info_memory_stick* info
+) {
+  if (info == NULL) {
+      return false;
+  }
+
+  if (indice >= (uint32_t) list_size(administrador.memory_sticks)) {
+      return false;
+  }
+
+  t_memory_stick* stick =
+      list_get(administrador.memory_sticks, indice);
+
+  info->ip = stick->ip;
+  info->puerto = stick->puerto;
+  info->base_global = stick->base_global;
+  info->tamanio = stick->tamanio;
+
+  return true;
 }
 
 static void registrar_hueco(uint32_t base, uint32_t tamanio) {
@@ -283,8 +313,15 @@ bool leer_memoria_fisica(uint32_t dir_global, uint32_t tamanio, void* buffer_out
   return true;
 }
 
+uint32_t obtener_cantidad_memory_sticks(void) {
+  return (uint32_t) list_size(administrador.memory_sticks);
+}
+
 static void destruir_memory_stick(void* elemento) {
   t_memory_stick* stick = elemento;
+
+  free(stick->ip);
+  free(stick->puerto);
   free(stick);
 }
 

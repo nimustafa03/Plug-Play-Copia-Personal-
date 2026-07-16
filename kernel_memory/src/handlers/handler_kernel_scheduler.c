@@ -16,6 +16,20 @@ extern t_log* logger;
 
 static int fd_kernel_scheduler = -1;
 
+void atender_creacion_proceso(){
+  uint32_t*pid; char*path; int size;
+
+  pid = recibir_mensaje(fd_kernel_scheduler,&size);
+  path = recibir_mensaje(fd_kernel_scheduler, &size);
+
+  crear_proceso(*pid,path);
+  free(pid); free(path);
+
+  op_code cod = MSG_OK;
+  enviar_mensaje(fd_kernel_scheduler, cod, sizeof(op_code));
+  return;
+}
+
 static t_resultado_solicitud_desalojo solicitar_desalojo_por_compactacion(void)
 {
     op_code mensaje = MSG_SOLICITAR_DESALOJO;
@@ -200,6 +214,10 @@ void atender_kernel_scheduler(int fd) {
           }
 
           free(pid); free(dir); free(tam);
+          break;
+        }
+        case MSG_CREAR_PROCESO: {
+          atender_creacion_proceso();
           break;
         }
 

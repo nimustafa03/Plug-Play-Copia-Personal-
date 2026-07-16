@@ -25,6 +25,8 @@ extern t_config* config; // CP3: para leer SEGMENT_MAX_SIZE en la traducción
 // Esquema (consigna): num_segmento = dir_logica / SEGMENT_MAX_SIZE;
 //                     desplazamiento = dir_logica % SEGMENT_MAX_SIZE;
 //                     fisica = base_del_segmento + desplazamiento.
+
+
 int traducir_direccion(uint32_t pid, uint32_t dir_logica, uint32_t tamanio, uint32_t* dir_global_out) {
   int seg_max = config_get_int_value(config, "SEGMENT_MAX_SIZE");
   uint32_t num_segmento = dir_logica / seg_max;
@@ -68,6 +70,27 @@ static t_contexto* crear_contexto_inicial(void) {
   contexto->tabla_segmentos = list_create();
 
   return contexto;
+}
+
+bool crear_proceso(uint32_t pid, char*path){
+  char* key = pid_to_key(pid);
+
+  if (dictionary_has_key(administrador.procesos_por_pid, key)) {
+    free(key);
+    log_warning(logger, "## ERROR: LA PID %d CORRESPONDE A UN PROCESO YA EXISTENTE.", *key);
+    return false;
+  }
+
+  t_proceso_memoria* proceso = malloc(sizeof(t_proceso_memoria));
+
+  proceso->pid = pid;
+  proceso->script_path = strdup(path);
+  
+  proceso->contexto = crear_contexto_inicial();
+
+  dictionary_put(administrador.procesos_por_pid, key, proceso);
+
+  return true;
 }
 
 char*devolver_instruccion(uint32_t pc,char*lista_instrucciones){
@@ -120,23 +143,13 @@ void*manejar_proceso(void*arg){
   pthread_exit(returnval);
 }
 
-bool crear_proceso(uint32_t pid, char* script_path, int fd_cpu) {
+bool inicializar_proceso(uint32_t pid, int fd_cpu) {
+  
   char* key = pid_to_key(pid);
-
-  if (dictionary_has_key(administrador.procesos_por_pid, key)) {
-    free(key);
-    log_warning(logger, "## ERROR: LA PID %d CORRESPONDE A UN PROCESO YA EXISTENTE.", *key);
-    return false;
-  }
 
   t_proceso_memoria* proceso = malloc(sizeof(t_proceso_memoria));
 
-  proceso->pid = pid;
-  proceso->script_path = strdup(script_path);
-  
-  proceso->contexto = crear_contexto_inicial();
-
-  dictionary_put(administrador.procesos_por_pid, key, proceso);
+  proceso = dictionary_get(administrador.procesos_por_pid, key);
 
   t_args_proceso*args = malloc(sizeof(t_args_proceso));
   args->fd_cpu = fd_cpu;
@@ -324,4 +337,21 @@ void destruir_segmento_ocupado(void* elemento)
 void destruir_administrador_procesos(void) {
   dictionary_destroy_and_destroy_elements( administrador.procesos_por_pid, destruir_proceso_memoria);
   administrador.procesos_por_pid = NULL;
+}
+
+bool actualizar_contexto(uint32_t p,t_contexto*contexto){
+  uint32_t pid = p;
+  char*key = pid_to_key(pid);
+  
+  if (!existe_proceso(pid)){
+    log_error(logger, "## ERROR: EL PID %d NO CORRESPONDE A UN PROCESO REGISTRADO", pid);
+    return false;
+  }
+
+  t_proceso_memoria *proceso = dictionary_get(administrador.procesos_por_pid, key);
+
+  proceso->contexto = contexto;
+
+  return true;
+
 }

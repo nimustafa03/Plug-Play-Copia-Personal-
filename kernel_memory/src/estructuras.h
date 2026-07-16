@@ -20,10 +20,19 @@ typedef struct {
 
 typedef struct {
     uint32_t id;
+    char* ip;
+    char* puerto;
     uint32_t base_global;
     uint32_t tamanio;
     int socket;
 } t_memory_stick;
+
+typedef struct {
+    char* ip;
+    char* puerto;
+    uint32_t base_global;
+    uint32_t tamanio;
+} t_info_memory_stick;
 
 
 typedef enum {

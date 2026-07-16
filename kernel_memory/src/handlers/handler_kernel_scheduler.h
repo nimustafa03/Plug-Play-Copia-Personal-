@@ -3,4 +3,6 @@
 
 void atender_kernel_scheduler(int fd_kernel_scheduler);
 
+void atender_creacion_proceso();
+
 #endif
