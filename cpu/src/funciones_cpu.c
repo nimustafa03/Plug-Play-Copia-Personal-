@@ -193,6 +193,7 @@ int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto, uint32_t pid,
 
         op_code avisar_km = MSG_INTERRUPT;
         enviar_mensaje(fd_km, &avisar_km, sizeof(op_code));
+        enviar_mensaje(fd_km, &pid, sizeof(uint32_t));
         enviar_mensaje(fd_km, contexto, sizeof(t_contexto));
 
         // avisar al KS que se interrumpió
