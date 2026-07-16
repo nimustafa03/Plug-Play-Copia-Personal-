@@ -97,29 +97,29 @@ int main(int argc, char* argv[]) {
     //Check archivo .config
     char* direccion_archivo = argv[1];
     if (string_ends_with(direccion_archivo, ".config") == 0){
-        log_error(logger_cpu, "El primer parametro debe ser .config");
+        log_info(logger_cpu, "El primer parametro debe ser .config");
         exit(EXIT_FAILURE);
     }
     // Crear .config
     t_config* config = config_create(argv[1]);
     if (config == NULL) {
-        log_error(logger_cpu, "Error al leer .config");
+        log_info(logger_cpu, "Error al leer .config");
         exit(EXIT_FAILURE);}
 
     // INICIAR CONEXIONES CON SERVIDORES
     int fd_km = conexionCPUKernelMemory(config);
     if (fd_km == -1) {
-    log_error(logger_cpu, "Error al conectar con Kernel Memory");
+    log_info(logger_cpu, "Error al conectar con Kernel Memory");
     exit(EXIT_FAILURE);
     }
     int fd_ks = conexionCPUKernelScheduler(config);
     if (fd_ks == -1) {
-    log_error(logger_cpu, "Error al conectar con Kernel Scheduler");
+    log_info(logger_cpu, "Error al conectar con Kernel Scheduler");
     exit(EXIT_FAILURE);
     }
     int fd_ms = conexionCPUMemoryStick(config);
     if (fd_ms == -1) {
-    log_error(logger_cpu, "Error al conectar con Memory Stick");
+    log_info(logger_cpu, "Error al conectar con Memory Stick");
     exit(EXIT_FAILURE);
     }
     bool op_exit;  
@@ -129,7 +129,7 @@ int main(int argc, char* argv[]) {
         // CPU espera la llegada de un pid por parte del KS
         int pid = esperar_pid(fd_ks, logger_cpu);
         if (pid == -1) {
-            log_error(logger_cpu, "Error al recibir pid");
+            log_info(logger_cpu, "Error al recibir pid");
             exit(EXIT_FAILURE);
         }
         
@@ -139,9 +139,9 @@ int main(int argc, char* argv[]) {
         // Se envia pid a KM
         enviar_mensaje(fd_km, &pid, sizeof(pid));
         int size;
-        t_contexto_ejecucion* contexto = recibir_mensaje(fd_km, &size);         // KM envia contexto
+        t_contexto* contexto = recibir_mensaje(fd_km, &size);         // KM envia contexto
         if (contexto == NULL) {
-            log_error(logger_cpu, "Error al recibir contexto");
+            log_info(logger_cpu, "Error al recibir contexto");
             break;
         }
         log_info(logger_cpu, "Inicia ejecucion de proceso: %d", pid);
@@ -150,42 +150,48 @@ int main(int argc, char* argv[]) {
         op_exit = false;
         while (op_exit != true) {
             // FETCH
+            log_info(logger_cpu, "## PID: %u - FETCH - Program Counter: %d", pid, contexto->registros.pc);
             char* instruccion = fetch(fd_km, pid, &contexto->registros);
             if (instruccion == NULL) {
-                log_error(logger_cpu, "Error en FETCH");
+                log_info(logger_cpu, "Error en FETCH");
                 break;}
 
             // DECODE
             operacion codigo = decode(instruccion);
 
             // EXECUTE
-            int operacion = execute(codigo, instruccion, &contexto->registros, fd_ks, fd_km, fd_ms, contexto->pid, contexto->tabla_segmentos);
+            char inst[32], parametro1[32], parametro2[32];
+            sscanf(instruccion, "%31s %31s %31s", inst, parametro1, parametro2);
+            log_info(logger_cpu, "## PID: %u - Ejecutando: %s - %s %s",pid, inst, parametro1, parametro2);
+
+            int operacion = execute(codigo, instruccion, &contexto->registros, fd_ks, fd_km, fd_ms, pid, contexto->tabla_segmentos, logger_cpu);
 
             if (operacion == -1) {                                  //en caso de SEG FAULT en las operaciones MOV y COPY
                 op_code guardar_contexto = MSG_SEG_FAULT;
                 enviar_mensaje(fd_km, &guardar_contexto, sizeof(op_code));
-                enviar_mensaje(fd_km, contexto, sizeof(t_contexto_ejecucion));
+                enviar_mensaje(fd_km, contexto, sizeof(t_contexto));
                 free(instruccion);
                 break;
             } else if (operacion == 1)
                 op_exit = true;
             else if (operacion == -2){
-                log_error(logger_cpu, "Operacion invalida en proceso %d", pid);
+                log_info(logger_cpu, "Operacion invalida en proceso %d", pid);
                 exit(EXIT_FAILURE);
             }
 
             // INTERRUPCIONES
             int atender = atender_interrupcion(fd_ks, fd_km, contexto);
             if (atender == 0){
+                log_info(logger_cpu, "## Interrupcion recibida");
                 free(instruccion);
                 break;
             }
             else if (atender == -1){
-                log_error(logger_cpu, "Error (-1) en la atencion de interrupcion del proceso %d", pid);
+                log_info(logger_cpu, "Error (-1) en la atencion de interrupcion del proceso %d", pid);
                 exit(EXIT_FAILURE);
             }
             else if (atender == -2){
-                log_error(logger_cpu, "Error (-2) en la atencion de interrupcion del proceso %d", pid);
+                log_info(logger_cpu, "Error (-2) en la atencion de interrupcion del proceso %d", pid);
                 exit(EXIT_FAILURE);
             }
             free(instruccion);

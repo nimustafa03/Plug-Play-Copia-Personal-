@@ -68,18 +68,18 @@ operacion decode(char* instruccion);
 int memory_management_unit(uint32_t direccion_logica, uint32_t tamanio_acceso, t_list* tabla_segmentos);
 int lectura_ms (int direccion, int fd_ms);
 int escritura_ms(int direccion, uint32_t dato, uint32_t tamanio, int fd_ms);
-int atender_interrupcion(int fd_ks,int fd_km,t_contexto_ejecucion* contexto);
+int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto);
 
 // CP3 -> Para las syscalls del mutex necesita tambien el fd_ks y el PID
-int execute(operacion codigo, char* instruccion, t_registros* cpu, int fd_ks, int fd_km, int fd_ms, uint32_t pid, t_list* tabla_segmentos);
+int execute(operacion codigo, char* instruccion, t_registros* cpu, int fd_ks, int fd_km, int fd_ms, uint32_t pid, t_list* tabla_segmentos, t_log* logger_cpu);
 
 void set(char* instruccion, t_registros* registro);
 void sum(char* instruccion, t_registros* registro);
 void sub(char* instruccion, t_registros* registro);
-int mov_in(char* instruccion, t_registros* registro, int fd_ms,t_list* tabla_segmentos);
-int mov_out(char* instruccion, t_registros* registro, int fd_ms,t_list* tabla_segmentos);
+int mov_in(char* instruccion, t_registros* registro, int fd_ms,t_list* tabla_segmentos, t_log* logger_cpu, uint32_t pid);
+int mov_out(char* instruccion, t_registros* registro, int fd_ms,t_list* tabla_segmentos, t_log* logger_cpu, uint32_t pid);
 void jnz(char* instruccion, t_registros* registro);
-int copy_mem(char* instruccion, t_registros* registro, int fd_ms,t_list* tabla_segmentos);
+int copy_mem(char* instruccion, t_registros* registro, int fd_ms,t_list* tabla_segmentos, t_log* logger_cpu, uint32_t pid);
 void noop(t_registros* registro);
 void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks);
 void syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);

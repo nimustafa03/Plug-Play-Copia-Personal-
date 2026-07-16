@@ -19,7 +19,7 @@ char* fetch(int fd_km, u_int32_t pid, t_registros* cpu){
     op_code codigo_fetch = MSG_FETCH_CPU;
     enviar_mensaje(fd_km,&codigo_fetch,sizeof(op_code));
     // Envio PC
-    int pc = cpu->PC;
+    int pc = cpu->pc;
     enviar_mensaje(fd_km, &pc, sizeof(pc));
     // KM responde por OK/ERROR
     int size_respuesta;
@@ -59,7 +59,7 @@ operacion decode(char* instruccion) {
     return OP_INVALID;
 }
 
-int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_ks, int fd_km, int fd_ms, uint32_t pid, t_list* tabla_segmentos){
+int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_ks, int fd_km, int fd_ms, uint32_t pid, t_list* tabla_segmentos, t_log* logger_cpu){
     switch (codigo){
         case OP_SET:
             set(instruccion, registros);
@@ -71,7 +71,7 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             sub(instruccion, registros);
             break;
         case OP_MOV_IN:
-            if (mov_in(instruccion, registros, fd_ms, tabla_segmentos) == -1) {
+            if (mov_in(instruccion, registros, fd_ms, tabla_segmentos, logger_cpu, pid) == -1) {
                 op_code codigo = MSG_SEG_FAULT;
                 enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
                 enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
@@ -79,7 +79,7 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             }
             break;
         case OP_MOV_OUT:
-            if (mov_out(instruccion, registros, fd_ms, tabla_segmentos) == -1) {
+            if (mov_out(instruccion, registros, fd_ms, tabla_segmentos, logger_cpu, pid) == -1) {
                 op_code codigo = MSG_SEG_FAULT;
                 enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
                 enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
@@ -90,7 +90,7 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             jnz(instruccion, registros);
             break;
         case OP_COPY_MEM:
-            if (copy_mem(instruccion, registros, fd_ms, tabla_segmentos) == -1) {
+            if (copy_mem(instruccion, registros, fd_ms, tabla_segmentos, logger_cpu, pid) == -1) {
                 op_code codigo = MSG_SEG_FAULT;     //falta escribir msj
                 enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
                 enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
@@ -157,7 +157,7 @@ int recibir_interrupcion(int fd_ks){
     return 0;          // Llego MSG_INTERRUPT
 }
 
-int atender_interrupcion(int fd_ks,int fd_km,t_contexto_ejecucion* contexto){
+int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto){
     int resultado = recibir_interrupcion(fd_ks);
 
     if (resultado == 1)
@@ -174,7 +174,7 @@ int atender_interrupcion(int fd_ks,int fd_km,t_contexto_ejecucion* contexto){
 
         op_code guardar_contexto = MSG_INTERRUPT;
         enviar_mensaje(fd_km, &guardar_contexto, sizeof(op_code));
-        enviar_mensaje(fd_km, contexto, sizeof(t_contexto_ejecucion));
+        enviar_mensaje(fd_km, contexto, sizeof(t_contexto));
 
         // avisar al KS que se interrumpió
         op_code atendido = MSG_INTERRUPCION_ATENDIDA;
