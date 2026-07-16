@@ -46,13 +46,14 @@ int conexionCPUKernelScheduler (t_config* config) {
     }
 
 int conexionCPUMemoryStick (t_config* config) {
-    char *ms_port = config_get_string_value(config, "MS_PORT");
+    char *ms_port = config_get_string_value(config, "MS_PORT");     
     char *ms_ip = config_get_string_value(config, "MS_IP");
     int fd_ms = crear_conexion(ms_ip, ms_port);
     op_code hs = MSG_HANDSHAKE_CPU;
     enviar_mensaje(fd_ms, &hs, sizeof(op_code));
     int size_ok;
     op_code* ok = recibir_mensaje(fd_ms, &size_ok);
+                //conexiones_abiertas_ms ++;
     free(ok);
     return fd_ms;
     }
@@ -117,13 +118,15 @@ int main(int argc, char* argv[]) {
     log_info(logger_cpu, "Error al conectar con Kernel Scheduler");
     exit(EXIT_FAILURE);
     }
+    int conexiones_abiertas_ms = 0;
     int fd_ms = conexionCPUMemoryStick(config);
     if (fd_ms == -1) {
     log_info(logger_cpu, "Error al conectar con Memory Stick");
     exit(EXIT_FAILURE);
     }
-    bool op_exit;  
+
     //WHILE PID
+    bool op_exit;  
     while (1) {
         
         // CPU espera la llegada de un pid por parte del KS
@@ -144,6 +147,10 @@ int main(int argc, char* argv[]) {
             log_info(logger_cpu, "Error al recibir contexto");
             break;
         }
+
+        // aca recibiia el status de los distintos ms
+        // si hay nuevos ms, se abre conexion con ellos y conexiones_abiertas_ms ++
+
         log_info(logger_cpu, "Inicia ejecucion de proceso: %d", pid);
 
         // WHILE CICLO DE INSTRUCCION
@@ -180,7 +187,7 @@ int main(int argc, char* argv[]) {
             }
 
             // INTERRUPCIONES
-            int atender = atender_interrupcion(fd_ks, fd_km, contexto);
+            int atender = atender_interrupcion(fd_ks, fd_km, contexto, pid, logger_cpu);
             if (atender == 0){
                 log_info(logger_cpu, "## Interrupcion recibida");
                 free(instruccion);

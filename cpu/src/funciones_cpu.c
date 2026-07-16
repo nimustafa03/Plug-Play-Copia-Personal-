@@ -91,7 +91,7 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             break;
         case OP_COPY_MEM:
             if (copy_mem(instruccion, registros, fd_ms, tabla_segmentos, logger_cpu, pid) == -1) {
-                op_code codigo = MSG_SEG_FAULT;     //falta escribir msj
+                op_code codigo = MSG_SEG_FAULT;
                 enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
                 enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
                 return -1;
@@ -111,16 +111,30 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             syscall_mutex_unlock(instruccion, fd_ks, pid, registros);
             break;
         case OP_INIT_PROC:
-            syscall_init_proc(instruccion, registros, fd_ks); 
+            syscall_init_proc(instruccion, registros, fd_ks, pid); 
             break;
         case OP_SLEEP:
             syscall_sleep(instruccion, fd_ks, pid, registros); 
             break;
         case OP_MEM_ALLOC:
-            syscall_mem_alloc(instruccion, registros, fd_ks, pid); 
+            switch (syscall_mem_alloc(instruccion, registros, fd_ks, pid)){
+                case 1:
+                    log_info(logger_cpu, "Operacion MEM_ALLOC recibio MSG_ERROR.");
+                case -1:
+                    log_info(logger_cpu, "Operacion MEM_ALLOC recibio NULL.");
+                case 0:
+                    break;
+            }; 
             break;
         case OP_MEM_FREE:
-            syscall_mem_free(instruccion, registros, fd_ks, pid); 
+            switch (syscall_mem_free(instruccion, registros, fd_ks, pid)){
+                case 1:
+                    log_info(logger_cpu, "Operacion MEM_FREE recibio MSG_ERROR.");
+                case -1:
+                    log_info(logger_cpu, "Operacion MEM_FREE recibio NULL.");
+                case 0:
+                    break;
+            }; 
             break;
         case OP_STDIN:
             syscall_stdin(instruccion, registros, fd_ks, pid);
@@ -129,7 +143,7 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             syscall_stdout(instruccion, registros, fd_ks, pid);
             break;
         case OP_EXIT:
-            int op_exit = syscall_exit(registros, fd_ks, pid);
+            int op_exit = syscall_exit(fd_ks, pid);
             return op_exit;
         case OP_INVALID:
             return -2;
@@ -157,7 +171,7 @@ int recibir_interrupcion(int fd_ks){
     return 0;          // Llego MSG_INTERRUPT
 }
 
-int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto){
+int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto, uint32_t pid, t_log* logger_cpu){
     int resultado = recibir_interrupcion(fd_ks);
 
     if (resultado == 1)
@@ -168,12 +182,17 @@ int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto){
     if (resultado == 0) {
         int size;
         t_interrupcion* interrupcion = recibir_mensaje(fd_ks, &size);
-        uint32_t pid = interrupcion->pid;
+        uint32_t pid_int = interrupcion->pid;
         int motivo = interrupcion->motivo;
         free(interrupcion);
 
-        op_code guardar_contexto = MSG_INTERRUPT;
-        enviar_mensaje(fd_km, &guardar_contexto, sizeof(op_code));
+        if (pid_int != pid) {
+            log_info(logger_cpu, "Se descarto interrupcion por no corresponder al proceso actual. PID INTERRUPCION: %u, PID ACTUAL: %u", pid_int, pid);
+            return 1;   // Retornar uno no afecta en cpu.c, por lo tanto la ejecucion continua normal (se ignora interrupcion inconsistente)
+        }
+
+        op_code avisar_km = MSG_INTERRUPT;
+        enviar_mensaje(fd_km, &avisar_km, sizeof(op_code));
         enviar_mensaje(fd_km, contexto, sizeof(t_contexto));
 
         // avisar al KS que se interrumpió

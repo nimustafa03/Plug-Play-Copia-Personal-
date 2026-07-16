@@ -117,7 +117,7 @@ void noop(t_registros* registros) {
 }
 
 // INIT_PROC
-void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks){
+void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid){
     char archivo[256];
     int prioridad;
     sscanf(instruccion, "%*s %255s %d", archivo, &prioridad);
@@ -125,9 +125,13 @@ void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks){
     op_code codigo = MSG_INIT_PROC;
 
     enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
+    enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
     enviar_mensaje(fd_ks, archivo, strlen(archivo) + 1);
     enviar_mensaje(fd_ks, &prioridad, sizeof(int));
 
+    int size;
+    op_code* respuesta = recibir_mensaje(fd_ks, &size);
+    free(respuesta);
     registro->pc++;
 }
 
@@ -218,6 +222,7 @@ void syscall_stdin(char* instruccion, t_registros* registros, int fd_ks, uint32_
 
     op_code codigo = MSG_STDIN;
     enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
+    enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
     enviar_mensaje(fd_ks, &direccion_logica, sizeof(uint32_t)); 
     enviar_mensaje(fd_ks, &tamanio, sizeof(uint32_t));
 
@@ -238,6 +243,7 @@ void syscall_stdout(char* instruccion, t_registros* registros, int fd_ks, uint32
     op_code codigo = MSG_STDOUT;
 
     enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
+    enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
     enviar_mensaje(fd_ks, &direccion_logica, sizeof(uint32_t)); 
     enviar_mensaje(fd_ks, &tamanio, sizeof(uint32_t));
 
@@ -245,27 +251,41 @@ void syscall_stdout(char* instruccion, t_registros* registros, int fd_ks, uint32
 }
 
 // MEM_ALLOC
-void syscall_mem_alloc(char* instruccion,t_registros* registros,int fd_ks,uint32_t pid) {
+int syscall_mem_alloc(char* instruccion,t_registros* registros,int fd_ks,uint32_t pid) {
     char id_segmento_str[32];
     char tamanio_str[32];
 
     sscanf(instruccion,"%*s %31s %31s",id_segmento_str,tamanio_str);
 
+    op_code codigo = MSG_MEM_ALLOC;
     uint32_t id_segmento = (uint32_t) atoi(id_segmento_str);
     uint32_t tamanio = (uint32_t) atoi(tamanio_str);
-
-    op_code codigo = MSG_MEM_ALLOC;
 
     enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
     enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
     enviar_mensaje(fd_ks, &id_segmento, sizeof(uint32_t));
     enviar_mensaje(fd_ks, &tamanio, sizeof(uint32_t));
 
-    registros->pc++;
+    int size;
+    op_code* respuesta = recibir_mensaje(fd_ks, &size);
+
+    if (respuesta == NULL) {
+        free(respuesta);
+        return -1;
+    }
+    if (*respuesta == MSG_OK) {
+        registros->pc++;
+    } else {
+        free(respuesta);
+        return 1;
+    }
+
+    free(respuesta);
+    return 0;
 }
 
 // MEM_FREE
-void syscall_mem_free(char* instruccion, t_registros* registros, int fd_ks, uint32_t pid) {
+int syscall_mem_free(char* instruccion, t_registros* registros, int fd_ks, uint32_t pid) {
     char id_segmento_str[32];
 
     sscanf(instruccion, "%*s %31s", id_segmento_str);
@@ -278,11 +298,28 @@ void syscall_mem_free(char* instruccion, t_registros* registros, int fd_ks, uint
     enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
     enviar_mensaje(fd_ks, &id_segmento, sizeof(uint32_t));
 
-    registros->pc++;
+    int size;
+    op_code* respuesta = recibir_mensaje(fd_ks, &size);
+
+    if (respuesta == NULL) {
+        free(respuesta);
+        return -1;
+    }
+    if (*respuesta == MSG_OK) {
+        registros->pc++;
+    } else {
+        free(respuesta);
+        return 1;
+    }
+
+    free(respuesta);
 }
 
 // EXIT
-int syscall_exit(t_registros* registro, int fd_ks, uint32_t pid){
+int syscall_exit(int fd_ks, uint32_t pid){
+    op_code cod = MSG_DONE;
+    enviar_mensaje(fd_ks, &cod, sizeof(op_code));
+    enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
     return 1;
 }
 
