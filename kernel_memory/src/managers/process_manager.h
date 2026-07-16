@@ -11,9 +11,10 @@ void inicializar_administrador_procesos(void);
 void destruir_administrador_procesos(void);
 
 bool crear_proceso(uint32_t pid, char*path);
-bool inicializar_proceso(uint32_t pid, int fd_cpu);
+bool inicializar_proceso(uint32_t pid,int fd_cpu);
 bool destruir_proceso(uint32_t pid);
 bool existe_proceso(uint32_t pid);
+bool actualizar_contexto(uint32_t pid,t_contexto*contexto);
 t_proceso_memoria* obtener_proceso(uint32_t pid);
 void*manejar_proceso(void*arg);
 

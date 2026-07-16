@@ -13,8 +13,23 @@
 
 extern t_log*logger;
 extern t_config*config;
+static int fd_cpu = -1;
+
+uint32_t recibir_pid(){
+    int size;
+    uint32_t*pid = recibir_mensaje(fd_cpu,&size);
+    return *pid;
+}
+
+t_contexto *recibir_contexto(){
+    int size;
+    t_contexto*contexto;
+    contexto = recibir_mensaje(fd_cpu, &size);
+    return contexto;
+}
 
 void atender_cpu(int fd_cpu){
+    fd_cpu = fd_cpu;
 
     int size;
 
@@ -28,11 +43,17 @@ void atender_cpu(int fd_cpu){
     op_code*codigo;
     while(1){
         codigo = recibir_mensaje(fd_cpu,&size);
-        if (*codigo == MSG_INIT_CPU) {
-            uint32_t*pid = recibir_mensaje(fd_cpu,&size);
-            char*path = recibir_mensaje(fd_cpu, &size);
-            inicializar_proceso(*pid, fd_cpu);
-            free(pid); free(path);
+        switch(*codigo){
+            case MSG_INIT_CPU:
+                inicializar_proceso(recibir_pid(), fd_cpu);
+                break;
+            case MSG_INTERRUPT:
+                enviar_confirmacion_a_CPU(fd_cpu,actualizar_contexto(recibir_pid(),recibir_contexto()));
+                break;
+            default:
+                log_warning(logger, "Código desconocido recibido de CPU: %d", *codigo);
+                break;
+          break;
         }
     }
     free(codigo);
