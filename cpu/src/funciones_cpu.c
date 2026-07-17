@@ -102,22 +102,22 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             break;
         // CP3:
         case OP_MUTEX_CREATE:
-            int comprobacion = syscall_mutex_create(instruccion, fd_ks, pid, registros); 
-            if (comprobacion == -1){
+            int comprobacion_m_create = syscall_mutex_create(instruccion, fd_ks, pid, registros); 
+            if (comprobacion_m_create == -1){
                 log_info(logger_cpu, "ERROR - MUTEX_CREATE devolvio -1");
                 exit(EXIT_FAILURE);
             }
             break;
         case OP_MUTEX_LOCK:
-            int comprobacion = syscall_mutex_lock(instruccion, fd_ks, pid, registros); 
-            if (comprobacion == -1){
+            int comprobacion_m_lock = syscall_mutex_lock(instruccion, fd_ks, pid, registros); 
+            if (comprobacion_m_lock == -1){
                 log_info(logger_cpu, "ERROR - MUTEX_LOCK devolvio -1");
                 exit(EXIT_FAILURE);
             }
             break;
         case OP_MUTEX_UNLOCK:
-            int comprobacion = syscall_mutex_unlock(instruccion, fd_ks, pid, registros);
-            if (comprobacion == -1){
+            int comprobacion_m_unlock = syscall_mutex_unlock(instruccion, fd_ks, pid, registros);
+            if (comprobacion_m_unlock == -1){
                 log_info(logger_cpu, "ERROR - MUTEX_UNLOCK devolvio -1");
                 exit(EXIT_FAILURE);
             }
@@ -153,15 +153,15 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             }; 
             break;
         case OP_STDIN:
-            int comprobacion = syscall_stdin(instruccion, registros, fd_ks, pid);
-            if (comprobacion == -1){
+            int comprobacion_stdin = syscall_stdin(instruccion, registros, fd_ks, pid);
+            if (comprobacion_stdin == -1){
                 log_info(logger_cpu, "ERROR - STDIN devolvio -1");
                 exit(EXIT_FAILURE);
             }
             break;
         case OP_STDOUT:
-            int comprobacion = syscall_stdout(instruccion, registros, fd_ks, pid);
-            if (comprobacion == -1){
+            int comprobacion_stdout = syscall_stdout(instruccion, registros, fd_ks, pid);
+            if (comprobacion_stdout == -1){
                 log_info(logger_cpu, "ERROR - STDOUT devolvio -1");
                 exit(EXIT_FAILURE);
             }

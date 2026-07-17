@@ -273,6 +273,7 @@ int syscall_stdin(char* instruccion, t_registros* registros, int fd_ks, uint32_t
 
     free(respuesta);
     registros->pc++;
+    return 0;
 }
 
 // STDOUT
@@ -304,6 +305,7 @@ int syscall_stdout(char* instruccion, t_registros* registros, int fd_ks, uint32_
     }
     free(respuesta);
     registros->pc++;
+    return 0;
 }
 
 // MEM_ALLOC
@@ -400,6 +402,7 @@ int syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid, t_registros
     }
     free(ok);
     cpu->pc++;
+    return 0;
 }
 
 // MUTEX_LOCK
@@ -423,6 +426,7 @@ int syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* 
     }
     free(ok);
     cpu->pc++;
+    return 0;
 }
 
 // MUTEX_UNLOCK
@@ -446,6 +450,7 @@ int syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros
 
     free(ok);
     cpu->pc++;
+    return 0;
 }
 
 // SLEEP
