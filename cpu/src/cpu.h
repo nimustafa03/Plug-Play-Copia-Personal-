@@ -86,6 +86,9 @@ int buscar_indice_ms(uint32_t direccion_global,t_mapa_memory_sticks_cpu* mapa);
 int obtener_fd_ms(uint32_t indice_ms,int fd_ms,int fd_ms_agregados[3]);
 void* lectura_ms(uint32_t direccion_global,uint32_t tamanio_lectura,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3]);
 int escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio_escritura,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3]);
+uint32_t obtener_valor(char* posicion, t_registros* registro);
+void escribir_registro(char* posicion,t_registros* registro,uint32_t valor);
+uint32_t tamanio_registro(char* nombre_registro);
 
 // CP3 -> Para las syscalls del mutex necesita tambien el fd_ks y el PID
 int execute(operacion codigo, char* instruccion, t_registros* cpu, int fd_ks, int fd_km, int fd_ms, uint32_t pid, t_list* tabla_segmentos, t_log* logger_cpu,t_mapa_memory_sticks_cpu* mapa,int fd_ms_agregados[3]);

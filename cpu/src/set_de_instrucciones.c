@@ -142,7 +142,10 @@ int mov_in(char* instruccion,t_registros* registros,t_mapa_memory_sticks_cpu* ma
     sscanf(instruccion,"%*s %7s",registro_destino);
 
     uint32_t direccion_logica = registros->si;
-    uint32_t tamanio = obtener_tamanio_registro(registro_destino);
+    uint32_t tamanio = tamanio_registro(registro_destino);
+
+    if (tamanio == 0)
+        return -1;
 
     int direccion_fisica =memory_management_unit(direccion_logica,tamanio,tabla_segmentos);
     if (direccion_fisica == MMU_ERROR)
@@ -170,7 +173,10 @@ int mov_out(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_m
     sscanf(instruccion,"%*s %7s",registro_origen);
 
     uint32_t direccion_logica = registros->di;
-    uint32_t tamanio = obtener_tamanio_registro(registro_origen);
+    uint32_t tamanio = tamanio_registro(registro_origen);
+
+    if (tamanio == 0)
+        return -1;
 
     int direccion_fisica =memory_management_unit(direccion_logica,tamanio,tabla_segmentos);
     if (direccion_fisica == MMU_ERROR) 
@@ -206,12 +212,6 @@ int copy_mem(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_
     int direccion_fisica_destino = memory_management_unit(direccion_logica_destino,tamanio,tabla_segmentos);
     if (direccion_fisica_destino == MMU_ERROR) {
         log_info(logger_cpu,"## PID: %u - COPY_MEM produjo SEG_FAULT en el destino",pid);
-        return -1;
-    }
-
-    void* buffer = malloc(tamanio);
-    if (buffer == NULL) {
-        log_info(logger_cpu,"No se pudo reservar memoria para COPY_MEM");
         return -1;
     }
 
@@ -340,6 +340,7 @@ int syscall_mem_free(char* instruccion, t_registros* registros, int fd_ks, uint3
     }
 
     free(respuesta);
+    return 0;
 }
 
 // EXIT

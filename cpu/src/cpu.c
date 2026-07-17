@@ -74,6 +74,8 @@ int esperar_pid(int fd_ks, t_log* logger_cpu) {
         return pid;
     }
 }
+int ms_conectados = 1;
+int fd_ms_agregados[3] = {-1, -1, -1};
 
 /*----------------------------- MAIN -----------------------------*/
 
@@ -118,14 +120,12 @@ int main(int argc, char* argv[]) {
     log_info(logger_cpu, "Error al conectar con Kernel Scheduler");
     exit(EXIT_FAILURE);
     }
-    int conexiones_abiertas_ms = 0;
+    
     int fd_ms = conexionCPUMemoryStick(config);
     if (fd_ms == -1) {
     log_info(logger_cpu, "Error al conectar con Memory Stick");
     exit(EXIT_FAILURE);
     }
-    int ms_conectados = 1;
-    int fd_ms_agregados[3];   // el MS inicial //otras posibles conexiones a distintos ms 
 
     //WHILE PID
     bool op_exit;  
@@ -143,6 +143,11 @@ int main(int argc, char* argv[]) {
         enviar_mensaje(fd_km,&codigo_init,sizeof(op_code));
         //recibe status de los diferentes ms
         t_mapa_memory_sticks_cpu* mapa = recibir_mapa(fd_km, logger_cpu);
+        if (conectar_memory_sticks_faltantes(mapa, logger_cpu) == -1) {
+            log_info(logger_cpu, "Error al conectar los Memory Sticks faltantes");
+            exit(EXIT_FAILURE);
+            break;
+        }
 
         // Se envia pid a KM
         enviar_mensaje(fd_km, &pid, sizeof(pid));
@@ -176,7 +181,7 @@ int main(int argc, char* argv[]) {
             sscanf(instruccion, "%31s %31s %31s", inst, parametro1, parametro2);
             log_info(logger_cpu, "## PID: %u - Ejecutando: %s - %s %s",pid, inst, parametro1, parametro2);
 
-            int operacion = execute(codigo, instruccion, &contexto->registros,fd_ks,fd_km,fd_ms,pid, &contexto->tabla_segmentos,logger_cpu,mapa,fd_ms_agregados);
+            int operacion = execute(codigo, instruccion, &contexto->registros,fd_ks,fd_km,fd_ms,pid, contexto->tabla_segmentos,logger_cpu,mapa,fd_ms_agregados);
 
             if (operacion == -1) {                                  //en caso de SEG FAULT en las operaciones MOV y COPY
                 op_code guardar_contexto = MSG_SEG_FAULT;
@@ -211,5 +216,6 @@ int main(int argc, char* argv[]) {
         if (op_exit == true)    
             log_info(logger_cpu, "Concluyo proceso %d con EXIT", pid);
         free(contexto);
+    destruir_mapa_memory_sticks(mapa);
     }
 }

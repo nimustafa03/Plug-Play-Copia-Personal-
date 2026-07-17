@@ -79,7 +79,7 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             }
             break;
         case OP_MOV_OUT:
-            if (mov_out(instruccion,registros,tabla_segmentos,mapa,fd_ms,fd_ms_agregados[3]) == -1) {
+            if (mov_out(instruccion,registros,tabla_segmentos,mapa,fd_ms,fd_ms_agregados) == -1) {
                 op_code codigo = MSG_SEG_FAULT;
                 enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
                 enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
@@ -130,8 +130,10 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             switch (syscall_mem_free(instruccion, registros, fd_ks, pid)){
                 case 1:
                     log_info(logger_cpu, "Operacion MEM_FREE recibio MSG_ERROR.");
+                    break;
                 case -1:
                     log_info(logger_cpu, "Operacion MEM_FREE recibio NULL.");
+                    break;
                 case 0:
                     break;
             }; 
@@ -195,10 +197,11 @@ int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto, uint32_t pid,
         enviar_mensaje(fd_km, &pid, sizeof(uint32_t));
         enviar_mensaje(fd_km, contexto, sizeof(t_contexto));
 
-        op_code* respuesta_km = (op_code*) recibir_mensaje(fd_km,&respuesta_km);
+        int size_respuesta;
+        op_code* respuesta_km = recibir_mensaje(fd_km, &size_respuesta);
         if (*respuesta_km == MSG_ERROR){
             free(respuesta_km);
-            return NULL;
+            return -1;
         }
 
         // avisar al KS que se interrumpió
