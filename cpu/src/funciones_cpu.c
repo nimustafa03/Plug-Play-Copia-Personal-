@@ -59,7 +59,7 @@ operacion decode(char* instruccion) {
     return OP_INVALID;
 }
 
-int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_ks, int fd_km, int fd_ms, uint32_t pid, t_list* tabla_segmentos, t_log* logger_cpu){
+int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_ks, int fd_km, int fd_ms, uint32_t pid, t_list* tabla_segmentos, t_log* logger_cpu, t_mapa_memory_sticks_cpu* mapa, int fd_ms_agregados[3]){
     switch (codigo){
         case OP_SET:
             set(instruccion, registros);
@@ -71,7 +71,7 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             sub(instruccion, registros);
             break;
         case OP_MOV_IN:
-            if (mov_in(instruccion, registros, fd_ms, tabla_segmentos, logger_cpu, pid) == -1) {
+            if (mov_in(instruccion,registros,mapa,fd_ms,fd_ms_agregados,tabla_segmentos) == -1) {
                 op_code codigo = MSG_SEG_FAULT;
                 enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
                 enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
@@ -79,7 +79,7 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             }
             break;
         case OP_MOV_OUT:
-            if (mov_out(instruccion, registros, fd_ms, tabla_segmentos, logger_cpu, pid) == -1) {
+            if (mov_out(instruccion,registros,tabla_segmentos,mapa,fd_ms,fd_ms_agregados[3]) == -1) {
                 op_code codigo = MSG_SEG_FAULT;
                 enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
                 enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
@@ -90,7 +90,7 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             jnz(instruccion, registros);
             break;
         case OP_COPY_MEM:
-            if (copy_mem(instruccion, registros, fd_ms, tabla_segmentos, logger_cpu, pid) == -1) {
+            if (copy_mem(instruccion,registros,tabla_segmentos,mapa,fd_ms,fd_ms_agregados,pid,logger_cpu) == -1) {
                 op_code codigo = MSG_SEG_FAULT;
                 enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
                 enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
@@ -158,7 +158,6 @@ int recibir_interrupcion(int fd_ks){
     if (bytes == -1) {
         if (errno == EAGAIN || errno == EWOULDBLOCK)
             return 1;  // No hay mensaje pendiente
-
         return -1;     // Error de recepcion
     }
     if (bytes == 0)
@@ -196,6 +195,12 @@ int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto, uint32_t pid,
         enviar_mensaje(fd_km, &pid, sizeof(uint32_t));
         enviar_mensaje(fd_km, contexto, sizeof(t_contexto));
 
+        op_code* respuesta_km = (op_code*) recibir_mensaje(fd_km,&respuesta_km);
+        if (*respuesta_km == MSG_ERROR){
+            free(respuesta_km);
+            return NULL;
+        }
+
         // avisar al KS que se interrumpió
         op_code atendido = MSG_INTERRUPCION_ATENDIDA;
         enviar_mensaje(fd_ks, &atendido, sizeof(op_code));
@@ -229,37 +234,327 @@ int memory_management_unit(uint32_t direccion_logica, uint32_t tamanio_acceso, t
     return segmento->base + desplazamiento;
 }
 
-int lectura_ms (int direccion, int fd_ms){
-    op_code lectura = MSG_READ;
-    enviar_mensaje(fd_ms, &lectura, sizeof(op_code));
-
-    enviar_mensaje(fd_ms, &direccion, sizeof(direccion));
-
-    int size;
-    int* dato_ptr = recibir_mensaje(fd_ms, &size);
-    int dato = *dato_ptr;
-
-    free(dato_ptr);
-    return dato;
+void destruir_mapa_memory_sticks(t_mapa_memory_sticks_cpu* mapa){
+    if (mapa == NULL) {
+        return;
+    }
+    for (uint32_t i = 0; i < 4; i++) {
+        free(mapa->memory_sticks[i].ip);
+        free(mapa->memory_sticks[i].puerto);
+    }
+    free(mapa);
 }
 
-int escritura_ms(int direccion, uint32_t dato, uint32_t tamanio, int fd_ms){
-    op_code escritura = MSG_WRITE;
-    enviar_mensaje(fd_ms, &escritura, sizeof(op_code));
+t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu){
+    int tamanio_buffer = 0;
+    void* buffer = recibir_mensaje(fd_km, &tamanio_buffer);
+    if (buffer == NULL) {
+        log_error(logger_cpu,"No se pudo recibir el mapa de Memory Sticks");
+        return NULL;
+    }
+    if (tamanio_buffer < (int) sizeof(uint32_t)) {
+        log_error(logger_cpu,"El buffer del mapa tiene un tamaño inválido");
+        free(buffer);
+        return NULL;
+    }
 
-    enviar_mensaje(fd_ms, &direccion, sizeof(direccion));
+    t_mapa_memory_sticks_cpu* mapa = calloc(1, sizeof(t_mapa_memory_sticks_cpu));
+    if (mapa == NULL) {
+        log_error(logger_cpu,"No se pudo reservar memoria para el mapa");
+        free(buffer);
+        return NULL;
+    }
 
-    enviar_mensaje(fd_ms, &dato, tamanio);
+    uint32_t desplazamiento = 0;
+    memcpy(&mapa->cantidad,(char*) buffer + desplazamiento,sizeof(uint32_t));
+    desplazamiento += sizeof(uint32_t);
 
-    int size;
-    op_code* confirmacion_ptr = recibir_mensaje(fd_ms, &size);
-    if (confirmacion_ptr == NULL)
+    for (uint32_t i = 0; i < mapa->cantidad; i++) {
+        uint32_t longitud_ip;
+        uint32_t longitud_puerto;
+
+        if (desplazamiento + sizeof(uint32_t) >
+            (uint32_t) tamanio_buffer) {
+            log_error(logger_cpu,"Error al reconstruir la longitud de IP del MS %u",i);
+            destruir_mapa_memory_sticks(mapa);
+            free(buffer);
+            return NULL;
+        }
+
+        memcpy(&longitud_ip,(char*) buffer + desplazamiento,sizeof(uint32_t));
+        desplazamiento += sizeof(uint32_t);
+
+        if (longitud_ip == 0 ||desplazamiento + longitud_ip >(uint32_t) tamanio_buffer) {
+            log_error(logger_cpu,"Error al reconstruir la IP del MS %u",i);
+            destruir_mapa_memory_sticks(mapa);
+            free(buffer);
+            return NULL;
+        }
+
+        mapa->memory_sticks[i].ip = malloc(longitud_ip);
+        if (mapa->memory_sticks[i].ip == NULL) {
+            log_error(logger_cpu,"No se pudo reservar memoria para la IP del MS %u",i);
+            destruir_mapa_memory_sticks(mapa);
+            free(buffer);
+            return NULL;
+        }
+
+        memcpy(mapa->memory_sticks[i].ip,(char*) buffer + desplazamiento,longitud_ip);
+        desplazamiento += longitud_ip;
+
+        if (desplazamiento + sizeof(uint32_t) >(uint32_t) tamanio_buffer) {
+            log_error(logger_cpu,"Error al reconstruir la longitud del puerto del MS %u",i);
+            destruir_mapa_memory_sticks(mapa);
+            free(buffer);
+            return NULL;
+        }
+
+        memcpy(&longitud_puerto,(char*) buffer + desplazamiento,sizeof(uint32_t));
+        desplazamiento += sizeof(uint32_t);
+
+        if (longitud_puerto == 0 ||desplazamiento + longitud_puerto >(uint32_t) tamanio_buffer) {
+            log_error(logger_cpu,"Error al reconstruir el puerto del MS %u",i);
+            destruir_mapa_memory_sticks(mapa);
+            free(buffer);
+            return NULL;
+        }
+
+        mapa->memory_sticks[i].puerto =malloc(longitud_puerto);
+
+        if (mapa->memory_sticks[i].puerto == NULL) {
+            log_error(logger_cpu,"No se pudo reservar memoria para el puerto del MS %u",i);
+            destruir_mapa_memory_sticks(mapa);
+            free(buffer);
+            return NULL;
+        }
+
+        memcpy(mapa->memory_sticks[i].puerto,(char*) buffer + desplazamiento,longitud_puerto);
+        desplazamiento += longitud_puerto;
+
+        if (desplazamiento + sizeof(uint32_t) >(uint32_t) tamanio_buffer) {
+            log_error(logger_cpu,"Error al reconstruir la base global del MS %u",i);
+            destruir_mapa_memory_sticks(mapa);
+            free(buffer);
+            return NULL;
+        }
+
+        memcpy(&mapa->memory_sticks[i].base_global,(char*) buffer + desplazamiento,sizeof(uint32_t));
+        desplazamiento += sizeof(uint32_t);
+
+        if (desplazamiento + sizeof(uint32_t) >(uint32_t) tamanio_buffer) {
+            log_error(logger_cpu,"Error al reconstruir el tamaño del MS %u",i);
+            destruir_mapa_memory_sticks(mapa);
+            free(buffer);
+            return NULL;
+        }
+
+        memcpy(&mapa->memory_sticks[i].tamanio,(char*) buffer + desplazamiento,sizeof(uint32_t));
+        desplazamiento += sizeof(uint32_t);
+
+        log_info(logger_cpu,"MS %u recibido: IP=%s Puerto=%s Base=%u Tamaño=%u",i,
+            mapa->memory_sticks[i].ip,
+            mapa->memory_sticks[i].puerto,
+            mapa->memory_sticks[i].base_global,
+            mapa->memory_sticks[i].tamanio
+        );
+    }
+
+    free(buffer);
+    return mapa;
+}
+
+
+int actualizar_conexiones_ms(t_info_memory_stick_cpu* info_ms,t_log* logger_cpu) {
+    if (info_ms == NULL)
         return -1;
-    if (*confirmacion_ptr != MSG_DONE) {
-        free(confirmacion_ptr);
+
+    int fd_ms = crear_conexion(info_ms->ip,info_ms->puerto);
+    if (fd_ms == -1) {
+        log_error(logger_cpu,"No se pudo conectar al MS %s:%s",info_ms->ip,info_ms->puerto);
         return -1;
     }
-    free(confirmacion_ptr);
+    log_info(logger_cpu,"Nueva conexión con MS %s:%s establecida. FD=%d",info_ms->ip,info_ms->puerto,fd_ms);
+    return fd_ms;
+}
+
+int conectar_memory_sticks_faltantes(t_mapa_memory_sticks_cpu* mapa,t_log* logger_cpu){
+    if (mapa->cantidad <= ms_conectados) 
+        return 0;
+
+    for (uint32_t i = ms_conectados; i < mapa->cantidad; i++) {
+
+        t_info_memory_stick_cpu* nuevo_ms =&mapa->memory_sticks[i];
+
+        int nuevo_fd = actualizar_conexiones_ms(nuevo_ms, logger_cpu);
+        if (nuevo_fd == -1) {
+            log_error(logger_cpu,"No se pudo conectar al MS %u: %s:%s",i,nuevo_ms->ip,nuevo_ms->puerto);
+            return -1;
+        }
+        fd_ms_agregados[i] = nuevo_fd;
+        ms_conectados++;
+        
+        log_info(logger_cpu,"Conexión establecida con MS %u: %s:%s | ""Base=%u | Tamaño=%u | Total conectados=%d",
+            i,
+            nuevo_ms->ip,
+            nuevo_ms->puerto,
+            nuevo_ms->base_global,
+            nuevo_ms->tamanio,
+            ms_conectados
+        );
+    }
     return 0;
 }
 
+int buscar_indice_ms(uint32_t direccion_global,t_mapa_memory_sticks_cpu* mapa) {
+    for (uint32_t i = 0; i < mapa->cantidad; i++) {
+        t_info_memory_stick_cpu* ms =&mapa->memory_sticks[i];
+
+        uint32_t inicio = ms->base_global;
+        uint32_t fin = inicio + ms->tamanio;
+
+        if (direccion_global >= inicio &&direccion_global < fin) 
+            return (int)i;
+    }
+    return -1;
+}
+
+int obtener_fd_ms(uint32_t indice_ms,int fd_ms,int fd_ms_agregados[3]) {
+    if (indice_ms == 0) 
+        return fd_ms;
+
+    uint32_t indice_agregado = indice_ms - 1;
+
+    if (indice_agregado >= 3)
+        return -1;
+    return fd_ms_agregados[indice_agregado];
+}
+
+void* lectura_ms(uint32_t direccion_global,uint32_t tamanio_lectura,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3]) {
+    if (mapa == NULL ||fd_ms < 0 ||tamanio_lectura == 0 ||mapa->cantidad == 0 ||mapa->cantidad > 4)
+        return NULL;
+
+    uint8_t* buffer_resultado = malloc(tamanio_lectura);
+
+    if (buffer_resultado == NULL) {
+        return NULL;
+    }
+
+    uint32_t direccion_actual = direccion_global;
+    uint32_t bytes_restantes = tamanio_lectura;
+    uint32_t desplazamiento_buffer = 0;
+
+    while (bytes_restantes > 0) {
+        int indice_ms = buscar_indice_ms(direccion_actual,mapa);
+
+        if (indice_ms == -1) {
+            free(buffer_resultado);
+            return NULL;
+        }
+
+        t_info_memory_stick_cpu* ms_actual = &mapa->memory_sticks[indice_ms];
+
+        int fd_actual = obtener_fd_ms((uint32_t)indice_ms,fd_ms,fd_ms_agregados);
+
+        if (fd_actual < 0) {
+            free(buffer_resultado);
+            return NULL;
+        }
+
+        uint32_t direccion_local = direccion_actual - ms_actual->base_global;
+        uint32_t bytes_disponibles =ms_actual->tamanio - direccion_local;
+        uint32_t bytes_a_leer;
+
+        if (bytes_restantes < bytes_disponibles) {
+            bytes_a_leer = bytes_restantes;
+        } else {
+            bytes_a_leer = bytes_disponibles;
+        }
+        op_code codigo = MSG_READ;
+        enviar_mensaje(fd_actual,&codigo,sizeof(op_code));
+        enviar_mensaje(fd_actual,&direccion_local,sizeof(uint32_t));
+        enviar_mensaje(fd_actual,&bytes_a_leer,sizeof(uint32_t));
+
+        int tamanio_respuesta = 0;
+
+        void* respuesta = recibir_mensaje(fd_actual,&tamanio_respuesta);
+
+        if (respuesta == NULL) {
+            free(buffer_resultado);
+            return NULL;
+        }
+
+        if (tamanio_respuesta < 0 ||(uint32_t)tamanio_respuesta != bytes_a_leer) {
+            free(respuesta);
+            free(buffer_resultado);
+            return NULL;
+        }
+
+        memcpy(buffer_resultado + desplazamiento_buffer,respuesta,bytes_a_leer);
+
+        free(respuesta);
+
+        direccion_actual += bytes_a_leer;
+        desplazamiento_buffer += bytes_a_leer;
+        bytes_restantes -= bytes_a_leer;
+    }
+    return buffer_resultado;
+}
+
+int escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio_escritura,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3]) {
+    if (buffer_origen == NULL||mapa == NULL||tamanio_escritura == 0||mapa->cantidad == 0||mapa->cantidad > 4) {
+        return -1;
+    }
+
+    uint32_t direccion_actual = direccion_global;
+    uint32_t bytes_restantes = tamanio_escritura;
+    uint32_t desplazamiento_buffer = 0;
+
+    uint8_t* buffer = (uint8_t*)buffer_origen;
+
+    while (bytes_restantes > 0) {
+        int indice_ms = buscar_indice_ms(direccion_actual,mapa);
+
+        if (indice_ms == -1) 
+            return -1;
+
+        t_info_memory_stick_cpu* ms_actual = &mapa->memory_sticks[indice_ms];
+
+        int fd_actual = obtener_fd_ms((uint32_t)indice_ms,fd_ms,fd_ms_agregados);
+        if (fd_actual < 0)
+            return -1;
+
+        uint32_t direccion_local = direccion_actual - ms_actual->base_global;
+        uint32_t bytes_disponibles = ms_actual->tamanio - direccion_local;
+        uint32_t bytes_a_escribir;
+
+        if (bytes_restantes < bytes_disponibles) {
+            bytes_a_escribir = bytes_restantes;
+        } else {
+            bytes_a_escribir = bytes_disponibles;
+        }
+
+        op_code codigo = MSG_WRITE;
+        enviar_mensaje(fd_actual,&codigo,sizeof(op_code));
+
+        enviar_mensaje(fd_actual,&direccion_local,sizeof(uint32_t));
+        enviar_mensaje(fd_actual,&bytes_a_escribir,sizeof(uint32_t));
+        enviar_mensaje(fd_actual,buffer + desplazamiento_buffer,bytes_a_escribir);
+
+        int tamanio_respuesta = 0;
+
+        op_code* respuesta = recibir_mensaje(fd_actual,&tamanio_respuesta);
+        if (respuesta == NULL)
+            return -1;
+
+        if (tamanio_respuesta != sizeof(op_code) ||*respuesta != MSG_DONE) {
+            free(respuesta);
+            return -1;
+        }
+
+        free(respuesta);
+        direccion_actual += bytes_a_escribir;
+        desplazamiento_buffer += bytes_a_escribir;
+        bytes_restantes -= bytes_a_escribir;
+    }
+    return 0;
+}

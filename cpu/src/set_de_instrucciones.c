@@ -136,76 +136,103 @@ void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint
 }
 
 // MOV_IN
-int mov_in (char* instruccion, t_registros* registro, int fd_ms, t_list* tabla_segmentos, t_log* logger_cpu, uint32_t pid){
+int mov_in(char* instruccion,t_registros* registros,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3],t_list* tabla_segmentos){
+    char registro_destino[8];
 
-    char registro_destino[32];
-    sscanf(instruccion, "%*s %s %*s", registro_destino);
-    uint32_t tamanio_acceso = tamanio_registro(registro_destino);
+    sscanf(instruccion,"%*s %7s",registro_destino);
 
-    uint32_t direccion_logica = registro->si;
+    uint32_t direccion_logica = registros->si;
+    uint32_t tamanio = obtener_tamanio_registro(registro_destino);
 
-    int direccion_fisica = memory_management_unit(direccion_logica, tamanio_acceso, tabla_segmentos);
+    int direccion_fisica =memory_management_unit(direccion_logica,tamanio,tabla_segmentos);
     if (direccion_fisica == MMU_ERROR)
         return -1;
 
-    int dato = lectura_ms(direccion_fisica, fd_ms);
-    escribir_registro(registro_destino, registro, dato);
-    log_info(logger_cpu,"PID: %u - Acción: LEER - Dirección Física: %d - Valor: %d.", pid, direccion_fisica, dato);
+    void* datos = lectura_ms(direccion_fisica,tamanio,mapa,fd_ms,fd_ms_agregados);
+    if (datos == NULL)
+        return -1;
 
-    registro->pc++;
+    uint32_t valor = 0;
+
+    memcpy(&valor,datos,tamanio);
+    free(datos);
+
+    escribir_registro(registro_destino,registros,valor);
+    registros->pc++;
     return 0;
 }
 
 // MOV_OUT
 
-int mov_out(char* instruccion, t_registros* registro, int fd_ms, t_list* tabla_segmentos, t_log* logger_cpu, uint32_t pid) {
+int mov_out(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3]){
+    char registro_origen[8];
 
-    char registro_origen[32];
-    sscanf(instruccion, "%*s %31s", registro_origen);
+    sscanf(instruccion,"%*s %7s",registro_origen);
 
-    uint32_t tamanio_acceso = tamanio_registro(registro_origen);
-    uint32_t valor = obtener_valor(registro_origen, registro);
+    uint32_t direccion_logica = registros->di;
+    uint32_t tamanio = obtener_tamanio_registro(registro_origen);
 
-    uint32_t direccion_logica = registro->di;
-
-    int direccion_fisica = memory_management_unit(direccion_logica, tamanio_acceso, tabla_segmentos);
-    if (direccion_fisica == MMU_ERROR) {
+    int direccion_fisica =memory_management_unit(direccion_logica,tamanio,tabla_segmentos);
+    if (direccion_fisica == MMU_ERROR) 
         return -1;
-    }
-    escritura_ms(direccion_fisica, valor, tamanio_acceso, fd_ms);
-    log_info(logger_cpu,"PID: %u - Acción: ESCRIBIR - Dirección Física: %d - Valor: %u.", pid, direccion_fisica, valor);
 
-    registro->pc++;
+    uint32_t valor = obtener_valor(registro_origen,registros);
+
+    int resultado = escritura_ms((uint32_t)direccion_fisica,&valor,tamanio,mapa,fd_ms,fd_ms_agregados);
+    if (resultado == -1)
+        return -1;
+
+    registros->pc++;
     return 0;
 }
 
 // COPY_MEM
-int copy_mem(char* instruccion, t_registros* registro, int fd_ms, t_list* tabla_segmentos, t_log* logger_cpu, uint32_t pid) {
+int copy_mem(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_mapa_memory_sticks_cpu* mapa_ms,int fd_ms,int fd_ms_agregados[3],uint32_t pid,t_log* logger_cpu){
+    char registro_tamanio[8];
 
-    char registro_tamanio[32];
-    sscanf(instruccion, "%*s %31s", registro_tamanio);
+    sscanf(instruccion, "%*s %7s", registro_tamanio);
 
-    uint32_t cantidad_bytes = obtener_valor(registro_tamanio, registro);
+    uint32_t tamanio = obtener_valor(registro_tamanio, registros);
 
-    uint32_t direccion_logica_origen = registro->si;
-    uint32_t direccion_logica_destino = registro->di;
+    uint32_t direccion_logica_origen = registros->si;
+    uint32_t direccion_logica_destino = registros->di;
 
-    int direccion_fisica_origen = memory_management_unit(direccion_logica_origen,cantidad_bytes,tabla_segmentos);
-    int direccion_fisica_destino = memory_management_unit(direccion_logica_destino,cantidad_bytes,tabla_segmentos);
-
-    if (direccion_fisica_origen == MMU_ERROR || direccion_fisica_destino == MMU_ERROR) {
+    int direccion_fisica_origen = memory_management_unit(direccion_logica_origen,tamanio,tabla_segmentos);
+    if (direccion_fisica_origen == MMU_ERROR) {
+        log_error(logger_cpu,"## PID: %u - COPY_MEM produjo SEG_FAULT en el origen",pid);
         return -1;
     }
 
-    for (uint32_t i = 0; i < cantidad_bytes; i++) {
-        uint32_t dato = lectura_ms(direccion_fisica_origen + i, fd_ms);
-        log_info(logger_cpu,"PID: %u - Acción: LEER - Dirección Física: %d - Valor: %u.", pid, direccion_fisica_origen, dato);
-        escritura_ms(direccion_fisica_destino + i, dato, sizeof(uint8_t), fd_ms);
-        log_info(logger_cpu,"PID: %u - Acción: ESCRIBIR - Dirección Física: %d - Valor: %u.", pid, direccion_fisica_destino, dato);
+    int direccion_fisica_destino = memory_management_unit(direccion_logica_destino,tamanio,tabla_segmentos);
+    if (direccion_fisica_destino == MMU_ERROR) {
+        log_info(logger_cpu,"## PID: %u - COPY_MEM produjo SEG_FAULT en el destino",pid);
+        return -1;
     }
 
+    void* buffer = malloc(tamanio);
+    if (buffer == NULL) {
+        log_info(logger_cpu,"No se pudo reservar memoria para COPY_MEM");
+        return -1;
+    }
 
-    registro->pc++;
+    void* buffer = lectura_ms(direccion_fisica_origen,tamanio,mapa_ms,fd_ms,fd_ms_agregados);
+    if (buffer == NULL) {
+        log_info(logger_cpu,"## PID: %u - Error al leer memoria en COPY_MEM",pid);
+        return -1;
+    }
+
+    int resultado_escritura = escritura_ms(direccion_fisica_destino,buffer,tamanio,mapa_ms,fd_ms,fd_ms_agregados);
+    if (resultado_escritura == -1) {
+        log_info(logger_cpu,"## PID: %u - Error al escribir memoria en COPY_MEM",pid);
+
+        free(buffer);
+        return -1;
+    }
+
+    free(buffer);
+    registros->pc++;
+
+    log_info(logger_cpu,"## PID: %u - Ejecutando: COPY_MEM - %s",pid,registro_tamanio);
     return 0;
 }
 

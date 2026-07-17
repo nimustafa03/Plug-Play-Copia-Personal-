@@ -124,6 +124,8 @@ int main(int argc, char* argv[]) {
     log_info(logger_cpu, "Error al conectar con Memory Stick");
     exit(EXIT_FAILURE);
     }
+    int ms_conectados = 1;
+    int fd_ms_agregados[3];   // el MS inicial //otras posibles conexiones a distintos ms 
 
     //WHILE PID
     bool op_exit;  
@@ -139,6 +141,9 @@ int main(int argc, char* argv[]) {
         // Aviso de inicio de proceso al KM
         op_code codigo_init = MSG_INIT_CPU;
         enviar_mensaje(fd_km,&codigo_init,sizeof(op_code));
+        //recibe status de los diferentes ms
+        t_mapa_memory_sticks_cpu* mapa = recibir_mapa(fd_km, logger_cpu);
+
         // Se envia pid a KM
         enviar_mensaje(fd_km, &pid, sizeof(pid));
         int size;
@@ -171,7 +176,7 @@ int main(int argc, char* argv[]) {
             sscanf(instruccion, "%31s %31s %31s", inst, parametro1, parametro2);
             log_info(logger_cpu, "## PID: %u - Ejecutando: %s - %s %s",pid, inst, parametro1, parametro2);
 
-            int operacion = execute(codigo, instruccion, &contexto->registros, fd_ks, fd_km, fd_ms, pid, contexto->tabla_segmentos, logger_cpu);
+            int operacion = execute(codigo, instruccion, &contexto->registros,fd_ks,fd_km,fd_ms,pid, &contexto->tabla_segmentos,logger_cpu,mapa,fd_ms_agregados);
 
             if (operacion == -1) {                                  //en caso de SEG FAULT en las operaciones MOV y COPY
                 op_code guardar_contexto = MSG_SEG_FAULT;
