@@ -100,7 +100,7 @@ void jnz(char* instruccion, t_registros* registro) {
 
     char registro_destino[32];
     char pc_ptr[32];
-    sscanf(instruccion, "%*s %s %s", registro_destino, pc_ptr);
+    sscanf(instruccion, "%*s %31s %31s", registro_destino, pc_ptr);
 
     uint32_t valor = obtener_valor(registro_destino, registro);
     uint32_t nuevo_pc = (uint32_t) strtol(pc_ptr, NULL, 10);
@@ -126,11 +126,19 @@ void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint
 
     enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
     enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
-    enviar_mensaje(fd_ks, archivo, strlen(archivo) + 1);
     enviar_mensaje(fd_ks, &prioridad, sizeof(int));
+    enviar_mensaje(fd_ks, archivo, strlen(archivo) + 1);
 
     int size;
     op_code* respuesta = recibir_mensaje(fd_ks, &size);
+
+    if (respuesta == NULL)
+    return;
+    if (*respuesta != MSG_OK) {
+        free(respuesta);
+        return;
+    }
+
     free(respuesta);
     registro->pc++;
 }
@@ -237,7 +245,7 @@ int copy_mem(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_
 }
 
 // STDIN
-void syscall_stdin(char* instruccion, t_registros* registros, int fd_ks, uint32_t pid) {
+int syscall_stdin(char* instruccion, t_registros* registros, int fd_ks, uint32_t pid) {
 
     char registro_direccion[32];
     char registro_tamanio[32];
@@ -253,11 +261,22 @@ void syscall_stdin(char* instruccion, t_registros* registros, int fd_ks, uint32_
     enviar_mensaje(fd_ks, &direccion_logica, sizeof(uint32_t)); 
     enviar_mensaje(fd_ks, &tamanio, sizeof(uint32_t));
 
+    int size;
+    op_code* respuesta = recibir_mensaje(fd_ks, &size);
+    if (respuesta == NULL)
+        return -1;
+
+    if (*respuesta != MSG_OK) {
+        free(respuesta);
+        return -1;
+    }
+
+    free(respuesta);
     registros->pc++;
 }
 
 // STDOUT
-void syscall_stdout(char* instruccion, t_registros* registros, int fd_ks, uint32_t pid) {
+int syscall_stdout(char* instruccion, t_registros* registros, int fd_ks, uint32_t pid) {
 
     char registro_direccion[32];
     char registro_tamanio[32];
@@ -274,6 +293,16 @@ void syscall_stdout(char* instruccion, t_registros* registros, int fd_ks, uint32
     enviar_mensaje(fd_ks, &direccion_logica, sizeof(uint32_t)); 
     enviar_mensaje(fd_ks, &tamanio, sizeof(uint32_t));
 
+    int size;
+    op_code* respuesta = recibir_mensaje(fd_ks, &size);
+    if (respuesta == NULL)
+        return -1;
+
+    if (*respuesta != MSG_OK) {
+        free(respuesta);
+        return -1;
+    }
+    free(respuesta);
     registros->pc++;
 }
 
@@ -352,7 +381,7 @@ int syscall_exit(int fd_ks, uint32_t pid){
 }
 
 // MUTEX_CREATE
-void syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu) {
+int syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu) {
     char nombre[64];
     sscanf(instruccion, "MUTEX_CREATE %s", nombre);
 
@@ -363,13 +392,18 @@ void syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid, t_registro
 
     int size; 
     op_code* ok = recibir_mensaje(fd_ks, &size);
+    if (ok == NULL)
+        return -1;
+    if (*ok != MSG_OK) {
+        free(ok);
+        return -1;
+    }
     free(ok);
-
     cpu->pc++;
 }
 
 // MUTEX_LOCK
-void syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu) {
+int syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu) {
     char nombre[64];
     sscanf(instruccion, "MUTEX_LOCK %s", nombre);
 
@@ -381,13 +415,18 @@ void syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros*
     // bloqueante — espera hasta que KS lo desbloquee
     int size; 
     op_code* ok = recibir_mensaje(fd_ks, &size);
+    if (ok == NULL)
+        return -1;
+    if (*ok != MSG_OK) {
+        free(ok);
+        return -1;
+    }
     free(ok);
-
     cpu->pc++;
 }
 
 // MUTEX_UNLOCK
-void syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu) {
+int syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu) {
     char nombre[64];
     sscanf(instruccion, "MUTEX_UNLOCK %s", nombre);
 
@@ -398,8 +437,14 @@ void syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registro
 
     int size; 
     op_code* ok = recibir_mensaje(fd_ks, &size);
-    free(ok);
+    if (ok == NULL)
+        return -1;
+    if (*ok != MSG_OK) {
+        free(ok);
+        return -1;
+    }
 
+    free(ok);
     cpu->pc++;
 }
 
@@ -418,6 +463,10 @@ void syscall_sleep(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu)
     // bloqueante - espera hasta que KS confirme que el sleep terminó
     int size;
     op_code* ok = recibir_mensaje(fd_ks, &size);
+    if (*ok != MSG_OK) {
+        free(ok);
+        return;
+    }
     free(ok);
 
     cpu->pc++;

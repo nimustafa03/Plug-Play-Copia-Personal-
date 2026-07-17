@@ -102,13 +102,25 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             break;
         // CP3:
         case OP_MUTEX_CREATE:
-            syscall_mutex_create(instruccion, fd_ks, pid, registros); 
+            int comprobacion = syscall_mutex_create(instruccion, fd_ks, pid, registros); 
+            if (comprobacion == -1){
+                log_info(logger_cpu, "ERROR - MUTEX_CREATE devolvio -1");
+                exit(EXIT_FAILURE);
+            }
             break;
         case OP_MUTEX_LOCK:
-            syscall_mutex_lock(instruccion, fd_ks, pid, registros); 
+            int comprobacion = syscall_mutex_lock(instruccion, fd_ks, pid, registros); 
+            if (comprobacion == -1){
+                log_info(logger_cpu, "ERROR - MUTEX_LOCK devolvio -1");
+                exit(EXIT_FAILURE);
+            }
             break;
         case OP_MUTEX_UNLOCK:
-            syscall_mutex_unlock(instruccion, fd_ks, pid, registros);
+            int comprobacion = syscall_mutex_unlock(instruccion, fd_ks, pid, registros);
+            if (comprobacion == -1){
+                log_info(logger_cpu, "ERROR - MUTEX_UNLOCK devolvio -1");
+                exit(EXIT_FAILURE);
+            }
             break;
         case OP_INIT_PROC:
             syscall_init_proc(instruccion, registros, fd_ks, pid); 
@@ -120,8 +132,10 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             switch (syscall_mem_alloc(instruccion, registros, fd_ks, pid)){
                 case 1:
                     log_info(logger_cpu, "Operacion MEM_ALLOC recibio MSG_ERROR.");
+                    break;
                 case -1:
                     log_info(logger_cpu, "Operacion MEM_ALLOC recibio NULL.");
+                    break;
                 case 0:
                     break;
             }; 
@@ -139,10 +153,18 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             }; 
             break;
         case OP_STDIN:
-            syscall_stdin(instruccion, registros, fd_ks, pid);
+            int comprobacion = syscall_stdin(instruccion, registros, fd_ks, pid);
+            if (comprobacion == -1){
+                log_info(logger_cpu, "ERROR - STDIN devolvio -1");
+                exit(EXIT_FAILURE);
+            }
             break;
         case OP_STDOUT:
-            syscall_stdout(instruccion, registros, fd_ks, pid);
+            int comprobacion = syscall_stdout(instruccion, registros, fd_ks, pid);
+            if (comprobacion == -1){
+                log_info(logger_cpu, "ERROR - STDOUT devolvio -1");
+                exit(EXIT_FAILURE);
+            }
             break;
         case OP_EXIT:
             int op_exit = syscall_exit(fd_ks, pid);
@@ -183,6 +205,14 @@ int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto, uint32_t pid,
     if (resultado == 0) {
         int size;
         t_interrupcion* interrupcion = recibir_mensaje(fd_ks, &size);
+
+        if (interrupcion == NULL)
+            return -1;
+        if (size != sizeof(t_interrupcion)) {
+            free(interrupcion);
+            return -1;
+        }
+
         uint32_t pid_int = interrupcion->pid;
         int motivo = interrupcion->motivo;
         free(interrupcion);
@@ -199,10 +229,19 @@ int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto, uint32_t pid,
 
         int size_respuesta;
         op_code* respuesta_km = recibir_mensaje(fd_km, &size_respuesta);
+
+        if (respuesta_km == NULL) 
+            return -1;
+        if (size_respuesta != sizeof(op_code)) {
+            free(respuesta_km);
+            return -1;
+        }
+        
         if (*respuesta_km == MSG_ERROR){
             free(respuesta_km);
             return -1;
         }
+        free(respuesta_km);
 
         // avisar al KS que se interrumpió
         op_code atendido = MSG_INTERRUPCION_ATENDIDA;
@@ -271,6 +310,13 @@ t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu){
     uint32_t desplazamiento = 0;
     memcpy(&mapa->cantidad,(char*) buffer + desplazamiento,sizeof(uint32_t));
     desplazamiento += sizeof(uint32_t);
+
+    if (mapa->cantidad == 0 || mapa->cantidad > 4) {
+        log_info(logger_cpu,"Cantidad inválida de Memory Sticks: %u",mapa->cantidad);
+        destruir_mapa_memory_sticks(mapa);
+        free(buffer);
+        return NULL;
+    }
 
     for (uint32_t i = 0; i < mapa->cantidad; i++) {
         uint32_t longitud_ip;
@@ -376,6 +422,18 @@ int actualizar_conexiones_ms(t_info_memory_stick_cpu* info_ms,t_log* logger_cpu)
         log_error(logger_cpu,"No se pudo conectar al MS %s:%s",info_ms->ip,info_ms->puerto);
         return -1;
     }
+
+    op_code handshake = MSG_HANDSHAKE_CPU;
+    enviar_mensaje(fd_ms, &handshake, sizeof(op_code));
+    int size;
+    op_code* respuesta = recibir_mensaje(fd_ms, &size);
+        if (respuesta == NULL ||size != sizeof(op_code) ||*respuesta != MSG_OK){
+        free(respuesta);
+        close(fd_ms);
+        return -1;
+    }
+    free(respuesta);
+
     log_info(logger_cpu,"Nueva conexión con MS %s:%s establecida. FD=%d",info_ms->ip,info_ms->puerto,fd_ms);
     return fd_ms;
 }
@@ -393,7 +451,7 @@ int conectar_memory_sticks_faltantes(t_mapa_memory_sticks_cpu* mapa,t_log* logge
             log_error(logger_cpu,"No se pudo conectar al MS %u: %s:%s",i,nuevo_ms->ip,nuevo_ms->puerto);
             return -1;
         }
-        fd_ms_agregados[i] = nuevo_fd;
+        fd_ms_agregados[i-1] = nuevo_fd;
         ms_conectados++;
         
         log_info(logger_cpu,"Conexión establecida con MS %u: %s:%s | ""Base=%u | Tamaño=%u | Total conectados=%d",

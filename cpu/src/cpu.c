@@ -143,6 +143,10 @@ int main(int argc, char* argv[]) {
         enviar_mensaje(fd_km,&codigo_init,sizeof(op_code));
         //recibe status de los diferentes ms
         t_mapa_memory_sticks_cpu* mapa = recibir_mapa(fd_km, logger_cpu);
+        if (mapa == NULL) {
+            log_info(logger_cpu, "No se pudo recibir el mapa de Memory Sticks");
+            exit(EXIT_FAILURE);
+        }
         if (conectar_memory_sticks_faltantes(mapa, logger_cpu) == -1) {
             log_info(logger_cpu, "Error al conectar los Memory Sticks faltantes");
             exit(EXIT_FAILURE);
