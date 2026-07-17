@@ -2,17 +2,17 @@
 
 #include <stdlib.h>
 #include <commons/log.h>
-
-#include <utils/mensajes.h>
-
+#include <commons/log.h>
+#include "../../utils/src/utils/conexiones.h"
+#include "../../utils/src/utils/mensajes.h"
 #include "../managers/memory_manager.h"
+#include "../handlers/handler_cpu.h"
 
 extern t_log* logger;
 
 void atender_memory_stick(int fd_memory_stick) {
   int size;
-  int* ptr_memory_stick_size = recibir_mensaje(fd_memory_stick, &size);
-
+  int*ptr_memory_stick_size = recibir_mensaje(fd_memory_stick, &size);
   if (ptr_memory_stick_size == NULL || size != sizeof(int)) {
       log_error(logger, "Error al recibir tamaño de Memory Stick - FD: %d", fd_memory_stick);
       free(ptr_memory_stick_size);
@@ -21,8 +21,8 @@ void atender_memory_stick(int fd_memory_stick) {
 
   int memory_stick_size = *ptr_memory_stick_size;
   free(ptr_memory_stick_size);
-
-  conectar_memory_stick((uint32_t) memory_stick_size, fd_memory_stick);
+  const char* ip = "test"; const char * port = "test2";
+  conectar_memory_stick(ip, port, (uint32_t) memory_stick_size, fd_memory_stick);
 
 
   if (!notificar_mapa_memory_sticks_a_cpu()) {

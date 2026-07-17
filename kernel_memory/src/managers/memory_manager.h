@@ -8,7 +8,11 @@
 void inicializar_administrador_memoria(t_estrategia_asignacion estrategia);
 void destruir_administrador_memoria(void);
 
-void conectar_memory_stick(uint32_t tamanio, int socket);
+void conectar_memory_stick(
+    const char* ip,
+    const char* puerto,
+    uint32_t tamanio,
+    int socket);
 
 uint32_t reservar_espacio(uint32_t tamanio);
 void liberar_espacio(uint32_t base, uint32_t tamanio);

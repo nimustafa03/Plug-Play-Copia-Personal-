@@ -22,18 +22,18 @@ static pthread_mutex_t mutex_envios_cpu = PTHREAD_MUTEX_INITIALIZER;
 
 uint32_t recibir_pid(){
     int size;
-    uint32_t*pid = recibir_mensaje(fd_cpu,&size);
+    uint32_t*pid = recibir_mensaje(socket_cpu,&size);
     return *pid;
 }
 
 t_contexto *recibir_contexto(){
     int size;
     t_contexto*contexto;
-    contexto = recibir_mensaje(fd_cpu, &size);
+    contexto = recibir_mensaje(socket_cpu, &size);
     return contexto;
 }
 
-void atender_cpu(int fd_cpu){
+void atender_cpu(int nuevo_socket_cpu){
     socket_cpu = nuevo_socket_cpu;
 
     int size;
@@ -62,14 +62,14 @@ void atender_cpu(int fd_cpu){
     notificar_mapa_memory_sticks_a_cpu();
 
     while(1){
-        codigo = recibir_mensaje(fd_cpu,&size);
+        codigo = recibir_mensaje(socket_cpu,&size);
         switch(*codigo){
             case MSG_INIT_CPU:
                 notificar_mapa_memory_sticks_a_cpu();
-                inicializar_proceso(recibir_pid(), fd_cpu);
+                inicializar_proceso(recibir_pid(), socket_cpu);
                 break;
             case MSG_INTERRUPT:
-                enviar_confirmacion_a_CPU(fd_cpu,actualizar_contexto(recibir_pid(),recibir_contexto()));
+                enviar_confirmacion_a_CPU(socket_cpu,actualizar_contexto(recibir_pid(),recibir_contexto()));
                 break;
             default:
                 log_warning(logger, "Código desconocido recibido de CPU: %d", *codigo);

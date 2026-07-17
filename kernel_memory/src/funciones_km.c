@@ -1,3 +1,4 @@
+/*
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -63,3 +64,4 @@ char* devolver_instruccion(uint32_t pc, char** lista_instrucciones) {
         return NULL;
     return strdup(lista_instrucciones[pc]);
 }
+*/

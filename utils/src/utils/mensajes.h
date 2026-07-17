@@ -56,6 +56,7 @@ typedef enum {
     MSG_MUTEX_LOCK = 26,
     MSG_MUTEX_UNLOCK = 27,
 
+    MSG_ACTUALIZAR_MEMORY_STICKS = 39,
     MSG_MEMORY_STICK_CONECTADA = 28, // KM cuando le informa a KS de una nueva Memory Stick conectada.
     MSG_MEMORIA_CORRUPTA = 29, // KM cuando le informa a KS de una corrupción de memoria debido a una desconexión de un Memory Stick.
     MSG_SOLICITAR_DESALOJO = 30, // KM cuando le pide a KS que desaloje CPUs para realizar compactación.

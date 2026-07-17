@@ -30,7 +30,8 @@ void conectar_memory_stick(
     const char* puerto,
     uint32_t tamanio,
     int socket
-) {
+) 
+{
   uint32_t base = administrador.memoria_total;
 
   t_memory_stick* stick = malloc(sizeof(t_memory_stick));

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <commons/collections/list.h>
-#include <utils/tipos.h>
+//#include < utils/tipos.h>
 
 
 #endif // KERNELMEMORY_H
