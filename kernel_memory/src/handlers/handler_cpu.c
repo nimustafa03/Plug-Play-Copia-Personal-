@@ -65,6 +65,7 @@ void atender_cpu(int fd_cpu){
         codigo = recibir_mensaje(fd_cpu,&size);
         switch(*codigo){
             case MSG_INIT_CPU:
+                notificar_mapa_memory_sticks_a_cpu();
                 inicializar_proceso(recibir_pid(), fd_cpu);
                 break;
             case MSG_INTERRUPT:
