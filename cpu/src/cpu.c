@@ -47,12 +47,14 @@ int conexionCPUKernelScheduler (t_config* config) {
     return fd_ks;
     }
 
-int conexionCPUMemoryStick (t_config* config) {
+int conexionCPUMemoryStick (t_config* config, int identificador_cpu) {
     char *ms_port = config_get_string_value(config, "MS_PORT");     
     char *ms_ip = config_get_string_value(config, "MS_IP");
     int fd_ms = crear_conexion(ms_ip, ms_port);
     op_code hs = MSG_HANDSHAKE_CPU;
     enviar_mensaje(fd_ms, &hs, sizeof(op_code));
+    int id_cpu = identificador_cpu;
+    enviar_mensaje(fd_km, &id_cpu, sizeof(int));
     int size_ok;
     op_code* ok = recibir_mensaje(fd_ms, &size_ok);
                 //conexiones_abiertas_ms ++;
@@ -125,7 +127,7 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
         } else log_info(logger_cpu, "Conexion exitosa con Kernel Scheduler");
     
-    int fd_ms = conexionCPUMemoryStick(config);
+    int fd_ms = conexionCPUMemoryStick(config, id);
     if (fd_ms == -1) {
         log_info(logger_cpu, "Error al conectar con Memory Stick");
         exit(EXIT_FAILURE);
