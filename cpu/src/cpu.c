@@ -31,7 +31,7 @@ int conexionCPUKernelMemory (t_config* config) {
     op_code* ok = recibir_mensaje(fd_km, &size_ok);
     free(ok);
     return fd_km;
-    }
+}
 
 int conexionCPUKernelScheduler (t_config* config) {
     char *ks_port = config_get_string_value(config, "KS_PORT");

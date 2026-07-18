@@ -67,7 +67,7 @@ void* atender_cliente_ks(void* arg) {
     return NULL;
 }
 
-// el while(1) que antes bloqueaba main() ahora es esto
+// el while(1) que antes bloqueaba main() ahora es estoclea
 void* loop_aceptar_clientes(void* arg) {
     while (1) {
         int* fd_cliente = malloc(sizeof(int));
