@@ -25,8 +25,8 @@ void atender_creacion_proceso(){
   crear_proceso(*pid,path);
   free(pid); free(path);
 
-  op_code*cod = MSG_OK;
-  enviar_mensaje(fd_kernel_scheduler, cod, sizeof(op_code));
+  op_code cod = MSG_OK;
+  enviar_mensaje(fd_kernel_scheduler, &cod, sizeof(op_code));
   return;
 }
 
