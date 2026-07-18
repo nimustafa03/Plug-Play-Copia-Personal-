@@ -111,12 +111,19 @@ void enviar_mensaje(int fd, void* buffer, int size) {
 // Devuelve un puntero al buffer recibido (hay que hacer free después).
 // ------------------------------------------------------------------
 void* recibir_mensaje(int fd, int* size) {
-    // Primero leemos cuántos bytes vienen
-    recv(fd, size, sizeof(int), MSG_WAITALL);
- 
-    // Reservamos memoria y leemos el contenido
+    int leido = recv(fd, size, sizeof(int), MSG_WAITALL);
+    if (leido <= 0) {
+        *size = 0;
+        return NULL;   // el otro extremo se desconectó
+    }
+
     void* buffer = malloc(*size);
-    recv(fd, buffer, *size, MSG_WAITALL);
- 
+    leido = recv(fd, buffer, *size, MSG_WAITALL);
+    if (leido <= 0) {
+        free(buffer);
+        *size = 0;
+        return NULL;
+    }
+
     return buffer;
 }
