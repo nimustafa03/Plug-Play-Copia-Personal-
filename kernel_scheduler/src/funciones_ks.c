@@ -234,7 +234,7 @@ void* iniciar_planificador_largo_plazo () {
       usleep(1000); // evita busy-wait
       continue;     // vuelve al while(1)
     }
-    Proceso* nuevoProceso = list_remove(listaProcesosNew, 0); //cambio list_get por list_remove, el proceso sale de NEW
+    Proceso* nuevoProceso = list_get(listaProcesosNew, 0);
     pthread_mutex_unlock(&mutex_listas);
 
     actualizarEstadoProceso(nuevoProceso, READY);
