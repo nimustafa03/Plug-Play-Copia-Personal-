@@ -21,12 +21,14 @@
 #include <cpu.h>
 #include <utils/tipos.h>
 
-int conexionCPUKernelMemory (t_config* config) {
+int conexionCPUKernelMemory (t_config* config, int identificador_cpu) {
     char *km_port = config_get_string_value(config, "KM_PORT");
     char *km_ip = config_get_string_value(config, "KM_IP");
     int fd_km = crear_conexion(km_ip, km_port);
     op_code hs = MSG_HANDSHAKE_CPU;
     enviar_mensaje(fd_km, &hs, sizeof(op_code));
+    int id_cpu = identificador_cpu;
+    enviar_mensaje(fd_km, &id_cpu, sizeof(int));
     int size_ok;
     op_code* ok = recibir_mensaje(fd_km, &size_ok);
     free(ok);
@@ -110,7 +112,7 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);}
 
     // INICIAR CONEXIONES CON SERVIDORES
-    int fd_km = conexionCPUKernelMemory(config);
+    int fd_km = conexionCPUKernelMemory(config,id);
     if (fd_km == -1) {
         log_info(logger_cpu, "Error al conectar con Kernel Memory");
         exit(EXIT_FAILURE);
