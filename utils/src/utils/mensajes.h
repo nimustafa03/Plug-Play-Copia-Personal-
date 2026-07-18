@@ -69,6 +69,7 @@ typedef enum {
     MSG_CREAR_PROCESO = 36, // KS -> KM, registrar un proceso nuevo (pid + path) apenas KS lo crea.
     MSG_SWAP_WRITE = 37, // KM -> SWAP, escribir un bloque
     MSG_SWAP_READ  = 38, // KM -> SWAP, leer un bloque
+    // 39 usado en MSG_ACTUALIZAR_MEMORY_STICK
     
 } op_code;
 

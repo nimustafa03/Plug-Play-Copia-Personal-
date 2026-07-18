@@ -234,7 +234,7 @@ void* iniciar_planificador_largo_plazo () {
       usleep(1000); // evita busy-wait
       continue;     // vuelve al while(1)
     }
-    Proceso* nuevoProceso = list_remove(listaProcesosNew, 0); //cambio list_get por list_remove, el proceso sale de NEW
+    Proceso* nuevoProceso = list_get(listaProcesosNew, 0);
     pthread_mutex_unlock(&mutex_listas);
 
     actualizarEstadoProceso(nuevoProceso, READY);
@@ -396,8 +396,6 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
           }
           break;
         case READY:
-          // con CMN el proceso puede estar en cualquiera de las colas
-          // multinivel; con FIFO/RR esta en listaProcesosReady.
           if (strcmp(config_get_string_value(config, "PLANIFICATION_ALGORITHM"), "CMN") == 0) {
             for (int c = 0; c < cantidadColas && procesoEncontrado == NULL; c++) {
               for (int i = 0; i < list_size(colasMultinivel[c]); i++) {
@@ -457,15 +455,19 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
           break;
         default:
           log_error(logger_ks, "Error: estado de proceso desconocido");
-          pthread_mutex_unlock(&mutex_listas);  // unlock antes de cada return
+          pthread_mutex_unlock(&mutex_listas);
           return;
     }
 
+    // CP3: si no lo encontramos en la lista de su estado_anterior, puede ser
+    // porque quien nos llamo ya lo saco de ahi antes de pedir el cambio de
+    // estado (pasa en el planificador de corto plazo: seleccionar_proceso_a_ejecutar
+    // ya hace list_remove antes de llamar a actualizarEstadoProceso). En ese
+    // caso confiamos en el puntero que recibimos en vez de cortar con error.
     if(procesoEncontrado == NULL) {
-      log_error(logger_ks, "Error: no se encontro el proceso en la lista correspondiente a su estado actual");
-      pthread_mutex_unlock(&mutex_listas); // hay que unlockear antes de cada return
-      return;
-    } else {
+      procesoEncontrado = proceso;
+    }
+    {
         // log obligatorio 
         log_info(logger_ks, "## (%d) Pasa del estado %s al estado %s",
                  proceso->id_proceso,
@@ -488,10 +490,6 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
             case BLOCK:
                 procesoEncontrado->estado = BLOCK;
                 procesoABlock(procesoEncontrado);
-
-                // NO lanzamos el hilo aca - todavia estamos con mutex_listas tomado.
-                // Solo marcamos la bandera; el pthread_create real pasa
-                // a hacerse despues de soltar el lock, al final de la funcion.
                 lanzar_timer_suspension = 1;
                 break;
             case SUSP_READY:
@@ -504,7 +502,6 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
                 break;
             default:
                 log_error(logger_ks, "Error: nuevo estado de query invalido");
-                // Devolvemos la query a su lista original para no perderla
                 switch(estado_anterior) {
                     case READY: procesoAReady(procesoEncontrado); break;
                     case EXEC: procesoAExec(procesoEncontrado); break;
@@ -513,16 +510,12 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
                     case SUSP_READY: procesoASuspReady(procesoEncontrado); break;
                     case SUSP_BLOCK: procesoABlock(procesoEncontrado); break;
                 }
-                pthread_mutex_unlock(&mutex_listas); // unlockear antes del return
+                pthread_mutex_unlock(&mutex_listas);
                 return;
         }
     }
-    pthread_mutex_unlock(&mutex_listas); // unlock al salir normalmente
+    pthread_mutex_unlock(&mutex_listas);
 
-    // recien aca, con mutex_listas ya liberado, creamos el hilo del timer.
-    // Usamos proceso->id_proceso (no procesoEncontrado): el struct sigue vivo
-    // en memoria - nada en este código hace free() de un Proceso* - asi que
-    // es seguro leerlo fuera del lock.
     if (lanzar_timer_suspension) {
         t_args_suspension* args_susp = malloc(sizeof(t_args_suspension));
         args_susp->pid = proceso->id_proceso;

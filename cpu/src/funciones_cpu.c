@@ -287,120 +287,280 @@ void destruir_mapa_memory_sticks(t_mapa_memory_sticks_cpu* mapa){
     free(mapa);
 }
 
-t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu){
-    int tamanio_buffer = 0;
-    void* buffer = recibir_mensaje(fd_km, &tamanio_buffer);
-    if (buffer == NULL) {
-        log_error(logger_cpu,"No se pudo recibir el mapa de Memory Sticks");
+t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu) {
+
+    /* Recibir opcode */
+    int tamanio_opcode = 0;
+    op_code* codigo = recibir_mensaje(fd_km, &tamanio_opcode);
+
+    if (codigo == NULL) {
+        log_error(logger_cpu,
+                  "No se pudo recibir el opcode del mapa de Memory Sticks");
         return NULL;
     }
-    if (tamanio_buffer < (int) sizeof(uint32_t)) {
-        log_error(logger_cpu,"El buffer del mapa tiene un tamaño inválido");
+
+    if (tamanio_opcode != sizeof(op_code)) {
+        log_error(
+            logger_cpu,
+            "Tamaño inválido del opcode: recibido=%d esperado=%zu",
+            tamanio_opcode,
+            sizeof(op_code)
+        );
+
+        free(codigo);
+        return NULL;
+    }
+
+    if (*codigo != MSG_ACTUALIZAR_MEMORY_STICKS) {
+        log_error(
+            logger_cpu,
+            "Opcode inesperado: recibido=%d esperado=%d",
+            *codigo,
+            MSG_ACTUALIZAR_MEMORY_STICKS
+        );
+
+        free(codigo);
+        return NULL;
+    }
+
+    free(codigo);
+
+    /* Recibir buffer serializado */
+    int tamanio_buffer = 0;
+    void* buffer = recibir_mensaje(fd_km, &tamanio_buffer);
+
+    if (buffer == NULL) {
+        log_error(logger_cpu,
+                  "No se pudo recibir el buffer del mapa");
+        return NULL;
+    }
+
+    if (tamanio_buffer < (int)sizeof(uint32_t)) {
+        log_error(
+            logger_cpu,
+            "Buffer del mapa demasiado pequeño: %d bytes",
+            tamanio_buffer
+        );
+
         free(buffer);
         return NULL;
     }
 
-    t_mapa_memory_sticks_cpu* mapa = calloc(1, sizeof(t_mapa_memory_sticks_cpu));
+    t_mapa_memory_sticks_cpu* mapa =
+        calloc(1, sizeof(t_mapa_memory_sticks_cpu));
+
     if (mapa == NULL) {
-        log_error(logger_cpu,"No se pudo reservar memoria para el mapa");
+        log_error(logger_cpu,
+                  "No se pudo reservar memoria para el mapa");
+
         free(buffer);
         return NULL;
     }
 
     uint32_t desplazamiento = 0;
-    memcpy(&mapa->cantidad,(char*) buffer + desplazamiento,sizeof(uint32_t));
+
+    /* Cantidad de Memory Sticks */
+    memcpy(
+        &mapa->cantidad,
+        (char*)buffer + desplazamiento,
+        sizeof(uint32_t)
+    );
+
     desplazamiento += sizeof(uint32_t);
 
     if (mapa->cantidad == 0 || mapa->cantidad > 4) {
-        log_info(logger_cpu,"Cantidad inválida de Memory Sticks: %u",mapa->cantidad);
-        destruir_mapa_memory_sticks(mapa);
+        log_error(
+            logger_cpu,
+            "Cantidad inválida de Memory Sticks: %u",
+            mapa->cantidad
+        );
+
         free(buffer);
+        destruir_mapa_memory_sticks(mapa);
         return NULL;
     }
 
+    log_info(
+        logger_cpu,
+        "Cantidad de Memory Sticks recibida: %u",
+        mapa->cantidad
+    );
+
     for (uint32_t i = 0; i < mapa->cantidad; i++) {
+
         uint32_t longitud_ip;
         uint32_t longitud_puerto;
 
+        /* Longitud de IP */
         if (desplazamiento + sizeof(uint32_t) >
-            (uint32_t) tamanio_buffer) {
-            log_error(logger_cpu,"Error al reconstruir la longitud de IP del MS %u",i);
+            (uint32_t)tamanio_buffer) {
+
+            log_error(
+                logger_cpu,
+                "Error al reconstruir la longitud de IP del MS %u",
+                i
+            );
+
             destruir_mapa_memory_sticks(mapa);
             free(buffer);
             return NULL;
         }
 
-        memcpy(&longitud_ip,(char*) buffer + desplazamiento,sizeof(uint32_t));
+        memcpy(
+            &longitud_ip,
+            (char*)buffer + desplazamiento,
+            sizeof(uint32_t)
+        );
+
         desplazamiento += sizeof(uint32_t);
 
-        if (longitud_ip == 0 ||desplazamiento + longitud_ip >(uint32_t) tamanio_buffer) {
-            log_error(logger_cpu,"Error al reconstruir la IP del MS %u",i);
+        if (longitud_ip == 0 ||
+            desplazamiento + longitud_ip >
+            (uint32_t)tamanio_buffer) {
+
+            log_error(
+                logger_cpu,
+                "Error al reconstruir la IP del MS %u",
+                i
+            );
+
             destruir_mapa_memory_sticks(mapa);
             free(buffer);
             return NULL;
         }
 
         mapa->memory_sticks[i].ip = malloc(longitud_ip);
+
         if (mapa->memory_sticks[i].ip == NULL) {
-            log_error(logger_cpu,"No se pudo reservar memoria para la IP del MS %u",i);
+            log_error(
+                logger_cpu,
+                "No se pudo reservar memoria para la IP del MS %u",
+                i
+            );
+
             destruir_mapa_memory_sticks(mapa);
             free(buffer);
             return NULL;
         }
 
-        memcpy(mapa->memory_sticks[i].ip,(char*) buffer + desplazamiento,longitud_ip);
+        memcpy(
+            mapa->memory_sticks[i].ip,
+            (char*)buffer + desplazamiento,
+            longitud_ip
+        );
+
         desplazamiento += longitud_ip;
 
-        if (desplazamiento + sizeof(uint32_t) >(uint32_t) tamanio_buffer) {
-            log_error(logger_cpu,"Error al reconstruir la longitud del puerto del MS %u",i);
+        /* Longitud de puerto */
+        if (desplazamiento + sizeof(uint32_t) >
+            (uint32_t)tamanio_buffer) {
+
+            log_error(
+                logger_cpu,
+                "Error al reconstruir la longitud del puerto del MS %u",
+                i
+            );
+
             destruir_mapa_memory_sticks(mapa);
             free(buffer);
             return NULL;
         }
 
-        memcpy(&longitud_puerto,(char*) buffer + desplazamiento,sizeof(uint32_t));
+        memcpy(
+            &longitud_puerto,
+            (char*)buffer + desplazamiento,
+            sizeof(uint32_t)
+        );
+
         desplazamiento += sizeof(uint32_t);
 
-        if (longitud_puerto == 0 ||desplazamiento + longitud_puerto >(uint32_t) tamanio_buffer) {
-            log_error(logger_cpu,"Error al reconstruir el puerto del MS %u",i);
+        if (longitud_puerto == 0 ||
+            desplazamiento + longitud_puerto >
+            (uint32_t)tamanio_buffer) {
+
+            log_error(
+                logger_cpu,
+                "Error al reconstruir el puerto del MS %u",
+                i
+            );
+
             destruir_mapa_memory_sticks(mapa);
             free(buffer);
             return NULL;
         }
 
-        mapa->memory_sticks[i].puerto =malloc(longitud_puerto);
+        mapa->memory_sticks[i].puerto = malloc(longitud_puerto);
 
         if (mapa->memory_sticks[i].puerto == NULL) {
-            log_error(logger_cpu,"No se pudo reservar memoria para el puerto del MS %u",i);
+            log_error(
+                logger_cpu,
+                "No se pudo reservar memoria para el puerto del MS %u",
+                i
+            );
+
             destruir_mapa_memory_sticks(mapa);
             free(buffer);
             return NULL;
         }
 
-        memcpy(mapa->memory_sticks[i].puerto,(char*) buffer + desplazamiento,longitud_puerto);
+        memcpy(
+            mapa->memory_sticks[i].puerto,
+            (char*)buffer + desplazamiento,
+            longitud_puerto
+        );
+
         desplazamiento += longitud_puerto;
 
-        if (desplazamiento + sizeof(uint32_t) >(uint32_t) tamanio_buffer) {
-            log_error(logger_cpu,"Error al reconstruir la base global del MS %u",i);
+        /* Base global */
+        if (desplazamiento + sizeof(uint32_t) >
+            (uint32_t)tamanio_buffer) {
+
+            log_error(
+                logger_cpu,
+                "Error al reconstruir la base global del MS %u",
+                i
+            );
+
             destruir_mapa_memory_sticks(mapa);
             free(buffer);
             return NULL;
         }
 
-        memcpy(&mapa->memory_sticks[i].base_global,(char*) buffer + desplazamiento,sizeof(uint32_t));
+        memcpy(
+            &mapa->memory_sticks[i].base_global,
+            (char*)buffer + desplazamiento,
+            sizeof(uint32_t)
+        );
+
         desplazamiento += sizeof(uint32_t);
 
-        if (desplazamiento + sizeof(uint32_t) >(uint32_t) tamanio_buffer) {
-            log_error(logger_cpu,"Error al reconstruir el tamaño del MS %u",i);
+        /* Tamaño */
+        if (desplazamiento + sizeof(uint32_t) >
+            (uint32_t)tamanio_buffer) {
+
+            log_error(
+                logger_cpu,
+                "Error al reconstruir el tamaño del MS %u",
+                i
+            );
+
             destruir_mapa_memory_sticks(mapa);
             free(buffer);
             return NULL;
         }
 
-        memcpy(&mapa->memory_sticks[i].tamanio,(char*) buffer + desplazamiento,sizeof(uint32_t));
+        memcpy(
+            &mapa->memory_sticks[i].tamanio,
+            (char*)buffer + desplazamiento,
+            sizeof(uint32_t)
+        );
+
         desplazamiento += sizeof(uint32_t);
 
-        log_info(logger_cpu,"MS %u recibido: IP=%s Puerto=%s Base=%u Tamaño=%u",i,
+        log_info(
+            logger_cpu,
+            "MS %u recibido: IP=%s Puerto=%s Base=%u Tamaño=%u",
+            i,
             mapa->memory_sticks[i].ip,
             mapa->memory_sticks[i].puerto,
             mapa->memory_sticks[i].base_global,
