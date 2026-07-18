@@ -209,6 +209,13 @@ int main(int argc, char*argv[]) {
     
     // DONE enviar el tamaño para que KM lo registre
     enviar_mensaje(fd_km,&size,sizeof(int));
+    char* mi_ip = config_get_string_value(config, "IP"); 
+    char* mi_port = config_get_string_value(config, "PORT");
+    
+    // Enviamos la IP y el Puerto incluyendo el terminador nulo (+ 1) 
+    // para que el Kernel Memory los reciba con recibir_mensaje() correctamente
+    enviar_mensaje(fd_km, mi_ip, strlen(mi_ip) + 1);
+    enviar_mensaje(fd_km, mi_port, strlen(mi_port) + 1);
 
     // DONE Esperar OK de KM y loguear conexión exitosa (log obligatorio)
     int size_resp;
