@@ -98,7 +98,7 @@ int main(int argc, char* argv[]) {
     if (logger_cpu == NULL){
 	    perror("Error al crear el archivo .log. La funcion log_create este devolviendo NULL");
 	    exit(EXIT_FAILURE);
-    }
+    } else log_info(logger_cpu,"LOG CREADO");
     //Check archivo .config
     char* direccion_archivo = argv[1];
     if (string_ends_with(direccion_archivo, ".config") == 0){
@@ -109,7 +109,8 @@ int main(int argc, char* argv[]) {
     t_config* config = config_create(argv[1]);
     if (config == NULL) {
         log_info(logger_cpu, "Error al leer .config");
-        exit(EXIT_FAILURE);}
+        exit(EXIT_FAILURE);
+    } else log_info(logger_cpu,"CONFIG CREADO");
 
     // INICIAR CONEXIONES CON SERVIDORES
     int fd_km = conexionCPUKernelMemory(config,id);
