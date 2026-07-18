@@ -54,7 +54,7 @@ int conexionCPUMemoryStick (t_config* config, int identificador_cpu) {
     op_code hs = MSG_HANDSHAKE_CPU;
     enviar_mensaje(fd_ms, &hs, sizeof(op_code));
     int id_cpu = identificador_cpu;
-    enviar_mensaje(fd_km, &id_cpu, sizeof(int));
+    enviar_mensaje(fd_ms, &id_cpu, sizeof(int));
     int size_ok;
     op_code* ok = recibir_mensaje(fd_ms, &size_ok);
                 //conexiones_abiertas_ms ++;
