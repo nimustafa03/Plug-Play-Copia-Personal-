@@ -123,13 +123,13 @@ int main(int argc, char* argv[]) {
     if (fd_ks == -1) {
         log_info(logger_cpu, "Error al conectar con Kernel Scheduler");
         exit(EXIT_FAILURE);
-    }
+        } else log_info(logger_cpu, "Conexion exitosa con Kernel Scheduler");
     
     int fd_ms = conexionCPUMemoryStick(config);
     if (fd_ms == -1) {
         log_info(logger_cpu, "Error al conectar con Memory Stick");
         exit(EXIT_FAILURE);
-    }
+        } else log_info(logger_cpu, "Conexion exitosa con Memory Stick");
 
     //WHILE PID
     bool op_exit;  
