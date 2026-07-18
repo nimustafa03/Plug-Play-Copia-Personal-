@@ -136,13 +136,12 @@ int main(int argc, char* argv[]) {
     //WHILE PID
     bool op_exit;  
     while (1) {
-        
         // CPU espera la llegada de un pid por parte del KS
         int pid = esperar_pid(fd_ks, logger_cpu);
         if (pid == -1) {
             log_info(logger_cpu, "Error al recibir pid");
             exit(EXIT_FAILURE);
-        }
+        } else log_info(logger_cpu, "Recibido PID: %d", pid);
         
         // Aviso de inicio de proceso al KM
         op_code codigo_init = MSG_INIT_CPU;
