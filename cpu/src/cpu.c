@@ -114,7 +114,8 @@ int main(int argc, char* argv[]) {
     if (fd_km == -1) {
         log_info(logger_cpu, "Error al conectar con Kernel Memory");
         exit(EXIT_FAILURE);
-    }
+        } else log_info(logger_cpu, "Conexion exitosa con Kernel Memory");
+        
     int fd_ks = conexionCPUKernelScheduler(config);
     if (fd_ks == -1) {
         log_info(logger_cpu, "Error al conectar con Kernel Scheduler");
