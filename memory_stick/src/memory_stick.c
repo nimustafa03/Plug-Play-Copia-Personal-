@@ -91,6 +91,10 @@ void atender_cpu(int fd_cpu){
                     break;
 
                 }
+
+                default:
+                    log_error(logger, "## Llegó código inesperado: %d", *orden);
+                    break;
             }
 
             free(orden);
@@ -142,6 +146,10 @@ void* atender_km(void* arg){
                 free(buffer);
                 break;
             }
+
+            default:
+                    log_error(logger, "## Llegó código inesperado: %d", *orden);
+                    break;
         }
         free(orden);
     }
@@ -197,8 +205,8 @@ int main(int argc, char*argv[]) {
     // DONE Nico M: crear logger con log_create()
     char*LOG_LEVEL = config_get_string_value(config,"LOG_LEVEL");
     logger = log_create("memstickinfo.log", "MSINFO",true,log_level_from_string(LOG_LEVEL));
-    log_debug(logger,"## config_path recibido: %d",config_path);
-    log_debug(logger,"## tamaño de memory stick recibido: ",char_size);
+    log_debug(logger,"## config_path recibido: %s",config_path);
+    log_debug(logger,"## tamaño de memory stick recibido: %s",char_size);
 
 
     // DONE Nico M: reservar memoria con malloc(tamaño)
