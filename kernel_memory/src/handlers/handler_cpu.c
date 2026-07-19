@@ -39,7 +39,7 @@ void atender_cpu(int nuevo_socket_cpu){
     int size;
 
     int* ptr_id_cpu =
-        recibir_mensaje(socket_cpu, &size);
+        recibir_mensaje(socket_cpu, &size); //  codigo init
 
     log_info(
         logger,
@@ -54,6 +54,8 @@ void atender_cpu(int nuevo_socket_cpu){
         &ok,
         sizeof(op_code)
     );
+
+
 
     free(ptr_id_cpu);
     // NICO M: Loop de espera activa, hasta que reciba el mensaje de iniciar proceso.
@@ -226,7 +228,7 @@ void* serializar_contexto_inicial(
     *tamanio_buffer =
         sizeof(t_registros) + sizeof(int);
 
-    void*buffer = malloc(*tamanio_buffer);
+    void* buffer = malloc(*tamanio_buffer);
 
     if (buffer == NULL) {
         return NULL;
