@@ -162,8 +162,14 @@ int main(int argc, char* argv[]) {
         // Se envia pid a KM
         enviar_mensaje(fd_km, &pid, sizeof(pid));
         int size;
-        t_contexto * contexto =  malloc(sizeof(t_contexto));
-        contexto = recibir_mensaje(fd_km, &size);         // KM envia contexto
+        void* buffer = recibir_mensaje(fd_ks, &size);
+            if (buffer == NULL) {
+                //Log error
+                return NULL;
+            }
+
+        t_contexto* contexto = deserializar_contexto_inicial(buffer,size);
+    
 
         printf("AX %d",contexto->registros.ax);
         printf("BX %d",contexto->registros.bx);
