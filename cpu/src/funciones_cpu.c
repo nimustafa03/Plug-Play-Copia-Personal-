@@ -780,3 +780,49 @@ int escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio_
     }
     return 0;
 }
+
+t_contexto* deserializar_contexto_inicial(const void* buffer,int tamanio_buffer) {
+    int tamanio_esperado =
+        sizeof(t_registros) +
+        sizeof(int);
+    if (buffer == NULL || tamanio_buffer != tamanio_esperado) {
+        return NULL;
+    }
+
+    t_contexto* contexto = malloc(sizeof(t_contexto));
+    if (contexto == NULL) {
+        return NULL;
+    }
+
+    int desplazamiento = 0;
+
+    memcpy(
+        &contexto->registros,
+        (char) buffer + desplazamiento,
+        sizeof(t_registros)
+    );
+
+    desplazamiento += sizeof(t_registros);
+    int cantidad_segmentos;
+
+    memcpy(
+        &cantidad_segmentos,
+        (char) buffer + desplazamiento,
+        sizeof(int)
+    );
+
+    if (cantidad_segmentos != 0) {
+        free(contexto);
+        return NULL;
+    }
+
+    contexto->tabla_segmentos = list_create();
+    if (contexto->tabla_segmentos == NULL) {
+        free(contexto);
+        return NULL;
+    }
+
+    /* log_info(logger,"Contexto recibido: PC=%u - Segmentos=%u - Próximo a detener=%d", +++); */
+
+    return contexto;
+}

@@ -111,5 +111,6 @@ int syscall_stdout(char* instruccion,t_registros* registro, int fd_ks, uint32_t 
 int syscall_mem_alloc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid);
 int syscall_mem_free(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid);
 int syscall_exit(int fd_ks, uint32_t pid);
+t_contexto* deserializar_contexto_inicial(const void* buffer,int tamanio_buffer);
 
 #endif
