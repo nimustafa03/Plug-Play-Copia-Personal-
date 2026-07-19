@@ -87,6 +87,10 @@ bool crear_proceso(uint32_t pid, char*path){
   proceso->script_path = strdup(path);
   
   proceso->contexto = crear_contexto_inicial();
+  if (proceso->contexto==NULL){
+    log_error(logger,"## ERROR: No se pudo crear el contexto inicial.");
+    return false;
+  }
 
   dictionary_put(administrador.procesos_por_pid, key, proceso);
 
@@ -158,8 +162,17 @@ bool inicializar_proceso(uint32_t pid, int fd_cpu) {
   pthread_create(&nuevo_poceso, NULL, manejar_proceso,args);
   free(args);
 
-  enviar_contexto_ejecucion_a_cpu(fd_cpu, *proceso->contexto);
+  int*tamanio_buffer;
+  void*buffer = serializar_contexto_inicial(proceso->contexto,tamanio_buffer);
 
+  if (buffer==NULL)
+  {
+    log_error(logger, "## ERROR: Ha ocurrido un error al serializar el contexto inicial.");
+  }
+
+  enviar_contexto_ejecucion_a_cpu(fd_cpu, buffer,*tamanio_buffer);
+
+  free(buffer);
   free(key);
   return true;
 }
