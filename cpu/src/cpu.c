@@ -139,7 +139,8 @@ int main(int argc, char* argv[]) {
         // Se envia pid a KM
         enviar_mensaje(fd_km, &pid, sizeof(pid));
         int size;
-        t_contexto* contexto = recibir_mensaje(fd_km, &size);         // KM envia contexto
+        t_contexto * contexto =  malloc(sizeof(t_contexto));
+        contexto = recibir_mensaje(fd_km, &size);         // KM envia contexto
         if (contexto == NULL) {
             log_info(logger_cpu, "Error al recibir contexto");
             break;
