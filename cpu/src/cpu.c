@@ -146,7 +146,8 @@ int main(int argc, char* argv[]) {
         // Aviso de inicio de proceso al KM
         op_code codigo_init = MSG_INIT_CPU;
         enviar_mensaje(fd_km,&codigo_init,sizeof(op_code));
-        //recibe status de los diferentes ms
+
+        // Recibe status de los diferentes ms
         t_mapa_memory_sticks_cpu* mapa = recibir_mapa(fd_km, logger_cpu);
         if (mapa == NULL) {
             log_info(logger_cpu, "No se pudo recibir el mapa de Memory Sticks");
@@ -167,9 +168,6 @@ int main(int argc, char* argv[]) {
             break;
         }
 
-        // aca recibiia el status de los distintos ms
-        // si hay nuevos ms, se abre conexion con ellos y conexiones_abiertas_ms ++
-
         log_info(logger_cpu, "Inicia ejecucion de proceso: %d", pid);
 
         // WHILE CICLO DE INSTRUCCION
@@ -189,7 +187,7 @@ int main(int argc, char* argv[]) {
             char inst[32], parametro1[32], parametro2[32];
             sscanf(instruccion, "%31s %31s %31s", inst, parametro1, parametro2);
             log_info(logger_cpu, "## PID: %u - Ejecutando: %s - %s %s",pid, inst, parametro1, parametro2);
-
+            //log_info(logger_cpu, "OPCODE: %d", codigo);
             int operacion = execute(codigo, instruccion, &contexto->registros,fd_ks,fd_km,fd_ms,pid, contexto->tabla_segmentos,logger_cpu,mapa,fd_ms_agregados);
 
             if (operacion == -1) {                                  //en caso de SEG FAULT en las operaciones MOV y COPY
