@@ -59,7 +59,7 @@ void atender_cpu(int nuevo_socket_cpu){
     // NICO M: Loop de espera activa, hasta que reciba el mensaje de iniciar proceso.
     op_code*codigo;
 
-    notificar_mapa_memory_sticks_a_cpu();
+    /* notificar_mapa_memory_sticks_a_cpu(); */
 
     while(1){
         codigo = recibir_mensaje(socket_cpu,&size);

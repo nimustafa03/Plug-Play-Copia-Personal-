@@ -291,7 +291,8 @@ t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu) {
 
     /* Recibir opcode */
     int tamanio_opcode = 0;
-    op_code* codigo = recibir_mensaje(fd_km, &tamanio_opcode);
+    op_code* codigo = recibir_mensaje(fd_km, &tamanio_opcode); //   OPCODE
+
 
     if (codigo == NULL) {
         log_error(logger_cpu,
@@ -327,7 +328,7 @@ t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu) {
 
     /* Recibir buffer serializado */
     int tamanio_buffer = 0;
-    void* buffer = recibir_mensaje(fd_km, &tamanio_buffer);
+    void* buffer = recibir_mensaje(fd_km, &tamanio_buffer); //  BUFFER
 
     if (buffer == NULL) {
         log_error(logger_cpu,
