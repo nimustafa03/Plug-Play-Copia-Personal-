@@ -223,6 +223,14 @@ void* serializar_contexto_inicial(
     t_contexto* contexto,
     int* tamanio_buffer
 ) {
+    if(contexto == NULL) {
+        log_warning(
+            logger,
+            "Contexto vacío al momento de serializar contexto inicial."
+        );
+        return;
+    }
+
     int cantidad_segmentos = 0;
 
     *tamanio_buffer =
@@ -234,7 +242,7 @@ void* serializar_contexto_inicial(
         return NULL;
     }
 
-    int desplazamiento = 0;
+    uint32_t desplazamiento = 0;
 
     escribir_en_buffer(
         buffer,
