@@ -16,19 +16,19 @@
 
 char* fetch(int fd_km, u_int32_t pid, t_registros* cpu){
     // Aviso de fetch
-    op_code codigo_fetch = MSG_FETCH_CPU;
-    enviar_mensaje(fd_km,&codigo_fetch,sizeof(op_code));
+    /* op_code codigo_fetch = MSG_FETCH_CPU;
+    enviar_mensaje(fd_km,&codigo_fetch,sizeof(op_code)); */
     // Envio PC
     int pc = cpu->pc;
     enviar_mensaje(fd_km, &pc, sizeof(pc));
     // KM responde por OK/ERROR
     int size_respuesta;
-    op_code* respuesta_km = (op_code*) recibir_mensaje(fd_km,&size_respuesta);
+    /* op_code* respuesta_km = (op_code*) recibir_mensaje(fd_km,&size_respuesta);
     if (*respuesta_km == MSG_ERROR){
         free(respuesta_km);
         return NULL;
     }
-    free(respuesta_km);
+    free(respuesta_km); */
     // Recibe Instruccion
     int size_instruccion;
     char* instruccion = recibir_mensaje(fd_km, &size_instruccion);
