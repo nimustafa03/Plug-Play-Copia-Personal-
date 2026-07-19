@@ -157,6 +157,7 @@ void* atender_km(void* arg){
 }
 
 void* esperar_cpu(void * arg){ 
+
     int fd_cliente = *((int*)arg);
     free(arg);
     
@@ -181,6 +182,23 @@ int main(int argc, char*argv[]) {
     // El tamaño viene por parámetro: argv[2]
 
     // NM: Guardamos los argumentos en variables :D
+    if (argc != 3) {
+        logger = log_create(
+            "memstickerror.log",
+            "MSERR",
+            true,
+            LOG_LEVEL_ERROR
+        );
+
+        log_error(
+            logger,
+            "Uso: %s <config_path> <tamanio>",
+            argv[0]
+        );
+
+        log_destroy(logger);
+        return EXIT_FAILURE;
+    }
     char *config_path = argv[1]; char * char_size = argv[2]; 
     int size = atoi(char_size);
 
@@ -194,7 +212,26 @@ int main(int argc, char*argv[]) {
 
     // DONE Nico M: cargar config con config_create()
     config = config_create(config_path);
+
+    if (config == NULL) {
+        t_log* error_logger = log_create(
+            "memstickerror.log",
+            "MSERR",
+            true,
+            LOG_LEVEL_ERROR
+        );
+
+        log_error(
+            error_logger,
+            "## ERROR. NO SE PUDO CREAR EL CONFIG. Abortando..."
+        );
+
+        log_destroy(error_logger);
+        return EXIT_FAILURE;
+    }
+
     memory_delay = config_get_int_value(config, "MEMORY_DELAY");
+
     if (config == NULL){
 		t_log *error_logger = log_create("memstickerror.log","MSERR",true,LOG_LEVEL_ERROR);
 		log_error(error_logger,"## ERROR. NO SE PUDO CREAR EL CONFIG. Abortando...");
