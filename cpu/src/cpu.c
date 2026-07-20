@@ -134,7 +134,7 @@ int main(int argc, char* argv[]) {
         } else log_info(logger_cpu, "Conexion exitosa con Memory Stick");
 
     //WHILE PID
-    bool op_exit;  
+    bool op_exit;
     while (1) {
         // CPU espera la llegada de un pid por parte del KS
         int pid = esperar_pid(fd_ks, logger_cpu);
@@ -159,18 +159,23 @@ int main(int argc, char* argv[]) {
             break;
         }
 
-        // Se envia pid a KM
+        //Se envia PID a KM
         enviar_mensaje(fd_km, &pid, sizeof(pid));
+        log_info(logger_cpu,"Se envio PID: %u", pid);
+
+        // Recibe contexto de ejecucion
         int size;
         void* buffer = recibir_mensaje(fd_km, &size);
             if (buffer == NULL) {
                 log_info(logger_cpu, "Buffer invalido al intetnar recibir el contexto");
-                return NULL;
+                exit(EXIT_FAILURE);
             }
-        log_info(logger_cpu,"Se envio PID: %u", pid);
 
         t_contexto* contexto = deserializar_contexto_inicial(buffer,size,logger_cpu);
-    
+        if (contexto == NULL) {
+            log_info(logger_cpu, "Error al recibir contexto");
+            break;
+        }
 
         printf("AX %d",contexto->registros.ax);
         printf("BX %d",contexto->registros.bx);
@@ -185,11 +190,6 @@ int main(int argc, char* argv[]) {
         printf("SI %d",contexto->registros.si);
 
 
-        if (contexto == NULL) {
-            log_info(logger_cpu, "Error al recibir contexto");
-            break;
-        }
-
         log_info(logger_cpu, "Inicia ejecucion de proceso: %d", pid);
 
         // WHILE CICLO DE INSTRUCCION
@@ -197,18 +197,25 @@ int main(int argc, char* argv[]) {
         while (op_exit != true) {
             // FETCH
             log_info(logger_cpu, "## PID: %u - FETCH - Program Counter: %d", pid, contexto->registros.pc);
-            char* instruccion = fetch(fd_km, pid, &contexto->registros);
+            char* instruccion = fetch(fd_km, pid, &contexto->registros, logger_cpu);
             if (instruccion == NULL) {
                 log_info(logger_cpu, "Error en FETCH");
-                break;}
+                exit(EXIT_FAILURE);
+            }
 
             // DECODE
             operacion codigo = decode(instruccion);
+            if (codigo == OP_INVALID) {
+                log_info(logger_cpu,"PID %u - Instrucción inválida: %s",pid,instruccion);
+                exit(EXIT_FAILURE);
+                break;
+            }
 
             // EXECUTE
             char inst[32], parametro1[32], parametro2[32];
             sscanf(instruccion, "%31s %31s %31s", inst, parametro1, parametro2);
             log_info(logger_cpu, "## PID: %u - Ejecutando: %s - %s %s",pid, inst, parametro1, parametro2);
+
             //log_info(logger_cpu, "OPCODE: %d", codigo);
             int operacion = execute(codigo, instruccion, &contexto->registros,fd_ks,fd_km,fd_ms,pid, contexto->tabla_segmentos,logger_cpu,mapa,fd_ms_agregados);
 

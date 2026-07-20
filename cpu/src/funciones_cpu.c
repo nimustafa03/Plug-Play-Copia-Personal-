@@ -14,25 +14,47 @@
 
 #define MMU_ERROR (-1)
 
-char* fetch(int fd_km, u_int32_t pid, t_registros* cpu){
+char* fetch(int fd_km, u_int32_t pid, t_registros* cpu, t_log* logger_cpu){
     // Aviso de fetch
-    /* op_code codigo_fetch = MSG_FETCH_CPU;
-    enviar_mensaje(fd_km,&codigo_fetch,sizeof(op_code)); */
+    op_code codigo_fetch = MSG_FETCH_CPU;
+    enviar_mensaje(fd_km,&codigo_fetch,sizeof(op_code));
+    log_info(
+        logger_cpu,
+        "FETCH: enviando MSG_FETCH_CPU=%d",
+        codigo_fetch
+    );
     // Envio PC
     int pc = cpu->pc;
     enviar_mensaje(fd_km, &pc, sizeof(pc));
+    log_info(
+        logger_cpu,
+        "FETCH: enviando PC=%d",
+        cpu->pc
+    );
     // KM responde por OK/ERROR
     int size_respuesta;
-    /* op_code* respuesta_km = (op_code*) recibir_mensaje(fd_km,&size_respuesta);
-    if (*respuesta_km == MSG_ERROR){
+    op_code* respuesta_km = (op_code*) recibir_mensaje(fd_km,&size_respuesta);
+    if (respuesta_km == NULL){
+        log_info(logger_cpu, "KM cerró la conexión o no envió respuesta");
         free(respuesta_km);
         return NULL;
-    }
-    free(respuesta_km); */
+    } else if (*respuesta_km == MSG_ERROR){
+            log_info(
+            logger_cpu,
+            "FETCH: KM respondio ERROR");
+            return NULL;
+            }
+
+    free(respuesta_km);
+    
     // Recibe Instruccion
     int size_instruccion;
     char* instruccion = recibir_mensaje(fd_km, &size_instruccion);
-    if (instruccion == NULL) return NULL;
+    if (instruccion == NULL) {
+        log_info(logger_cpu, "Error al recibir instruccion");
+        free(instruccion);
+        return NULL;
+    }
     return instruccion;
 }
 
@@ -814,7 +836,7 @@ t_contexto* deserializar_contexto_inicial(void* buffer,int tamanio_buffer, t_log
         sizeof(t_registros)
     );
 
-    printf("AX %d",contexto->registros.ax);
+    /*printf("AX %d",contexto->registros.ax);
     printf("BX %d",contexto->registros.bx);
     printf("CX %d",contexto->registros.cx);
     printf("DI %d",contexto->registros.di);
@@ -824,7 +846,7 @@ t_contexto* deserializar_contexto_inicial(void* buffer,int tamanio_buffer, t_log
     printf("ECX %d",contexto->registros.ecx);
     printf("EDX %d",contexto->registros.edx);
     printf("PC %d",contexto->registros.pc);
-    printf("SI %d",contexto->registros.si);
+    printf("SI %d",contexto->registros.si);*/
     
 
     desplazamiento += sizeof(t_registros);
@@ -845,7 +867,10 @@ t_contexto* deserializar_contexto_inicial(void* buffer,int tamanio_buffer, t_log
         return NULL;
     }
 
-    log_info(logger_cpu,"Contexto recibido: PC=%u - Segmentos=%u - Próximo a detener=%d", contexto->registros.pc, contexto->tabla_segmentos,contexto->proximo_a_detener);
+    contexto->proximo_a_detener = false;
 
+    log_info(logger_cpu,"Contexto recibido: PC=%u - Segmentos=%d - Próximo a detener=%d", contexto->registros.pc, list_size(contexto->tabla_segmentos),contexto->proximo_a_detener);
+
+    free(buffer);
     return contexto;
 }

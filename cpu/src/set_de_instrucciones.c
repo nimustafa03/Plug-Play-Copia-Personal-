@@ -50,6 +50,7 @@ uint32_t tamanio_registro(char* nombre_registro) {
     if (strcmp(nombre_registro, "EDX") == 0) return sizeof(uint32_t);
     if (strcmp(nombre_registro, "SI") == 0) return sizeof(uint32_t);
     if (strcmp(nombre_registro, "DI") == 0) return sizeof(uint32_t);
+    return -1;
 }
 
 /*------------------------ INSTRUCCIONES ------------------------*/
