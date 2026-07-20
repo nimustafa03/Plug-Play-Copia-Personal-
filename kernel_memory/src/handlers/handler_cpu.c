@@ -68,6 +68,7 @@ void atender_cpu(int nuevo_socket_cpu){
         switch(*codigo){
             case MSG_INIT_CPU:
                 notificar_mapa_memory_sticks_a_cpu();
+                log_info(logger, "Mapa enviado. Esperando PID");
                 inicializar_proceso(recibir_pid(), socket_cpu);
                 break;
             case MSG_INTERRUPT:
@@ -228,7 +229,7 @@ void* serializar_contexto_inicial(
             logger,
             "Contexto vacío al momento de serializar contexto inicial."
         );
-        return;
+        return NULL;
     }
 
     int cantidad_segmentos = 0;

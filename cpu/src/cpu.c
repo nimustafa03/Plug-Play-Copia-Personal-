@@ -162,11 +162,12 @@ int main(int argc, char* argv[]) {
         // Se envia pid a KM
         enviar_mensaje(fd_km, &pid, sizeof(pid));
         int size;
-        void* buffer = recibir_mensaje(fd_ks, &size);
+        void* buffer = recibir_mensaje(fd_km, &size);
             if (buffer == NULL) {
-                //Log error
+                log_info(logger_cpu, "Buffer invalido al intetnar recibir el contexto");
                 return NULL;
             }
+        log_info(logger_cpu,"Se envio PID: %u", pid);
 
         t_contexto* contexto = deserializar_contexto_inicial(buffer,size);
     

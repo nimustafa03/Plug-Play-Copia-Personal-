@@ -149,11 +149,31 @@ void*manejar_proceso(void*arg){
 
 bool inicializar_proceso(uint32_t pid, int fd_cpu) {
   
+  log_info(logger, "PID recibido desde CPU: %u", pid);
+  
   char* key = pid_to_key(pid);
 
   t_proceso_memoria* proceso = malloc(sizeof(t_proceso_memoria));
 
   proceso = dictionary_get(administrador.procesos_por_pid, key);
+
+  // Validaciones del proceso creado
+  if (proceso == NULL) {
+  log_error(
+      logger,
+      "No se encontró el proceso con PID %u",
+      pid
+  );
+  return;
+  }
+  if (proceso->contexto == NULL) {
+    log_error(
+        logger,
+        "El proceso con PID %u no tiene contexto",
+        pid
+    );
+    return;
+}
 
   t_args_proceso*args = malloc(sizeof(t_args_proceso));
   args->fd_cpu = fd_cpu;
@@ -162,15 +182,20 @@ bool inicializar_proceso(uint32_t pid, int fd_cpu) {
   pthread_create(&nuevo_poceso, NULL, manejar_proceso,args);
   free(args);
 
-  int*tamanio_buffer;
-  void*buffer = serializar_contexto_inicial(proceso->contexto,tamanio_buffer);
+  log_info(logger, "Proceso creado");
+
+  int tamanio_buffer = 0;
+  void*buffer = serializar_contexto_inicial(proceso->contexto, &tamanio_buffer);
 
   if (buffer==NULL)
   {
     log_error(logger, "## ERROR: Ha ocurrido un error al serializar el contexto inicial.");
   }
-
-  enviar_contexto_ejecucion_a_cpu(fd_cpu, buffer,*tamanio_buffer);
+  
+  log_info(logger, "se creo el contexto y se va a enviar contexto");
+  int* tamanio_buffer_cpu;
+  enviar_contexto_ejecucion_a_cpu(fd_cpu, buffer,*tamanio_buffer_cpu);
+  log_info(logger, "se envio contexto");
 
   free(buffer);
   free(key);
