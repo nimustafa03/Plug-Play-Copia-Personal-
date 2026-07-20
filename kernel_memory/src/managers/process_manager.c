@@ -69,6 +69,8 @@ static t_contexto* crear_contexto_inicial(void) {
 
   contexto->tabla_segmentos = list_create();
 
+  contexto->proximo_a_detener = false;
+
   return contexto;
 }
 
@@ -142,6 +144,7 @@ void*manejar_proceso(void*arg){
       }
     }
   }
+  log_info(logger, "## PID: %d - Proceso eliminado.",proceso -> pid);
   destruir_proceso(proceso->pid);
   int*returnval = malloc(sizeof(1));
   pthread_exit(returnval);
