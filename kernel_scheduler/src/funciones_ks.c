@@ -46,6 +46,8 @@ static long reloj_suspension = 0;      // sello incremental para desempatar por 
 
 
 void inicializarListasProcesos() {
+  // DEBUG: frontera de funcion
+  log_debug(logger_ks, "[DBG][inicializarListasProcesos] ENTRADA");
   listaProcesosNew = list_create();
   listaProcesosReady = list_create();
   listaProcesosExec = list_create();
@@ -78,10 +80,14 @@ void inicializarListasProcesos() {
       cantidadColas++;
   }
   colasMultinivel = malloc(sizeof(t_list*) * cantidadColas);
+  // DEBUG: heap
+  log_debug(logger_ks, "[DBG][inicializarListasProcesos] malloc colasMultinivel=%p (%d colas)", (void*)colasMultinivel, cantidadColas);
   for (int i = 0; i < cantidadColas; i++) {
       colasMultinivel[i] = list_create();
   }
   log_info(logger_ks, "CMN: %d colas de prioridad inicializadas", cantidadColas);
+  // DEBUG: frontera de funcion
+  log_debug(logger_ks, "[DBG][inicializarListasProcesos] SALIDA");
 }
 
 // CP3: genera el próximo PID de forma segura. El primero es 0 (proceso inicial).
@@ -89,6 +95,8 @@ uint32_t generar_pid() {
     pthread_mutex_lock(&mutex_listas);
     uint32_t pid = contador_pids++;
     pthread_mutex_unlock(&mutex_listas);
+    // DEBUG: frontera de funcion (valor devuelto)
+    log_debug(logger_ks, "[DBG][generar_pid] SALIDA -> pid=%d", pid);
     return pid;
 }
 
@@ -96,18 +104,28 @@ uint32_t generar_pid() {
 // para el proceso inicial como para cada INIT_PROC. Serializado con mutex_km porque
 // fd_km es un único socket compartido; leemos el ack para no desincronizar el stream.
 void km_crear_proceso(uint32_t pid, char* path) {
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][km_crear_proceso] ENTRADA - pid=%d, path=%p ('%s')", pid, (void*)path, path ? path : "NULL");
     pthread_mutex_lock(&mutex_km);
     op_code cod = MSG_CREAR_PROCESO;
+    // DEBUG: serializacion
+    log_debug(logger_ks, "[DBG][km_crear_proceso] pid=%d - envío MSG_CREAR_PROCESO + pid + path a KM fd=%d", pid, fd_km);
     enviar_mensaje(fd_km, &cod, sizeof(op_code));
     enviar_mensaje(fd_km, &pid, sizeof(uint32_t));
     enviar_mensaje(fd_km, path, strlen(path) + 1);
 
     int size;
     op_code* resp = recibir_mensaje(fd_km, &size);
+    // DEBUG: deserializacion
+    log_debug(logger_ks, "[DBG][km_crear_proceso] pid=%d - ack KM ptr=%p, size=%d, opcode=%d", pid, (void*)resp, size, resp ? (int)*resp : -1);
     if (resp == NULL || *resp != MSG_OK)
         log_error(logger_ks, "## KM no confirmó la creación del PID %d", pid);
+    // DEBUG: heap
+    log_debug(logger_ks, "[DBG][km_crear_proceso] pid=%d - free(resp=%p)", pid, (void*)resp);
     free(resp);
     pthread_mutex_unlock(&mutex_km);
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][km_crear_proceso] SALIDA - pid=%d", pid);
 }
 
 // CP3: crea un proceso con la prioridad dada y lo mete en NEW.
@@ -115,6 +133,8 @@ void km_crear_proceso(uint32_t pid, char* path) {
 // contexto por PID; KS sólo trackea el ciclo de vida del proceso.
 void crear_proceso(char* path, int prioridad) {
     Proceso* p = malloc(sizeof(Proceso));
+    // DEBUG: heap - direccion del PCB nuevo (clave para cazar use-after-free)
+    log_debug(logger_ks, "[DBG][crear_proceso] malloc Proceso=%p, prioridad=%d, path='%s'", (void*)p, prioridad, path ? path : "NULL");
     p->id_proceso = generar_pid();
     p->estado = NEW;
     p->prioridad = prioridad;
@@ -130,7 +150,10 @@ void crear_proceso(char* path, int prioridad) {
     km_crear_proceso(p->id_proceso, path);
 
     pthread_mutex_lock(&mutex_listas);
+    // DEBUG: insercion en cola NEW (tamaño antes/despues)
+    log_debug(logger_ks, "[DBG][crear_proceso] pid=%d - insertando en NEW (size antes=%d)", p->id_proceso, list_size(listaProcesosNew));
     list_add(listaProcesosNew, p);
+    log_debug(logger_ks, "[DBG][crear_proceso] pid=%d - insertado en NEW (size despues=%d)", p->id_proceso, list_size(listaProcesosNew));
     pthread_mutex_unlock(&mutex_listas);
 }
 
@@ -163,6 +186,9 @@ void desalojar_por_prioridad(Proceso* proceso_entrante) {
     "## (%d) Prioridad: %d - Desalojado por cola más prioritaria por el proceso %d con prioridad %d",
     victima->id_proceso, victima->prioridad, proceso_entrante->id_proceso, proceso_entrante->prioridad);
 
+  // DEBUG: serializacion - interrupcion a la CPU de la victima
+  log_debug(logger_ks, "[DBG][desalojar_por_prioridad] envío MSG_INTERRUPT (motivo=1) a fd_cpu=%d, victima pid=%d ptr=%p", victima->fd_cpu, victima->id_proceso, (void*)victima);
+
   // interrumpir la CPU de la victima (mismo patron que timer_rr, motivo 1 = prioridad)
   op_code interrupcion = MSG_INTERRUPT;
   enviar_mensaje(victima->fd_cpu, &interrupcion, sizeof(op_code));
@@ -185,33 +211,45 @@ void procesoAReady(Proceso* proceso){
                 proceso->id_proceso, proceso->prioridad, cantidadColas - 1);
       return;
     }
+    // DEBUG: insercion en cola CMN (tamaño antes)
+    log_debug(logger_ks, "[DBG][procesoAReady] pid=%d ptr=%p -> cola CMN[%d] (size antes=%d)", proceso->id_proceso, (void*)proceso, proceso->prioridad, list_size(colasMultinivel[proceso->prioridad]));
     list_add(colasMultinivel[proceso->prioridad], proceso);
     log_info(logger_ks, "proceso %d agregado a cola CMN de prioridad %d",
              proceso->id_proceso, proceso->prioridad);
     desalojar_por_prioridad(proceso);
   } else {
+    // DEBUG: insercion en READY (tamaño antes)
+    log_debug(logger_ks, "[DBG][procesoAReady] pid=%d ptr=%p -> READY (size antes=%d)", proceso->id_proceso, (void*)proceso, list_size(listaProcesosReady));
     list_add(listaProcesosReady, proceso);
     log_info(logger_ks, "proceso %d agregado a lista READY", proceso->id_proceso);
   }
 }
 
 void procesoAExec(Proceso* proceso){
+  // DEBUG: insercion en EXEC
+  log_debug(logger_ks, "[DBG][procesoAExec] pid=%d ptr=%p -> EXEC (size antes=%d)", proceso->id_proceso, (void*)proceso, list_size(listaProcesosExec));
   list_add(listaProcesosExec, proceso);
   log_info(logger_ks, "proceso %d agregado a lista EXEC", proceso->id_proceso);
 }
 
 void procesoAExit(Proceso* proceso){
+  // DEBUG: insercion en EXIT
+  log_debug(logger_ks, "[DBG][procesoAExit] pid=%d ptr=%p -> EXIT (size antes=%d)", proceso->id_proceso, (void*)proceso, list_size(listaProcesosExit));
   list_add(listaProcesosExit, proceso);
   log_info(logger_ks, "Se terminó la proceso %d agregado a lista EXIT", proceso->id_proceso);
 }
 
 void procesoABlock(Proceso* proceso){
+  // DEBUG: insercion en BLOCK
+  log_debug(logger_ks, "[DBG][procesoABlock] pid=%d ptr=%p -> BLOCK (size antes=%d)", proceso->id_proceso, (void*)proceso, list_size(listaProcesosBlock));
   list_add(listaProcesosBlock, proceso);
   log_info(logger_ks, "Proceso %d agregado a lista BLOCK", proceso->id_proceso);
 }
 
 void procesoASuspBlock(Proceso* proceso){
   proceso->orden_suspension = reloj_suspension++; // CP3: antigüedad de suspensión
+  // DEBUG: insercion en SUSP_BLOCK
+  log_debug(logger_ks, "[DBG][procesoASuspBlock] pid=%d ptr=%p -> SUSP_BLOCK (size antes=%d)", proceso->id_proceso, (void*)proceso, list_size(listaProcesosSuspBlock));
   list_add(listaProcesosSuspBlock, proceso);
   log_info(logger_ks, "Proceso %d agregado a lista SUSP BLOCK", proceso->id_proceso);
 }
@@ -219,6 +257,8 @@ void procesoASuspBlock(Proceso* proceso){
 void procesoASuspReady(Proceso* proceso){
   // conserva el orden_suspension original si venía de SUSP_BLOCK; si entra directo, lo sella
   if (proceso->orden_suspension == 0) proceso->orden_suspension = reloj_suspension++;
+  // DEBUG: insercion en SUSP_READY
+  log_debug(logger_ks, "[DBG][procesoASuspReady] pid=%d ptr=%p -> SUSP_READY (size antes=%d)", proceso->id_proceso, (void*)proceso, list_size(listaProcesosSuspReady));
   list_add(listaProcesosSuspReady, proceso);
   log_info(logger_ks, "Proceso %d agregado a lista SUSP READY", proceso->id_proceso);
 }
@@ -237,6 +277,9 @@ void* iniciar_planificador_largo_plazo () {
     Proceso* nuevoProceso = list_get(listaProcesosNew, 0);
     pthread_mutex_unlock(&mutex_listas);
 
+    // DEBUG: extraccion de NEW - puntero y pid antes de mover a READY
+    log_debug(logger_ks, "[DBG][planif_largo] tomado de NEW: pid=%d ptr=%p (NEW size=%d) -> pasando a READY", nuevoProceso->id_proceso, (void*)nuevoProceso, list_size(listaProcesosNew));
+
     actualizarEstadoProceso(nuevoProceso, READY);
     sem_post(&sem_hay_proceso_ready); // avisa al planificador de corto plazo
   }
@@ -244,9 +287,14 @@ void* iniciar_planificador_largo_plazo () {
 
 void* timer_rr(void* arg) {
     t_args_rr* args = (t_args_rr*) arg;
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][timer_rr] ENTRADA - pid=%d, fd_cpu=%d, quantum=%d, args=%p", args->pid, args->fd_cpu, args->quantum, (void*)args);
 
     // dormimos el quantum (usleep espera microsegundos, el config está en ms)
     usleep(args->quantum * 1000);
+
+    // DEBUG: serializacion - interrupcion por fin de quantum
+    log_debug(logger_ks, "[DBG][timer_rr] pid=%d - envío MSG_INTERRUPT (motivo=0) a fd_cpu=%d", args->pid, args->fd_cpu);
 
     // enviamos la interrupción
     op_code interrupcion = MSG_INTERRUPT;
@@ -257,6 +305,8 @@ void* timer_rr(void* arg) {
     intr.motivo = 0; // fin de quantum
     enviar_mensaje(args->fd_cpu, &intr, sizeof(t_interrupcion));
 
+    // DEBUG: heap
+    log_debug(logger_ks, "[DBG][timer_rr] SALIDA - free(args=%p)", (void*)args);
     free(args);
     return NULL;
 }
@@ -264,10 +314,14 @@ void* timer_rr(void* arg) {
 // timer de suspensión - si al vencer SUSPENSION_TIMEOUT el proceso sigue en BLOCK, pasa a SUSP_BLOCK
 void* timer_suspension(void* arg) {
     t_args_suspension* args = (t_args_suspension*) arg;
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][timer_suspension] ENTRADA - pid=%d, timeout=%d, args=%p", args->pid, args->timeout, (void*)args);
 
     usleep(args->timeout * 1000); // SUSPENSION_TIMEOUT está en ms
 
     Proceso* proceso = buscar_proceso_por_pid(args->pid);
+    // DEBUG: resultado de la busqueda (NULL si el proceso ya salio/termino)
+    log_debug(logger_ks, "[DBG][timer_suspension] pid=%d - buscar_proceso -> ptr=%p", args->pid, (void*)proceso);
 
     if (proceso != NULL) {
         pthread_mutex_lock(&mutex_listas);
@@ -280,6 +334,8 @@ void* timer_suspension(void* arg) {
         // si ya no está en BLOCK (se desbloqueó antes de vencer el timeout), no hacemos nada
     }
 
+    // DEBUG: heap
+    log_debug(logger_ks, "[DBG][timer_suspension] SALIDA - pid=%d, free(args=%p)", args->pid, (void*)args);
     free(args);
     return NULL;
 }
@@ -297,15 +353,27 @@ Proceso* seleccionar_proceso_a_ejecutar(char* algoritmo, int* nivel_out) {
         for (int i = 0; i < cantidadColas; i++) {
             if (!list_is_empty(colasMultinivel[i])) {
                 *nivel_out = i;
-                return list_remove(colasMultinivel[i], 0);
+                Proceso* elegido = list_remove(colasMultinivel[i], 0);
+                // DEBUG: extraccion de cola CMN - valor devuelto fundamental para el scheduler
+                log_debug(logger_ks, "[DBG][seleccionar_proceso] CMN: removido pid=%d ptr=%p de cola[%d] (size ahora=%d)", elegido->id_proceso, (void*)elegido, i, list_size(colasMultinivel[i]));
+                return elegido;
             }
         }
+        // DEBUG: frontera de funcion (retorno NULL)
+        log_debug(logger_ks, "[DBG][seleccionar_proceso] CMN: todas las colas vacias -> NULL");
         return NULL; // todas las colas vacias
     }
 
     // FIFO / RR: una sola cola
-    if (list_is_empty(listaProcesosReady)) return NULL;
-    return list_remove(listaProcesosReady, 0);
+    if (list_is_empty(listaProcesosReady)) {
+        // DEBUG: frontera de funcion (retorno NULL)
+        log_debug(logger_ks, "[DBG][seleccionar_proceso] %s: READY vacia -> NULL", algoritmo);
+        return NULL;
+    }
+    Proceso* elegido = list_remove(listaProcesosReady, 0);
+    // DEBUG: extraccion de READY - valor devuelto fundamental para el scheduler
+    log_debug(logger_ks, "[DBG][seleccionar_proceso] %s: removido pid=%d ptr=%p de READY (size ahora=%d)", algoritmo, elegido->id_proceso, (void*)elegido, list_size(listaProcesosReady));
+    return elegido;
 }
 
 // Planif. Corto plazo: implementa FIFO, RR y CMN
@@ -321,6 +389,9 @@ void* iniciar_planificador_corto_plazo() {
     // bloquea hasta que haya proceso en READY Y cpu libre
     sem_wait(&sem_hay_proceso_ready);
     sem_wait(&sem_hay_cpu_libre);
+
+    // DEBUG: paso los dos semaforos
+    log_debug(logger_ks, "[DBG][planif_corto] semaforos ok (ready+cpu) - entrando a seccion critica");
  
     pthread_mutex_lock(&mutex_listas);
  
@@ -345,6 +416,8 @@ void* iniciar_planificador_corto_plazo() {
 
     int* fd_cpu_ptr = list_remove(listaCPUsLibres, 0);
     int  fd_cpu = *fd_cpu_ptr;
+    // DEBUG: heap - liberamos el int* que envolvia al fd
+    log_debug(logger_ks, "[DBG][planif_corto] pid=%d - CPU tomada fd=%d, free(fd_cpu_ptr=%p), CPUs libres ahora=%d", proceso->id_proceso, fd_cpu, (void*)fd_cpu_ptr, list_size(listaCPUsLibres));
     free(fd_cpu_ptr);
  
     pthread_mutex_unlock(&mutex_listas);
@@ -352,6 +425,9 @@ void* iniciar_planificador_corto_plazo() {
     proceso->fd_cpu = fd_cpu;
     actualizarEstadoProceso(proceso, EXEC);
  
+    // DEBUG: serializacion - despacho del PID a la CPU
+    log_debug(logger_ks, "[DBG][planif_corto] pid=%d - envío PID a CPU fd=%d (nivel CMN=%d)", proceso->id_proceso, fd_cpu, nivel);
+
     // envia el PID a la CPU para que empiece a ejecutar
     enviar_mensaje(fd_cpu, &proceso->id_proceso, sizeof(uint32_t));
  
@@ -365,6 +441,8 @@ void* iniciar_planificador_corto_plazo() {
 
     if (strcmp(algoritmo_efectivo, "RR") == 0) {
         t_args_rr* args = malloc(sizeof(t_args_rr));
+        // DEBUG: heap
+        log_debug(logger_ks, "[DBG][planif_corto] pid=%d - malloc t_args_rr=%p, lanzando timer_rr", proceso->id_proceso, (void*)args);
         args->fd_cpu = fd_cpu;
         args->pid = proceso->id_proceso;
         args->quantum = config_get_int_value(config, "RR_QUANTUM");
@@ -378,6 +456,11 @@ void* iniciar_planificador_corto_plazo() {
 
 
 void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
+  // DEBUG: frontera de funcion - loguea el PUNTERO CRUDO antes de desreferenciarlo.
+  // Si aca se ve proceso=(nil) y justo despues hay un SIGSEGV, el crash es el
+  // acceso a proceso->id_proceso / proceso->estado con puntero NULL.
+  log_debug(logger_ks, "[DBG][actualizarEstadoProceso] ENTRADA - proceso=%p, nuevoEstado=%s", (void*)proceso, estadosProcesos[nuevoEstado]);
+
   pthread_mutex_lock(&mutex_listas); // evita race conditions entre planificadores
 
   Proceso* procesoEncontrado = NULL;
@@ -387,6 +470,8 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
   estado_proceso estado_anterior = proceso->estado;
     switch(estado_anterior){
         case NEW:
+          // DEBUG: extraccion de cola NEW (tamaño antes)
+          log_debug(logger_ks, "[DBG][actualizarEstadoProceso] pid=%d - buscando en NEW (size=%d)", proceso->id_proceso, list_size(listaProcesosNew));
           for(int i = 0; i < list_size(listaProcesosNew); i++) {
               Proceso* procesoTemporal= list_get(listaProcesosNew, i);
               if(procesoTemporal->id_proceso == proceso->id_proceso) {
@@ -397,6 +482,8 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
           break;
         case READY:
           if (strcmp(config_get_string_value(config, "PLANIFICATION_ALGORITHM"), "CMN") == 0) {
+            // DEBUG: extraccion de colas CMN
+            log_debug(logger_ks, "[DBG][actualizarEstadoProceso] pid=%d - buscando en colas CMN (%d colas)", proceso->id_proceso, cantidadColas);
             for (int c = 0; c < cantidadColas && procesoEncontrado == NULL; c++) {
               for (int i = 0; i < list_size(colasMultinivel[c]); i++) {
                 Proceso* procesoTemporal = list_get(colasMultinivel[c], i);
@@ -407,6 +494,8 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
               }
             }
           } else {
+            // DEBUG: extraccion de READY (tamaño antes)
+            log_debug(logger_ks, "[DBG][actualizarEstadoProceso] pid=%d - buscando en READY (size=%d)", proceso->id_proceso, list_size(listaProcesosReady));
             for(int i = 0; i < list_size(listaProcesosReady); i++) {
                 Proceso* procesoTemporal= list_get(listaProcesosReady, i);
                 if(procesoTemporal->id_proceso == proceso->id_proceso) {
@@ -417,6 +506,8 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
           }
           break;
         case EXEC:
+          // DEBUG: extraccion de EXEC (tamaño antes)
+          log_debug(logger_ks, "[DBG][actualizarEstadoProceso] pid=%d - buscando en EXEC (size=%d)", proceso->id_proceso, list_size(listaProcesosExec));
           for(int i = 0; i < list_size(listaProcesosExec); i++) {
             Proceso* procesoTemporal= list_get(listaProcesosExec, i);
             if(procesoTemporal->id_proceso == proceso->id_proceso) {
@@ -426,6 +517,8 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
           }
           break;
         case BLOCK:
+          // DEBUG: extraccion de BLOCK (tamaño antes)
+          log_debug(logger_ks, "[DBG][actualizarEstadoProceso] pid=%d - buscando en BLOCK (size=%d)", proceso->id_proceso, list_size(listaProcesosBlock));
           for(int i = 0; i < list_size(listaProcesosBlock); i++) {
             Proceso* procesoTemporal= list_get(listaProcesosBlock, i);
             if(procesoTemporal->id_proceso == proceso->id_proceso) {
@@ -435,6 +528,8 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
           }
           break;
         case SUSP_BLOCK:
+          // DEBUG: extraccion de SUSP_BLOCK (tamaño antes)
+          log_debug(logger_ks, "[DBG][actualizarEstadoProceso] pid=%d - buscando en SUSP_BLOCK (size=%d)", proceso->id_proceso, list_size(listaProcesosSuspBlock));
           for(int i = 0; i < list_size(listaProcesosSuspBlock); i++) {
             Proceso* procesoTemporal= list_get(listaProcesosSuspBlock, i);
             if(procesoTemporal->id_proceso == proceso->id_proceso) {
@@ -444,6 +539,8 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
           }
           break;
         case SUSP_READY:
+          // DEBUG: extraccion de SUSP_READY (tamaño antes)
+          log_debug(logger_ks, "[DBG][actualizarEstadoProceso] pid=%d - buscando en SUSP_READY (size=%d)", proceso->id_proceso, list_size(listaProcesosSuspReady));
           for(int i = 0; i < list_size(listaProcesosSuspReady); i++) {
             Proceso* procesoTemporal= list_get(listaProcesosSuspReady, i);
             if(procesoTemporal->id_proceso == proceso->id_proceso) {
@@ -458,6 +555,9 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
           pthread_mutex_unlock(&mutex_listas);
           return;
     }
+
+    // DEBUG: resultado de la extraccion - si no lo encontro se usa el puntero recibido
+    log_debug(logger_ks, "[DBG][actualizarEstadoProceso] pid=%d - procesoEncontrado=%p (recibido=%p, %s)", proceso->id_proceso, (void*)procesoEncontrado, (void*)proceso, procesoEncontrado == NULL ? "NO estaba en su lista, se confia en el recibido" : "removido de su lista");
 
     // CP3: si no lo encontramos en la lista de su estado_anterior, puede ser
     // porque quien nos llamo ya lo saco de ahi antes de pedir el cambio de
@@ -518,6 +618,8 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
 
     if (lanzar_timer_suspension) {
         t_args_suspension* args_susp = malloc(sizeof(t_args_suspension));
+        // DEBUG: heap
+        log_debug(logger_ks, "[DBG][actualizarEstadoProceso] pid=%d - malloc t_args_suspension=%p, lanzando timer_suspension", proceso->id_proceso, (void*)args_susp);
         args_susp->pid = proceso->id_proceso;
         args_susp->timeout = config_get_int_value(config, "SUSPENSION_TIMEOUT");
 
@@ -525,6 +627,8 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
         pthread_create(&thread_susp, NULL, timer_suspension, args_susp);
         pthread_detach(thread_susp);
     }
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][actualizarEstadoProceso] SALIDA - pid=%d ya en %s", proceso->id_proceso, estadosProcesos[nuevoEstado]);
 }
 
 t_mutex_ks* buscar_mutex(char* nombre) {
@@ -541,6 +645,8 @@ void mutex_create(char* nombre) {
       return;
   }
   t_mutex_ks* m = malloc(sizeof(t_mutex_ks));
+  // DEBUG: heap
+  log_debug(logger_ks, "[DBG][mutex_create] malloc t_mutex_ks=%p para '%s'", (void*)m, nombre);
   m->nombre = strdup(nombre);
   m->pid_tomador = -1;
   m->cola_bloqueados = list_create();
@@ -562,6 +668,10 @@ void cambiar_prioridad(Proceso* proceso, int nueva_prioridad) {
 }
 
 void mutex_lock(char* nombre, Proceso* proceso) {
+  // DEBUG: frontera de funcion - PUNTERO CRUDO antes de desreferenciar.
+  // Si proceso=(nil) aca, el proceso->id_proceso de abajo segfaultea (llega NULL
+  // desde MSG_MUTEX_LOCK cuando buscar_proceso_por_pid no lo encontro).
+  log_debug(logger_ks, "[DBG][mutex_lock] ENTRADA - nombre='%s', proceso=%p", nombre ? nombre : "NULL", (void*)proceso);
   pthread_mutex_lock(&mutex_listas);
   t_mutex_ks* m = buscar_mutex(nombre);
   if (m == NULL) {
@@ -576,6 +686,8 @@ void mutex_lock(char* nombre, Proceso* proceso) {
       log_info(logger_ks, "## (%d) Toma el Mutex %s", proceso->id_proceso, nombre);
       pthread_mutex_unlock(&mutex_listas);
       op_code ok = MSG_OK;
+      // DEBUG: serializacion
+      log_debug(logger_ks, "[DBG][mutex_lock] pid=%d - envío MSG_OK a fd_cpu=%d", proceso->id_proceso, proceso->fd_cpu);
       enviar_mensaje(proceso->fd_cpu, &ok, sizeof(op_code));
   } else {
       // ocupado, bloquear el proceso
@@ -586,6 +698,8 @@ void mutex_lock(char* nombre, Proceso* proceso) {
       // prioritario (numero menor) que el tomador actual, el tomador hereda
       // esa prioridad para liberar el mutex cuanto antes.
       Proceso* tomador = buscar_proceso_por_pid_sin_lock(m->pid_tomador);
+      // DEBUG: puntero del tomador (NULL si no esta en ninguna lista)
+      log_debug(logger_ks, "[DBG][mutex_lock] pid=%d - tomador pid=%d ptr=%p", proceso->id_proceso, m->pid_tomador, (void*)tomador);
       if (tomador != NULL && proceso->prioridad < tomador->prioridad) {
           cambiar_prioridad(tomador, proceso->prioridad);
       }
@@ -593,9 +707,13 @@ void mutex_lock(char* nombre, Proceso* proceso) {
       pthread_mutex_unlock(&mutex_listas);
       actualizarEstadoProceso(proceso, BLOCK);
   }
+  // DEBUG: frontera de funcion
+  log_debug(logger_ks, "[DBG][mutex_lock] SALIDA - nombre='%s'", nombre);
 }
 
 void mutex_unlock(char* nombre, Proceso* proceso) {
+  // DEBUG: frontera de funcion - PUNTERO CRUDO antes de desreferenciar
+  log_debug(logger_ks, "[DBG][mutex_unlock] ENTRADA - nombre='%s', proceso=%p", nombre ? nombre : "NULL", (void*)proceso);
   pthread_mutex_lock(&mutex_listas);
   t_mutex_ks* m = buscar_mutex(nombre);
   if (m == NULL) {
@@ -622,6 +740,8 @@ void mutex_unlock(char* nombre, Proceso* proceso) {
   } else {
       // desbloquear el primero de la cola
       Proceso* siguiente = list_remove(m->cola_bloqueados, 0);
+      // DEBUG: extracción de cola de bloqueados del mutex
+      log_debug(logger_ks, "[DBG][mutex_unlock] '%s' - desbloquea siguiente pid=%d ptr=%p (bloqueados ahora=%d)", nombre, siguiente->id_proceso, (void*)siguiente, list_size(m->cola_bloqueados));
       m->pid_tomador = siguiente->id_proceso;
       pthread_mutex_unlock(&mutex_listas);
       
@@ -629,14 +749,22 @@ void mutex_unlock(char* nombre, Proceso* proceso) {
       actualizarEstadoProceso(siguiente, READY);
       sem_post(&sem_hay_proceso_ready);
       op_code ok = MSG_OK;
+      // DEBUG: serializacion
+      log_debug(logger_ks, "[DBG][mutex_unlock] pid=%d - envío MSG_OK a fd_cpu=%d del desbloqueado", siguiente->id_proceso, siguiente->fd_cpu);
       enviar_mensaje(siguiente->fd_cpu, &ok, sizeof(op_code));
   }
+  // DEBUG: frontera de funcion
+  log_debug(logger_ks, "[DBG][mutex_unlock] SALIDA - nombre='%s'", nombre);
 }
 
 void atender_cpu_ks(int fd_cpu) {
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][atender_cpu_ks] ENTRADA - fd_cpu=%d", fd_cpu);
     // CPU recién conectada, entonces esta libre
     pthread_mutex_lock(&mutex_listas);
     int* fd_libre = malloc(sizeof(int));
+    // DEBUG: heap
+    log_debug(logger_ks, "[DBG][atender_cpu_ks] malloc fd_libre=%p (fd=%d) -> listaCPUsLibres", (void*)fd_libre, fd_cpu);
     *fd_libre = fd_cpu;
     list_add(listaCPUsLibres, fd_libre);
     pthread_mutex_unlock(&mutex_listas);
@@ -649,18 +777,26 @@ void atender_cpu_ks(int fd_cpu) {
             log_warning(logger_ks, "CPU FD:%d desconectada", fd_cpu);
             break;
         }
+        // DEBUG: deserializacion - opcode recibido de la CPU
+        log_debug(logger_ks, "[DBG][atender_cpu_ks] fd=%d - opcode recibido: %d (ptr=%p, size=%d)", fd_cpu, (int)*codigo, (void*)codigo, size);
 
         switch (*codigo) {
             case MSG_DONE: {
                 // CP2/CP3: proceso terminó (fin de instrucciones o syscall EXIT)
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
+                // DEBUG: deserializacion - si pid_ptr==NULL el *pid_ptr de abajo SEGFAULTEA
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:MSG_DONE] fd=%d - pid_ptr=%p, pid=%d", fd_cpu, (void*)pid_ptr, pid_ptr ? (int)*pid_ptr : -1);
                 Proceso* proceso = buscar_proceso_por_pid(*pid_ptr);
+                // DEBUG: puntero del proceso (NULL si ya no esta en ninguna lista viva)
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:MSG_DONE] pid=%d - buscar_proceso -> ptr=%p", *pid_ptr, (void*)proceso);
                 free(pid_ptr);
                 // CP3: finalizar_proceso avisa a KM (libera memoria) + log obligatorio de fin
                 if (proceso) finalizar_proceso(proceso, "EXIT");
 
                 pthread_mutex_lock(&mutex_listas);
                 int* fd_libre2 = malloc(sizeof(int));
+                // DEBUG: heap
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:MSG_DONE] malloc fd_libre2=%p (fd=%d) -> CPU libre de nuevo", (void*)fd_libre2, fd_cpu);
                 *fd_libre2 = fd_cpu;
                 list_add(listaCPUsLibres, fd_libre2);
                 pthread_mutex_unlock(&mutex_listas);
@@ -670,12 +806,17 @@ void atender_cpu_ks(int fd_cpu) {
             case MSG_SEG_FAULT: {
                 // CP3: la CPU detectó un Segmentation Fault -> se finaliza el proceso
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
+                // DEBUG: deserializacion
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:MSG_SEG_FAULT] fd=%d - pid_ptr=%p, pid=%d", fd_cpu, (void*)pid_ptr, pid_ptr ? (int)*pid_ptr : -1);
                 Proceso* proceso = buscar_proceso_por_pid(*pid_ptr);
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:MSG_SEG_FAULT] pid=%d - buscar_proceso -> ptr=%p", *pid_ptr, (void*)proceso);
                 free(pid_ptr);
                 if (proceso) finalizar_proceso(proceso, "SEG_FAULT");
 
                 pthread_mutex_lock(&mutex_listas);
                 int* fd_libre_sf = malloc(sizeof(int));
+                // DEBUG: heap
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:MSG_SEG_FAULT] malloc fd_libre_sf=%p (fd=%d)", (void*)fd_libre_sf, fd_cpu);
                 *fd_libre_sf = fd_cpu;
                 list_add(listaCPUsLibres, fd_libre_sf);
                 pthread_mutex_unlock(&mutex_listas);
@@ -687,7 +828,13 @@ void atender_cpu_ks(int fd_cpu) {
                 // 1=cola más prioritaria, 2=desalojo por compactación (CP3).
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
                 int* motivo_ptr = recibir_mensaje(fd_cpu, &size);
+                // DEBUG: deserializacion - CUALQUIERA de los dos en NULL segfaultea abajo
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:INT_ATENDIDA] fd=%d - pid_ptr=%p (pid=%d), motivo_ptr=%p (motivo=%d)", fd_cpu, (void*)pid_ptr, pid_ptr ? (int)*pid_ptr : -1, (void*)motivo_ptr, motivo_ptr ? *motivo_ptr : -1);
                 Proceso* proceso = buscar_proceso_por_pid(*pid_ptr);
+                // DEBUG: SI proceso=(nil) ACA, EL actualizarEstadoProceso/proceso->id_proceso
+                // DE MAS ABAJO ES EL SEGFAULT (interrupcion atendida de un proceso que ya
+                // termino por MSG_DONE - carrera clasica del timer RR con el fin del proceso)
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:INT_ATENDIDA] pid=%d - buscar_proceso -> ptr=%p", *pid_ptr, (void*)proceso);
                 int motivo = *motivo_ptr;
                 free(pid_ptr);
                 free(motivo_ptr);
@@ -695,6 +842,8 @@ void atender_cpu_ks(int fd_cpu) {
                 // en todos los casos la CPU vuelve a estar libre
                 pthread_mutex_lock(&mutex_listas);
                 int* fd_libre3 = malloc(sizeof(int));
+                // DEBUG: heap
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:INT_ATENDIDA] malloc fd_libre3=%p (fd=%d)", (void*)fd_libre3, fd_cpu);
                 *fd_libre3 = fd_cpu;
                 list_add(listaCPUsLibres, fd_libre3);
                 pthread_mutex_unlock(&mutex_listas);
@@ -712,6 +861,8 @@ void atender_cpu_ks(int fd_cpu) {
                     }
                     proceso->estado = READY;
                     proceso->fd_cpu = -1;
+                    // DEBUG: insercion al frente de READY/cola CMN
+                    log_debug(logger_ks, "[DBG][atender_cpu_ks:INT_ATENDIDA] pid=%d ptr=%p - insertando al FRENTE de READY (compactacion)", proceso->id_proceso, (void*)proceso);
                     if (strcmp(config_get_string_value(config, "PLANIFICATION_ALGORITHM"), "CMN") == 0)
                         list_add_in_index(colasMultinivel[proceso->prioridad], 0, proceso);
                     else
@@ -733,9 +884,13 @@ void atender_cpu_ks(int fd_cpu) {
             case MSG_MUTEX_CREATE: {
                 char* nombre = recibir_mensaje(fd_cpu, &size);
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
+                // DEBUG: deserializacion
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:MUTEX_CREATE] nombre=%p ('%s'), pid_ptr=%p (pid=%d)", (void*)nombre, nombre ? nombre : "NULL", (void*)pid_ptr, pid_ptr ? (int)*pid_ptr : -1);
                 log_info(logger_ks, "## (%d) - Solicitó syscall: MUTEX_CREATE", *pid_ptr);
                 mutex_create(nombre);
                 op_code ok = MSG_OK;
+                // DEBUG: serializacion
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:MUTEX_CREATE] envío MSG_OK a fd=%d", fd_cpu);
                 enviar_mensaje(fd_cpu, &ok, sizeof(op_code));
                 free(nombre);
                 free(pid_ptr);
@@ -744,8 +899,12 @@ void atender_cpu_ks(int fd_cpu) {
             case MSG_MUTEX_LOCK: {
                 char* nombre = recibir_mensaje(fd_cpu, &size);
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
+                // DEBUG: deserializacion
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:MUTEX_LOCK] nombre=%p ('%s'), pid_ptr=%p (pid=%d)", (void*)nombre, nombre ? nombre : "NULL", (void*)pid_ptr, pid_ptr ? (int)*pid_ptr : -1);
                 log_info(logger_ks, "## (%d) - Solicitó syscall: MUTEX_LOCK", *pid_ptr);
                 Proceso* proceso = buscar_proceso_por_pid(*pid_ptr);
+                // DEBUG: si proceso=(nil), mutex_lock lo desreferencia y segfaultea
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:MUTEX_LOCK] pid=%d - buscar_proceso -> ptr=%p", *pid_ptr, (void*)proceso);
                 free(pid_ptr);
                 mutex_lock(nombre, proceso);
                 // no respondemos acá — mutex_lock responde cuando corresponde
@@ -755,10 +914,16 @@ void atender_cpu_ks(int fd_cpu) {
             case MSG_MUTEX_UNLOCK: {
                 char* nombre = recibir_mensaje(fd_cpu, &size);
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
+                // DEBUG: deserializacion
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:MUTEX_UNLOCK] nombre=%p ('%s'), pid_ptr=%p (pid=%d)", (void*)nombre, nombre ? nombre : "NULL", (void*)pid_ptr, pid_ptr ? (int)*pid_ptr : -1);
                 log_info(logger_ks, "## (%d) - Solicitó syscall: MUTEX_UNLOCK", *pid_ptr);
                 Proceso* proceso = buscar_proceso_por_pid(*pid_ptr);
+                // DEBUG: si proceso=(nil), mutex_unlock lo desreferencia y segfaultea
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:MUTEX_UNLOCK] pid=%d - buscar_proceso -> ptr=%p", *pid_ptr, (void*)proceso);
                 mutex_unlock(nombre, proceso);
                 op_code ok = MSG_OK;
+                // DEBUG: serializacion
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:MUTEX_UNLOCK] envío MSG_OK a fd=%d", fd_cpu);
                 enviar_mensaje(fd_cpu, &ok, sizeof(op_code));
                 free(nombre);
                 free(pid_ptr);
@@ -770,9 +935,13 @@ void atender_cpu_ks(int fd_cpu) {
                 // manda la respuesta a fd_cpu para destrabarla.
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
                 int* tiempo_ptr = recibir_mensaje(fd_cpu, &size);
+                // DEBUG: deserializacion
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:SLEEP] pid_ptr=%p (pid=%d), tiempo_ptr=%p (tiempo=%d)", (void*)pid_ptr, pid_ptr ? (int)*pid_ptr : -1, (void*)tiempo_ptr, tiempo_ptr ? *tiempo_ptr : -1);
                 log_info(logger_ks, "## (%d) - Solicitó syscall: SLEEP", *pid_ptr);
 
                 t_args_sleep* args_sleep = malloc(sizeof(t_args_sleep));
+                // DEBUG: heap
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:SLEEP] malloc t_args_sleep=%p", (void*)args_sleep);
                 args_sleep->fd_cpu = fd_cpu;
                 args_sleep->pid = *pid_ptr;
                 args_sleep->tiempo = *tiempo_ptr;
@@ -789,10 +958,14 @@ void atender_cpu_ks(int fd_cpu) {
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
                 uint32_t* id_ptr  = recibir_mensaje(fd_cpu, &size);
                 uint32_t* tam_ptr = recibir_mensaje(fd_cpu, &size);
+                // DEBUG: deserializacion
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:MEM_ALLOC] pid_ptr=%p (pid=%d), id_ptr=%p (id=%d), tam_ptr=%p (tam=%d)", (void*)pid_ptr, pid_ptr ? (int)*pid_ptr : -1, (void*)id_ptr, id_ptr ? (int)*id_ptr : -1, (void*)tam_ptr, tam_ptr ? (int)*tam_ptr : -1);
                 log_info(logger_ks, "## (%d) - Solicitó syscall: MEM_ALLOC", *pid_ptr);
 
                 bool ok = km_mem_alloc(*pid_ptr, *id_ptr, *tam_ptr);
                 op_code r = ok ? MSG_OK : MSG_ERROR;
+                // DEBUG: serializacion
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:MEM_ALLOC] pid=%d - envío %s a fd=%d", *pid_ptr, ok ? "MSG_OK" : "MSG_ERROR", fd_cpu);
                 enviar_mensaje(fd_cpu, &r, sizeof(op_code));
                 free(pid_ptr); free(id_ptr); free(tam_ptr);
                 break;
@@ -801,10 +974,14 @@ void atender_cpu_ks(int fd_cpu) {
                 // CP3: opcode + pid + id_segmento
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
                 uint32_t* id_ptr  = recibir_mensaje(fd_cpu, &size);
+                // DEBUG: deserializacion
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:MEM_FREE] pid_ptr=%p (pid=%d), id_ptr=%p (id=%d)", (void*)pid_ptr, pid_ptr ? (int)*pid_ptr : -1, (void*)id_ptr, id_ptr ? (int)*id_ptr : -1);
                 log_info(logger_ks, "## (%d) - Solicitó syscall: MEM_FREE", *pid_ptr);
 
                 bool ok = km_mem_free(*pid_ptr, *id_ptr);
                 op_code r = ok ? MSG_OK : MSG_ERROR;
+                // DEBUG: serializacion
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:MEM_FREE] pid=%d - envío %s a fd=%d", *pid_ptr, ok ? "MSG_OK" : "MSG_ERROR", fd_cpu);
                 enviar_mensaje(fd_cpu, &r, sizeof(op_code));
                 // se liberó memoria -> intentar des-suspender procesos (mediano plazo)
                 if (ok) intentar_desuspender_procesos();
@@ -816,10 +993,14 @@ void atender_cpu_ks(int fd_cpu) {
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
                 int* prio_ptr = recibir_mensaje(fd_cpu, &size);
                 char* path = recibir_mensaje(fd_cpu, &size);
+                // DEBUG: deserializacion
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:INIT_PROC] pid_ptr=%p (pid=%d), prio_ptr=%p (prio=%d), path=%p ('%s')", (void*)pid_ptr, pid_ptr ? (int)*pid_ptr : -1, (void*)prio_ptr, prio_ptr ? *prio_ptr : -1, (void*)path, path ? path : "NULL");
                 log_info(logger_ks, "## (%d) - Solicitó syscall: INIT_PROC", *pid_ptr);
 
                 crear_proceso(path, *prio_ptr);
                 op_code r = MSG_OK;
+                // DEBUG: serializacion
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:INIT_PROC] envío MSG_OK a fd=%d", fd_cpu);
                 enviar_mensaje(fd_cpu, &r, sizeof(op_code));
                 free(pid_ptr); free(prio_ptr); free(path);
                 break;
@@ -829,9 +1010,13 @@ void atender_cpu_ks(int fd_cpu) {
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
                 uint32_t* dir_ptr = recibir_mensaje(fd_cpu, &size);
                 uint32_t* tam_ptr = recibir_mensaje(fd_cpu, &size);
+                // DEBUG: deserializacion
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:STDIN] pid_ptr=%p (pid=%d), dir_ptr=%p (dir=%d), tam_ptr=%p (tam=%d)", (void*)pid_ptr, pid_ptr ? (int)*pid_ptr : -1, (void*)dir_ptr, dir_ptr ? (int)*dir_ptr : -1, (void*)tam_ptr, tam_ptr ? (int)*tam_ptr : -1);
                 log_info(logger_ks, "## (%d) - Solicitó syscall: STDIN", *pid_ptr);
 
                 t_args_io_mem* a = malloc(sizeof(t_args_io_mem));
+                // DEBUG: heap
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:STDIN] malloc t_args_io_mem=%p", (void*)a);
                 a->fd_cpu = fd_cpu; a->pid = *pid_ptr;
                 a->dir_logica = *dir_ptr; a->tamanio = *tam_ptr;
                 free(pid_ptr); free(dir_ptr); free(tam_ptr);
@@ -844,9 +1029,13 @@ void atender_cpu_ks(int fd_cpu) {
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
                 uint32_t* dir_ptr = recibir_mensaje(fd_cpu, &size);
                 uint32_t* tam_ptr = recibir_mensaje(fd_cpu, &size);
+                // DEBUG: deserializacion
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:STDOUT] pid_ptr=%p (pid=%d), dir_ptr=%p (dir=%d), tam_ptr=%p (tam=%d)", (void*)pid_ptr, pid_ptr ? (int)*pid_ptr : -1, (void*)dir_ptr, dir_ptr ? (int)*dir_ptr : -1, (void*)tam_ptr, tam_ptr ? (int)*tam_ptr : -1);
                 log_info(logger_ks, "## (%d) - Solicitó syscall: STDOUT", *pid_ptr);
 
                 t_args_io_mem* a = malloc(sizeof(t_args_io_mem));
+                // DEBUG: heap
+                log_debug(logger_ks, "[DBG][atender_cpu_ks:STDOUT] malloc t_args_io_mem=%p", (void*)a);
                 a->fd_cpu = fd_cpu; a->pid = *pid_ptr;
                 a->dir_logica = *dir_ptr; a->tamanio = *tam_ptr;
                 free(pid_ptr); free(dir_ptr); free(tam_ptr);
@@ -858,8 +1047,12 @@ void atender_cpu_ks(int fd_cpu) {
                 log_warning(logger_ks, "Syscall desconocida: %d", *codigo);
                 break;
         }
+        // DEBUG: heap
+        log_debug(logger_ks, "[DBG][atender_cpu_ks] fd=%d - fin de iteracion, free(codigo=%p)", fd_cpu, (void*)codigo);
         free(codigo);
     }
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][atender_cpu_ks] SALIDA - fd_cpu=%d (socket cerrado)", fd_cpu);
 }
 
 // Version sin lock: debe llamarse con mutex_listas YA tomado.
@@ -893,6 +1086,8 @@ Proceso* buscar_proceso_por_pid(uint32_t pid) {
     pthread_mutex_lock(&mutex_listas);
     Proceso* resultado = buscar_proceso_por_pid_sin_lock(pid);
     pthread_mutex_unlock(&mutex_listas);
+    // DEBUG: frontera de funcion (valor devuelto fundamental - NULL si no esta)
+    log_debug(logger_ks, "[DBG][buscar_proceso_por_pid] pid=%d -> ptr=%p", pid, (void*)resultado);
     return resultado;
 }
 
@@ -911,8 +1106,12 @@ sem_t* semaforo_io_por_tipo(char* tipo) {
 void identificar_io_ks(int fd_io) {
     int size;
     char* tipo = recibir_mensaje(fd_io, &size);
+    // DEBUG: deserializacion - si tipo==NULL, el strdup/strcmp de abajo SEGFAULTEA
+    log_debug(logger_ks, "[DBG][identificar_io_ks] fd=%d - tipo=%p ('%s'), size=%d", fd_io, (void*)tipo, tipo ? tipo : "NULL", size);
 
     t_io_ks* io = malloc(sizeof(t_io_ks));
+    // DEBUG: heap
+    log_debug(logger_ks, "[DBG][identificar_io_ks] malloc t_io_ks=%p (fd=%d)", (void*)io, fd_io);
     io->fd = fd_io;
     io->tipo = strdup(tipo);
 
@@ -924,6 +1123,8 @@ void identificar_io_ks(int fd_io) {
 
     sem_t* sem = semaforo_io_por_tipo(tipo);
     if (sem != NULL) sem_post(sem);
+    // DEBUG: heap
+    log_debug(logger_ks, "[DBG][identificar_io_ks] free(tipo=%p) y SALIDA", (void*)tipo);
     free(tipo);
 }
 
@@ -941,12 +1142,17 @@ t_io_ks* sacar_io_libre_por_tipo(char* tipo) {
         }
     }
     pthread_mutex_unlock(&mutex_listas);
+    // DEBUG: frontera de funcion (valor devuelto - NULL si no habia IO de ese tipo,
+    // los llamadores hacen io->fd sin chequear -> segfault si esto da (nil))
+    log_debug(logger_ks, "[DBG][sacar_io_libre_por_tipo] tipo='%s' -> ptr=%p", tipo, (void*)encontrada);
     return encontrada;
 }
 
 // Vuelve a dejar la IO disponible para la próxima syscall que la necesite,
 // posteando el semáforo específico de su tipo.
 void liberar_io(t_io_ks* io) {
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][liberar_io] ENTRADA - io=%p (fd=%d, tipo='%s')", (void*)io, io ? io->fd : -1, io ? io->tipo : "NULL");
     pthread_mutex_lock(&mutex_listas);
     list_add(listaIOsLibres, io);
     pthread_mutex_unlock(&mutex_listas);
@@ -962,6 +1168,8 @@ void liberar_io(t_io_ks* io) {
 // 4) libera la IO, pasa el proceso a READY, y recien ahi responde a la CPU
 void* atender_sleep_ks(void* arg) {
     t_args_sleep* args = (t_args_sleep*) arg;
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][atender_sleep_ks] ENTRADA - pid=%d, fd_cpu=%d, tiempo=%d, args=%p", args->pid, args->fd_cpu, args->tiempo, (void*)args);
 
     Proceso* proceso = buscar_proceso_por_pid(args->pid);
     if (proceso == NULL) {
@@ -976,14 +1184,20 @@ void* atender_sleep_ks(void* arg) {
     // sem_wait + sacar_io_libre_por_tipo alcanza, sin loop de reintento
     sem_wait(&sem_hay_sleep_libre);
     t_io_ks* io = sacar_io_libre_por_tipo("SLEEP");
+    // DEBUG: si io=(nil), el io->fd de abajo SEGFAULTEA
+    log_debug(logger_ks, "[DBG][atender_sleep_ks] pid=%d - io obtenida ptr=%p (fd=%d)", args->pid, (void*)io, io ? io->fd : -1);
 
     op_code cod_sleep = MSG_SLEEP;
+    // DEBUG: serializacion
+    log_debug(logger_ks, "[DBG][atender_sleep_ks] pid=%d - envío MSG_SLEEP + pid + tiempo a IO fd=%d", args->pid, io->fd);
     enviar_mensaje(io->fd, &cod_sleep, sizeof(op_code));
     enviar_mensaje(io->fd, &args->pid, sizeof(uint32_t));
     enviar_mensaje(io->fd, &args->tiempo, sizeof(int));
 
     int size;
     op_code* respuesta = recibir_mensaje(io->fd, &size);
+    // DEBUG: deserializacion
+    log_debug(logger_ks, "[DBG][atender_sleep_ks] pid=%d - respuesta IO ptr=%p, size=%d, opcode=%d", args->pid, (void*)respuesta, size, respuesta ? (int)*respuesta : -1);
     // se espera MSG_DONE; si la IO se desconectó (NULL) lo tratamos como error y
     // de todas formas liberamos al proceso para no dejarlo colgado para siempre
     if (respuesta != NULL) free(respuesta);
@@ -996,8 +1210,12 @@ void* atender_sleep_ks(void* arg) {
 
     // recién ahora destrabamos a la CPU que pidió el sleep
     op_code ok = MSG_OK;
+    // DEBUG: serializacion
+    log_debug(logger_ks, "[DBG][atender_sleep_ks] pid=%d - envío MSG_OK a fd_cpu=%d", args->pid, args->fd_cpu);
     enviar_mensaje(args->fd_cpu, &ok, sizeof(op_code));
 
+    // DEBUG: heap
+    log_debug(logger_ks, "[DBG][atender_sleep_ks] SALIDA - free(args=%p)", (void*)args);
     free(args);
     return NULL;
 }
@@ -1007,6 +1225,8 @@ void* atender_sleep_ks(void* arg) {
 // Al terminar una IO, desbloquea el proceso contemplando que el SUSPENSION_TIMEOUT
 // lo haya movido a SUSP_BLOCK mientras la IO estaba en curso.
 void finalizar_io_y_desbloquear(Proceso* proceso) {
+    // DEBUG: frontera de funcion - PUNTERO CRUDO antes de desreferenciar
+    log_debug(logger_ks, "[DBG][finalizar_io_y_desbloquear] ENTRADA - proceso=%p", (void*)proceso);
     pthread_mutex_lock(&mutex_listas);
     estado_proceso estado_actual = proceso->estado;
     pthread_mutex_unlock(&mutex_listas);
@@ -1044,21 +1264,31 @@ const char* nombre_syscall(op_code cod) {
 
 // Avisa a KM que el proceso terminó para que libere su memoria.
 void km_notificar_exit(uint32_t pid) {
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][km_notificar_exit] ENTRADA - pid=%d", pid);
     pthread_mutex_lock(&mutex_km);
     op_code cod = MSG_DONE;
+    // DEBUG: serializacion
+    log_debug(logger_ks, "[DBG][km_notificar_exit] pid=%d - envío MSG_DONE + pid a KM fd=%d", pid, fd_km);
     enviar_mensaje(fd_km, &cod, sizeof(op_code));
     enviar_mensaje(fd_km, &pid, sizeof(uint32_t));
 
     int size;
     op_code* resp = recibir_mensaje(fd_km, &size);
+    // DEBUG: deserializacion
+    log_debug(logger_ks, "[DBG][km_notificar_exit] pid=%d - ack KM ptr=%p, size=%d, opcode=%d", pid, (void*)resp, size, resp ? (int)*resp : -1);
     if (resp == NULL || *resp != MSG_OK)
         log_error(logger_ks, "## KM no confirmó la liberación de memoria del PID %d", pid);
     free(resp);
     pthread_mutex_unlock(&mutex_km);
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][km_notificar_exit] SALIDA - pid=%d", pid);
 }
 
 // Finaliza un proceso: avisa a KM, lo pasa a EXIT y loguea el fin obligatorio.
 void finalizar_proceso(Proceso* proceso, char* motivo) {
+    // DEBUG: frontera de funcion - PUNTERO CRUDO antes de desreferenciar
+    log_debug(logger_ks, "[DBG][finalizar_proceso] ENTRADA - proceso=%p, motivo=%s", (void*)proceso, motivo);
     km_notificar_exit(proceso->id_proceso);
     actualizarEstadoProceso(proceso, EXIT);
     log_info(logger_ks, "## (%d) finalizó su ejecución con motivo de %s", proceso->id_proceso, motivo);
@@ -1068,8 +1298,12 @@ void finalizar_proceso(Proceso* proceso, char* motivo) {
 // compactación (MSG_SOLICITAR_DESALOJO) en el MISMO socket antes de la respuesta
 // final; lo manejamos inline. Devuelve true si el segmento se creó OK.
 bool km_mem_alloc(uint32_t pid, uint32_t id_segmento, uint32_t tamanio) {
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][km_mem_alloc] ENTRADA - pid=%d, id_seg=%d, tam=%d", pid, id_segmento, tamanio);
     pthread_mutex_lock(&mutex_km);
     op_code cod = MSG_MEM_ALLOC;
+    // DEBUG: serializacion
+    log_debug(logger_ks, "[DBG][km_mem_alloc] pid=%d - envío MSG_MEM_ALLOC + pid + id + tam a KM fd=%d", pid, fd_km);
     enviar_mensaje(fd_km, &cod, sizeof(op_code));
     enviar_mensaje(fd_km, &pid, sizeof(uint32_t));
     enviar_mensaje(fd_km, &id_segmento, sizeof(uint32_t));
@@ -1079,6 +1313,8 @@ bool km_mem_alloc(uint32_t pid, uint32_t id_segmento, uint32_t tamanio) {
     while (1) {
         int size;
         op_code* resp = recibir_mensaje(fd_km, &size);
+        // DEBUG: deserializacion
+        log_debug(logger_ks, "[DBG][km_mem_alloc] pid=%d - respuesta KM ptr=%p, size=%d, opcode=%d", pid, (void*)resp, size, resp ? (int)*resp : -1);
         if (resp == NULL) break;
         if (*resp == MSG_SOLICITAR_DESALOJO) {
             free(resp);
@@ -1099,22 +1335,32 @@ bool km_mem_alloc(uint32_t pid, uint32_t id_segmento, uint32_t tamanio) {
 
     // tras compactar, hubo movimiento de memoria -> puede haber espacio para des-suspender
     if (hubo_compactacion) intentar_desuspender_procesos();
+    // DEBUG: frontera de funcion (valor devuelto)
+    log_debug(logger_ks, "[DBG][km_mem_alloc] SALIDA - pid=%d -> %s", pid, ok ? "true" : "false");
     return ok;
 }
 
 // Pide a KM eliminar un segmento. Devuelve true si se liberó OK.
 bool km_mem_free(uint32_t pid, uint32_t id_segmento) {
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][km_mem_free] ENTRADA - pid=%d, id_seg=%d", pid, id_segmento);
     pthread_mutex_lock(&mutex_km);
     op_code cod = MSG_MEM_FREE;
+    // DEBUG: serializacion
+    log_debug(logger_ks, "[DBG][km_mem_free] pid=%d - envío MSG_MEM_FREE + pid + id a KM fd=%d", pid, fd_km);
     enviar_mensaje(fd_km, &cod, sizeof(op_code));
     enviar_mensaje(fd_km, &pid, sizeof(uint32_t));
     enviar_mensaje(fd_km, &id_segmento, sizeof(uint32_t));
 
     int size;
     op_code* resp = recibir_mensaje(fd_km, &size);
+    // DEBUG: deserializacion
+    log_debug(logger_ks, "[DBG][km_mem_free] pid=%d - respuesta KM ptr=%p, size=%d, opcode=%d", pid, (void*)resp, size, resp ? (int)*resp : -1);
     bool ok = (resp != NULL && *resp == MSG_OK);
     free(resp);
     pthread_mutex_unlock(&mutex_km);
+    // DEBUG: frontera de funcion (valor devuelto)
+    log_debug(logger_ks, "[DBG][km_mem_free] SALIDA - pid=%d -> %s", pid, ok ? "true" : "false");
     return ok;
 }
 
@@ -1125,6 +1371,8 @@ bool km_mem_free(uint32_t pid, uint32_t id_segmento) {
 // que confirmen y le avisamos a KM que puede compactar. Se llama con mutex_km
 // tomado (desde km_mem_alloc).
 void manejar_solicitud_desalojo(uint32_t pid_issuer) {
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][manejar_solicitud_desalojo] ENTRADA - pid_issuer=%d, EXEC size=%d", pid_issuer, list_size(listaProcesosExec));
     log_info(logger_ks, "## Inicio de compactación");
     en_compactacion = true; // el corto plazo deja de despachar
 
@@ -1134,6 +1382,8 @@ void manejar_solicitud_desalojo(uint32_t pid_issuer) {
         Proceso* p = list_get(listaProcesosExec, i);
         if (p->fd_cpu < 0) continue;
         if (p->id_proceso == (int) pid_issuer) continue; // su CPU está en la syscall, no la interrumpimos
+        // DEBUG: serializacion - interrupcion por compactacion
+        log_debug(logger_ks, "[DBG][manejar_solicitud_desalojo] envío MSG_INTERRUPT (motivo=2) a fd_cpu=%d, pid=%d ptr=%p", p->fd_cpu, p->id_proceso, (void*)p);
         op_code intr = MSG_INTERRUPT;
         enviar_mensaje(p->fd_cpu, &intr, sizeof(op_code));
         t_interrupcion t;
@@ -1144,11 +1394,16 @@ void manejar_solicitud_desalojo(uint32_t pid_issuer) {
     }
     pthread_mutex_unlock(&mutex_listas);
 
+    // DEBUG: cantidad de confirmaciones a esperar
+    log_debug(logger_ks, "[DBG][manejar_solicitud_desalojo] esperando %d confirmaciones de desalojo", a_esperar);
+
     // esperar la confirmación de cada CPU (MSG_INTERRUPCION_ATENDIDA motivo=2)
     for (int i = 0; i < a_esperar; i++)
         sem_wait(&sem_desalojo_confirmado);
 
     op_code ok = MSG_DESALOJO_REALIZADO;
+    // DEBUG: serializacion
+    log_debug(logger_ks, "[DBG][manejar_solicitud_desalojo] envío MSG_DESALOJO_REALIZADO a KM fd=%d y SALIDA", fd_km);
     enviar_mensaje(fd_km, &ok, sizeof(op_code));
     // en_compactacion se apaga en km_mem_alloc al recibir la respuesta final
 }
@@ -1161,6 +1416,8 @@ void manejar_solicitud_desalojo(uint32_t pid_issuer) {
 // para recrear los segmentos SIN compactar. Eso requiere un mensaje "¿hay espacio
 // para el PID X?" a KM que hoy no existe -> por ahora es best-effort (mueve todos).
 void intentar_desuspender_procesos() {
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][intentar_desuspender] ENTRADA - SUSP_READY size=%d", list_size(listaProcesosSuspReady));
     pthread_mutex_lock(&mutex_listas);
     while (!list_is_empty(listaProcesosSuspReady)) {
         int best = 0;
@@ -1172,6 +1429,8 @@ void intentar_desuspender_procesos() {
                 best = i;
         }
         Proceso* p = list_get(listaProcesosSuspReady, best);
+        // DEBUG: extraccion de SUSP_READY (via actualizarEstadoProceso)
+        log_debug(logger_ks, "[DBG][intentar_desuspender] elegido pid=%d ptr=%p (prio=%d) -> READY", p->id_proceso, (void*)p, p->prioridad);
         pthread_mutex_unlock(&mutex_listas);
 
         actualizarEstadoProceso(p, READY); // hace su propio lock y saca de SUSP_READY
@@ -1180,6 +1439,8 @@ void intentar_desuspender_procesos() {
         pthread_mutex_lock(&mutex_listas);
     }
     pthread_mutex_unlock(&mutex_listas);
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][intentar_desuspender] SALIDA");
 }
 
 // ---------------------- largo plazo: BSOD ----------------------
@@ -1213,6 +1474,8 @@ void bsod() {
 // usuario, y (pendiente KM) escribe lo leído en la dirección lógica pedida.
 void* atender_stdin_ks(void* arg) {
     t_args_io_mem* a = (t_args_io_mem*) arg;
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][atender_stdin_ks] ENTRADA - pid=%d, fd_cpu=%d, dir=%d, tam=%d, args=%p", a->pid, a->fd_cpu, a->dir_logica, a->tamanio, (void*)a);
 
     Proceso* proceso = buscar_proceso_por_pid(a->pid);
     if (proceso == NULL) {
@@ -1225,8 +1488,12 @@ void* atender_stdin_ks(void* arg) {
 
     sem_wait(&sem_hay_stdin_libre);
     t_io_ks* io = sacar_io_libre_por_tipo("STDIN");
+    // DEBUG: si io=(nil), el io->fd de abajo SEGFAULTEA
+    log_debug(logger_ks, "[DBG][atender_stdin_ks] pid=%d - io obtenida ptr=%p (fd=%d)", a->pid, (void*)io, io ? io->fd : -1);
 
     op_code cod = MSG_STDIN;
+    // DEBUG: serializacion
+    log_debug(logger_ks, "[DBG][atender_stdin_ks] pid=%d - envío MSG_STDIN + pid + cant a IO fd=%d", a->pid, io->fd);
     enviar_mensaje(io->fd, &cod, sizeof(op_code));
     enviar_mensaje(io->fd, &a->pid, sizeof(uint32_t));
     int cant = (int) a->tamanio;
@@ -1234,12 +1501,17 @@ void* atender_stdin_ks(void* arg) {
 
     int size;
     char* texto = recibir_mensaje(io->fd, &size); // la cadena leída (a->tamanio bytes)
+    // DEBUG: deserializacion - texto=(nil) si la IO se desconecto; el enviar_mensaje
+    // a KM de abajo mandaria un buffer NULL
+    log_debug(logger_ks, "[DBG][atender_stdin_ks] pid=%d - texto leido ptr=%p, size=%d", a->pid, (void*)texto, size);
     liberar_io(io);
 
     // CP3: pedirle a KM que escriba lo leído en memoria de usuario (a->dir_logica).
     // Serializado con mutex_km porque fd_km es un único socket compartido.
     pthread_mutex_lock(&mutex_km);
     op_code cod_km = MSG_STDIN;
+    // DEBUG: serializacion
+    log_debug(logger_ks, "[DBG][atender_stdin_ks] pid=%d - envío MSG_STDIN + pid + dir + tam + texto a KM fd=%d", a->pid, fd_km);
     enviar_mensaje(fd_km, &cod_km, sizeof(op_code));
     enviar_mensaje(fd_km, &a->pid, sizeof(uint32_t));
     enviar_mensaje(fd_km, &a->dir_logica, sizeof(uint32_t));
@@ -1247,9 +1519,13 @@ void* atender_stdin_ks(void* arg) {
     enviar_mensaje(fd_km, texto, (int) a->tamanio);
     int size_resp;
     op_code* resp = recibir_mensaje(fd_km, &size_resp);
+    // DEBUG: deserializacion
+    log_debug(logger_ks, "[DBG][atender_stdin_ks] pid=%d - respuesta KM ptr=%p, size=%d, opcode=%d", a->pid, (void*)resp, size_resp, resp ? (int)*resp : -1);
     op_code resultado = (resp != NULL) ? *resp : MSG_ERROR;
     free(resp);
     pthread_mutex_unlock(&mutex_km);
+    // DEBUG: heap
+    log_debug(logger_ks, "[DBG][atender_stdin_ks] pid=%d - free(texto=%p)", a->pid, (void*)texto);
     if (texto != NULL) free(texto);
 
     if (resultado == MSG_SEG_FAULT) {
@@ -1262,7 +1538,11 @@ void* atender_stdin_ks(void* arg) {
     // destrabamos a la CPU (ver nota del modelo de bloqueo: en SEG_FAULT igual
     // la liberamos para que no quede colgada; el proceso ya fue finalizado)
     op_code ok = MSG_OK;
+    // DEBUG: serializacion
+    log_debug(logger_ks, "[DBG][atender_stdin_ks] pid=%d - envío MSG_OK a fd_cpu=%d", a->pid, a->fd_cpu);
     enviar_mensaje(a->fd_cpu, &ok, sizeof(op_code));
+    // DEBUG: heap
+    log_debug(logger_ks, "[DBG][atender_stdin_ks] SALIDA - free(args=%p)", (void*)a);
     free(a);
     return NULL;
 }
@@ -1271,6 +1551,8 @@ void* atender_stdin_ks(void* arg) {
 // dirección lógica y se los manda a una IO STDOUT para que los imprima.
 void* atender_stdout_ks(void* arg) {
     t_args_io_mem* a = (t_args_io_mem*) arg;
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][atender_stdout_ks] ENTRADA - pid=%d, fd_cpu=%d, dir=%d, tam=%d, args=%p", a->pid, a->fd_cpu, a->dir_logica, a->tamanio, (void*)a);
 
     Proceso* proceso = buscar_proceso_por_pid(a->pid);
     if (proceso == NULL) {
@@ -1284,12 +1566,16 @@ void* atender_stdout_ks(void* arg) {
     // CP3: pedirle a KM los a->tamanio bytes en a->dir_logica (serializado con mutex_km).
     pthread_mutex_lock(&mutex_km);
     op_code cod = MSG_STDOUT;
+    // DEBUG: serializacion
+    log_debug(logger_ks, "[DBG][atender_stdout_ks] pid=%d - envío MSG_STDOUT + pid + dir + tam a KM fd=%d", a->pid, fd_km);
     enviar_mensaje(fd_km, &cod, sizeof(op_code));
     enviar_mensaje(fd_km, &a->pid, sizeof(uint32_t));
     enviar_mensaje(fd_km, &a->dir_logica, sizeof(uint32_t));
     enviar_mensaje(fd_km, &a->tamanio, sizeof(uint32_t));
     int size_resp;
     op_code* resp = recibir_mensaje(fd_km, &size_resp);
+    // DEBUG: deserializacion
+    log_debug(logger_ks, "[DBG][atender_stdout_ks] pid=%d - respuesta KM ptr=%p, size=%d, opcode=%d", a->pid, (void*)resp, size_resp, resp ? (int)*resp : -1);
     op_code resultado = (resp != NULL) ? *resp : MSG_ERROR;
     free(resp);
 
@@ -1297,6 +1583,8 @@ void* atender_stdout_ks(void* arg) {
     if (resultado == MSG_OK) {
         int size_datos;
         contenido = recibir_mensaje(fd_km, &size_datos); // a->tamanio bytes
+        // DEBUG: deserializacion
+        log_debug(logger_ks, "[DBG][atender_stdout_ks] pid=%d - contenido KM ptr=%p, size=%d", a->pid, (void*)contenido, size_datos);
     }
     pthread_mutex_unlock(&mutex_km);
 
@@ -1310,26 +1598,40 @@ void* atender_stdout_ks(void* arg) {
 
     // aseguramos terminador para que la IO STDOUT lo imprima como cadena
     char* texto = calloc(1, a->tamanio + 1);
+    // DEBUG: heap
+    log_debug(logger_ks, "[DBG][atender_stdout_ks] pid=%d - calloc texto=%p (%d bytes)", a->pid, (void*)texto, a->tamanio + 1);
     if (contenido != NULL) { memcpy(texto, contenido, a->tamanio); free(contenido); }
 
     sem_wait(&sem_hay_stdout_libre);
     t_io_ks* io = sacar_io_libre_por_tipo("STDOUT");
+    // DEBUG: si io=(nil), el io->fd de abajo SEGFAULTEA
+    log_debug(logger_ks, "[DBG][atender_stdout_ks] pid=%d - io obtenida ptr=%p (fd=%d)", a->pid, (void*)io, io ? io->fd : -1);
 
     op_code cod_io = MSG_STDOUT;
+    // DEBUG: serializacion
+    log_debug(logger_ks, "[DBG][atender_stdout_ks] pid=%d - envío MSG_STDOUT + pid + texto a IO fd=%d", a->pid, io->fd);
     enviar_mensaje(io->fd, &cod_io, sizeof(op_code));
     enviar_mensaje(io->fd, &a->pid, sizeof(uint32_t));
     enviar_mensaje(io->fd, texto, strlen(texto) + 1);
+    // DEBUG: heap
+    log_debug(logger_ks, "[DBG][atender_stdout_ks] pid=%d - free(texto=%p)", a->pid, (void*)texto);
     free(texto);
 
     int size;
     op_code* done = recibir_mensaje(io->fd, &size); // se espera MSG_DONE
+    // DEBUG: deserializacion
+    log_debug(logger_ks, "[DBG][atender_stdout_ks] pid=%d - done IO ptr=%p, size=%d", a->pid, (void*)done, size);
     if (done != NULL) free(done);
     liberar_io(io);
 
     finalizar_io_y_desbloquear(proceso);
 
     op_code ok = MSG_OK;
+    // DEBUG: serializacion
+    log_debug(logger_ks, "[DBG][atender_stdout_ks] pid=%d - envío MSG_OK a fd_cpu=%d", a->pid, a->fd_cpu);
     enviar_mensaje(a->fd_cpu, &ok, sizeof(op_code));
+    // DEBUG: heap
+    log_debug(logger_ks, "[DBG][atender_stdout_ks] SALIDA - free(args=%p)", (void*)a);
     free(a);
     return NULL;
 }

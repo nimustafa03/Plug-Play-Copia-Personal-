@@ -33,10 +33,14 @@ int       fd_km;           // FD de la conexión KS→KM (global para que
  
 void* atender_cliente_ks(void* arg) {
     int fd_cliente = *((int*) arg);
+    // DEBUG: frontera de funcion + free del arg heap
+    log_debug(logger_ks, "[DBG][atender_cliente_ks] ENTRADA - fd_cliente=%d, arg=%p (se libera ahora)", fd_cliente, arg);
     free(arg);
  
     int size;
     op_code* codigo = recibir_mensaje(fd_cliente, &size);
+    // DEBUG: deserializacion - OJO: si codigo==NULL el *codigo de abajo SEGFAULTEA
+    log_debug(logger_ks, "[DBG][atender_cliente_ks] recibir_mensaje handshake -> ptr=%p, size=%d, opcode=%d", (void*)codigo, size, codigo ? (int)*codigo : -1);
 
     op_code respuesta_ok = MSG_OK;
  
@@ -44,12 +48,16 @@ void* atender_cliente_ks(void* arg) {
  
         case MSG_HANDSHAKE_CPU:
             log_info(logger_ks, "CPU conectado - FD: %d", fd_cliente);
+            // DEBUG: serializacion
+            log_debug(logger_ks, "[DBG][atender_cliente_ks] envío MSG_OK a CPU fd=%d", fd_cliente);
             enviar_mensaje(fd_cliente, &respuesta_ok, sizeof(op_code));
             // CP2: listaCPUsLibres y sem_post se hacen dentro de atender_cpu_ks
             atender_cpu_ks(fd_cliente);
             break;
  
         case MSG_HANDSHAKE_IO:
+            // DEBUG: serializacion
+            log_debug(logger_ks, "[DBG][atender_cliente_ks] envío MSG_OK a IO fd=%d", fd_cliente);
             enviar_mensaje(fd_cliente, &respuesta_ok, sizeof(op_code));
             
             // identificar_io_ks recibe el tipo (STDIN/STDOUT/SLEEP) y
@@ -63,6 +71,8 @@ void* atender_cliente_ks(void* arg) {
             break;
     }
  
+    // DEBUG: heap
+    log_debug(logger_ks, "[DBG][atender_cliente_ks] free(codigo=%p) y SALIDA - fd=%d", (void*)codigo, fd_cliente);
     free(codigo);
     return NULL;
 }
@@ -71,7 +81,11 @@ void* atender_cliente_ks(void* arg) {
 void* loop_aceptar_clientes(void* arg) {
     while (1) {
         int* fd_cliente = malloc(sizeof(int));
+        // DEBUG: heap
+        log_debug(logger_ks, "[DBG][loop_aceptar_clientes] malloc fd_cliente=%p, esperando cliente...", (void*)fd_cliente);
         *fd_cliente = esperar_cliente(fd_servidor_ks);
+        // DEBUG: conexion aceptada
+        log_debug(logger_ks, "[DBG][loop_aceptar_clientes] cliente aceptado fd=%d, lanzando hilo", *fd_cliente);
         pthread_t hilo;
         pthread_create(&hilo, NULL, atender_cliente_ks, fd_cliente);
         pthread_detach(hilo);
@@ -115,15 +129,21 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
     op_code codigo = MSG_HANDSHAKE_KS;
+    // DEBUG: serializacion
+    log_debug(logger_ks, "[DBG][main] envío MSG_HANDSHAKE_KS a KM fd=%d", fd_km);
     enviar_mensaje(fd_km, &codigo, sizeof(op_code));
     log_info(logger_ks, "## Conectado a Kernel Memory");
 
     int size_resp;
     op_code* respuesta = recibir_mensaje(fd_km, &size_resp);
+    // DEBUG: deserializacion - si respuesta==NULL el *respuesta de abajo SEGFAULTEA
+    log_debug(logger_ks, "[DBG][main] recibir_mensaje ack KM -> ptr=%p, size=%d, opcode=%d", (void*)respuesta, size_resp, respuesta ? (int)*respuesta : -1);
     
     if (*respuesta == MSG_OK) {
         log_info(logger_ks, "## Conectado a Kernel Memory y aceptado");
     }
+    // DEBUG: heap
+    log_debug(logger_ks, "[DBG][main] free(respuesta=%p)", (void*)respuesta);
     free(respuesta); 
 
     fd_servidor_ks = iniciar_servidor(ks_port);
