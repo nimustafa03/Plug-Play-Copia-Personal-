@@ -781,48 +781,71 @@ int escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio_
     return 0;
 }
 
-t_contexto* deserializar_contexto_inicial(const void* buffer,int tamanio_buffer) {
+t_contexto* deserializar_contexto_inicial(void* buffer,int tamanio_buffer, t_log* logger_cpu) {
     int tamanio_esperado =
         sizeof(t_registros) +
         sizeof(int);
-    if (buffer == NULL || tamanio_buffer != tamanio_esperado) {
+    
+    log_info(logger_cpu,"Tamanio esperado: %d", tamanio_esperado);
+    
+
+    if (buffer == NULL) {
+        log_info(logger_cpu, "Buffer recibido NULL");
         return NULL;
     }
-
+    if (tamanio_buffer != tamanio_esperado){
+        log_info(logger_cpu, "Problemas con el  tamanio");
+        return NULL;
+    }
+    
     t_contexto* contexto = malloc(sizeof(t_contexto));
     if (contexto == NULL) {
+        log_info(logger_cpu, "No se pudo asignar memoria");
         return NULL;
     }
-
+    
     int desplazamiento = 0;
+
+    log_info(logger_cpu, "Se copiara contexto...");
 
     memcpy(
         &contexto->registros,
-        (char) buffer + desplazamiento,
+        (char*) buffer + desplazamiento,
         sizeof(t_registros)
     );
 
+    printf("AX %d",contexto->registros.ax);
+    printf("BX %d",contexto->registros.bx);
+    printf("CX %d",contexto->registros.cx);
+    printf("DI %d",contexto->registros.di);
+    printf("DX %d",contexto->registros.dx);
+    printf("EAX %d",contexto->registros.eax);
+    printf("EBX %d",contexto->registros.ebx);
+    printf("ECX %d",contexto->registros.ecx);
+    printf("EDX %d",contexto->registros.edx);
+    printf("PC %d",contexto->registros.pc);
+    printf("SI %d",contexto->registros.si);
+    
+
     desplazamiento += sizeof(t_registros);
     int cantidad_segmentos;
+    log_info(logger_cpu,"Valos desplazamiento: %d", desplazamiento);
 
     memcpy(
         &cantidad_segmentos,
-        (char) buffer + desplazamiento,
+        (char*) buffer + desplazamiento,
         sizeof(int)
     );
-
-    if (cantidad_segmentos != 0) {
-        free(contexto);
-        return NULL;
-    }
+    log_info(logger_cpu,"ok");
 
     contexto->tabla_segmentos = list_create();
     if (contexto->tabla_segmentos == NULL) {
         free(contexto);
+        log_info(logger_cpu, "Error al generar la lista de segmentos en el contexto");
         return NULL;
     }
 
-    /* log_info(logger,"Contexto recibido: PC=%u - Segmentos=%u - Próximo a detener=%d", +++); */
+    log_info(logger_cpu,"Contexto recibido: PC=%u - Segmentos=%u - Próximo a detener=%d", contexto->registros.pc, contexto->tabla_segmentos,contexto->proximo_a_detener);
 
     return contexto;
 }

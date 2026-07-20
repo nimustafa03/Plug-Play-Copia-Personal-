@@ -184,7 +184,7 @@ bool inicializar_proceso(uint32_t pid, int fd_cpu) {
 
   log_info(logger, "Proceso creado");
 
-  int tamanio_buffer = 0;
+  int tamanio_buffer =0 ;
   void*buffer = serializar_contexto_inicial(proceso->contexto, &tamanio_buffer);
 
   if (buffer==NULL)
@@ -193,8 +193,8 @@ bool inicializar_proceso(uint32_t pid, int fd_cpu) {
   }
   
   log_info(logger, "se creo el contexto y se va a enviar contexto");
-  int* tamanio_buffer_cpu;
-  enviar_contexto_ejecucion_a_cpu(fd_cpu, buffer,*tamanio_buffer_cpu);
+
+  enviar_contexto_ejecucion_a_cpu(fd_cpu, buffer, tamanio_buffer);
   log_info(logger, "se envio contexto");
 
   free(buffer);

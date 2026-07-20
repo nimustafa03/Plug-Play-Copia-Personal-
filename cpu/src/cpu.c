@@ -169,7 +169,7 @@ int main(int argc, char* argv[]) {
             }
         log_info(logger_cpu,"Se envio PID: %u", pid);
 
-        t_contexto* contexto = deserializar_contexto_inicial(buffer,size);
+        t_contexto* contexto = deserializar_contexto_inicial(buffer,size,logger_cpu);
     
 
         printf("AX %d",contexto->registros.ax);

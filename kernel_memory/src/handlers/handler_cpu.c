@@ -251,6 +251,7 @@ void* serializar_contexto_inicial(
         &contexto->registros,
         sizeof(t_registros)
     );
+    log_info(logger, "Registros guardados: %d", contexto->registros.pc);
 
     escribir_en_buffer(
         buffer,
@@ -258,6 +259,7 @@ void* serializar_contexto_inicial(
         &cantidad_segmentos,
         sizeof(int)
     );
+    log_info(logger, "Segmentos guardados: %d", cantidad_segmentos);
 
     return buffer;
 }
