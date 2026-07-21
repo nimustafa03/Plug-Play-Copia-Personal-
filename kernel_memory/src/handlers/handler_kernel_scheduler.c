@@ -22,11 +22,21 @@ void atender_creacion_proceso(){
   pid = recibir_mensaje(fd_kernel_scheduler,&size);
   path = recibir_mensaje(fd_kernel_scheduler, &size);
   log_info(logger, "Creando nuevo proceso. PID: %d", *pid);
-  crear_proceso(*pid,path);
+  bool exito = crear_proceso(*pid,path);
+  op_code cod;
+  if (exito){
+    log_info(logger, "Proceso creado. PID: %d", pid);
+    cod = MSG_OK;
+    
+  }
+  else{
+    log_error(logger, "El proceso no se pudo crear.");
+    cod = MSG_ERROR;
+  }
   free(pid); free(path);
-
-  op_code cod = MSG_OK;
   enviar_mensaje(fd_kernel_scheduler, &cod, sizeof(op_code));
+  
+  
   return;
 }
 

@@ -101,17 +101,21 @@ bool crear_proceso(uint32_t pid, char*path){
     return false;
   }
 
+  log_info(logger, "El PID pedido está libre, alojando memoria...");
   t_proceso_memoria* proceso = malloc(sizeof(t_proceso_memoria));
 
+  log_info(logger, "Generando lista de instrucciones...");
   proceso->pid = pid;
   proceso->lista_instrucciones = generar_lista_instrucciones(path);
   
+  log_info(logger, "Creando contexto inicial...");
   proceso->contexto = crear_contexto_inicial();
   if (proceso->contexto==NULL){
     log_error(logger,"## ERROR: No se pudo crear el contexto inicial.");
     return false;
   }
 
+  log_info(logger, "Indexando proceso en el diccionario.");
   dictionary_put(administrador.procesos_por_pid, key, proceso);
 
   return true;
