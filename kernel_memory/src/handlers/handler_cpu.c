@@ -341,7 +341,7 @@ bool esperar_pedido_de_instruccion(int fd_cpu){
     }
     if (*codigo == MSG_INTERRUPT){
         log_info(logger, "INTERRUPCION RECIBIDA.");
-        uint32_t*pid = recibir_pid();
+        uint32_t pid = recibir_pid();
         t_contexto*contexto = recibir_contexto();
         actualizar_contexto(pid, contexto);
         enviar_confirmacion_a_CPU(socket_cpu,true);
