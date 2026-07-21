@@ -151,6 +151,7 @@ void*manejar_proceso(void*arg){
       log_info(logger, "## PID: %d - Recibido PC: %d.", proceso->pid, pc);
       char*proxima_instruccion = devolver_instruccion(pc, instrucciones);
       log_info(logger, "Busqueda de instrucción concluida.");
+      log_info(logger,"## PID: %d - Obtener instrucción: %d - Instrucción: %s", proceso->pid,pc,proxima_instruccion);
       if (proxima_instruccion == NULL)
       {
         log_error(logger, "## PID: %d - Obtener instruccion: %d - INSTRUCCION FUERA DE RANGO.", proceso->pid, pc);

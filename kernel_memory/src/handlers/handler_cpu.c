@@ -345,6 +345,7 @@ bool esperar_pedido_de_instruccion(int fd_cpu){
         t_contexto*contexto = recibir_contexto();
         actualizar_contexto(pid, contexto);
         enviar_confirmacion_a_CPU(socket_cpu,true);
+        return false;
     }
     log_info(logger, "NO SE RECIBIÓ FETCH");
     return false;
