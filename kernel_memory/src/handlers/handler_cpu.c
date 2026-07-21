@@ -333,6 +333,7 @@ void enviar_proxima_instruccion_a_cpu(int fd_cpu, char*proxima_instruccion){
 
 bool esperar_pedido_de_instruccion(int fd_cpu){
     int size;
+    log_info(logger, "Esperando codigo de cpu...");
     op_code * codigo = recibir_mensaje(fd_cpu, &size);
     if (*codigo == MSG_FETCH_CPU){
         log_info(logger, "FETCH RECIBIDO.");
