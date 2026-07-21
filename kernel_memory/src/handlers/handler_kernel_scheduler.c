@@ -15,7 +15,7 @@
 #include "../../utils/src/utils/tipos.h"
 
 extern t_log* logger;
-extern t_log*config;
+extern t_config*config;
 
 static int fd_kernel_scheduler = -1;
 
@@ -57,7 +57,7 @@ void atender_creacion_proceso(){
   }
 
   log_info(logger, "Creando nuevo proceso. PID: %d", *pid);
-  bool exito = crear_proceso(*pid,path_completop);
+  bool exito = crear_proceso(*pid,path_completo);
   op_code cod;
   if (exito){
     log_info(logger, "Proceso creado. PID: %d", *pid);
