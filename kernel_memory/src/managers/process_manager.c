@@ -126,7 +126,7 @@ char*devolver_instruccion(uint32_t pc,char*lista_instrucciones){
     do
     {
         instruccion = string_duplicate(tokenizado[contador]);
-        log_info(logger, "Instruccion %d: %s",contador, instruccion);
+        // log_info(logger, "Instruccion %d: %s",contador, instruccion);
         contador++;
     } while (contador-1 != pc && instruccion != NULL); // NICO M: Nos movemos por el array tokenizado hasta donde nos indique el PC, siempre y cuando no nos encontremos en un espacio inválido, lo que indicaría que el PC se sale del rango de la lista.
     free(copia_lista_instrucciones);
@@ -148,9 +148,11 @@ void*manejar_proceso(void*arg){
   log_info(logger, "## PID: %d - Imprimiendo lista de instrucciones para el proceso...", proceso->pid);
   log_info(logger,instrucciones);
 
-  while (!proceso->contexto->proximo_a_detener){
+  bool interrumpido = false;
 
-    if (esperar_pedido_de_instruccion(fd_cpu)){
+  while (!interrumpido){
+    op_code*codigo = esperar_pedido_de_instruccion(fd_cpu);
+    if (*codigo == MSG_FETCH_CPU){
       uint32_t pc = recibir_pc(fd_cpu);
       log_info(logger, "## PID: %d - Recibido PC: %d.", proceso->pid, pc);
       char*proxima_instruccion = devolver_instruccion(pc, instrucciones);
@@ -169,9 +171,14 @@ void*manejar_proceso(void*arg){
         free(proxima_instruccion);
       } 
     }
+    if (*codigo == MSG_INTERRUPT) interrumpido = true;
   }
-  log_info(logger, "## PID: %d - Proceso eliminado.",proceso -> pid);
-  destruir_proceso(proceso->pid);
+  if (proceso->contexto->proximo_a_detener) {
+    log_info(logger, "## PID: %d - Proceso eliminado.",proceso -> pid);
+    destruir_proceso(proceso->pid);
+  }
+
+  // NICO M: Acá debería volver a atender mensajes de INIT_PROC_CPU, por lo que debería iniciar atender_mensajes_cpu() de nuevo. El problema es que si lo llamo a secas, no puedo cerrar el thread porque sino dejo de atender esa función.
   // free(arg);
   int*returnval = malloc(sizeof(1));
   pthread_exit(returnval);
@@ -206,8 +213,8 @@ bool inicializar_proceso(uint32_t pid, int fd_cpu) {
   t_args_proceso*args = malloc(sizeof(t_args_proceso));
   args->fd_cpu = fd_cpu;
   args->proceso = proceso;
-  pthread_t nuevo_poceso;
-  pthread_create(&nuevo_poceso, NULL, manejar_proceso,args);
+  pthread_t nuevo_proceso;
+  pthread_create(&nuevo_proceso, NULL, manejar_proceso,args);
   // free(args);
 
   log_info(logger, "Proceso creado");

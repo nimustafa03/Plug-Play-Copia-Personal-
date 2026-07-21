@@ -21,7 +21,7 @@ void atender_creacion_proceso(){
 
   pid = recibir_mensaje(fd_kernel_scheduler,&size);
   path = recibir_mensaje(fd_kernel_scheduler, &size);
-
+  log_info(logger, "Creando nuevo proceso. PID: %d", pid);
   crear_proceso(*pid,path);
   free(pid); free(path);
 

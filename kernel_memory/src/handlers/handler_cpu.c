@@ -8,8 +8,6 @@
 #include <pthread.h>
 #include <stdint.h>
 #include "../src/managers/memory_manager.h"
-#include "../src/estructuras.h"
-#include "../../utils/src/utils/mensajes.h"
 #include "../../utils/src/utils/conexiones.h"
 #include "../src/managers/process_manager.h"
 
@@ -330,14 +328,14 @@ void enviar_proxima_instruccion_a_cpu(int fd_cpu, char*proxima_instruccion){
     enviar_mensaje(fd_cpu, proxima_instruccion,strlen(proxima_instruccion)+1);
 }
 
-bool esperar_pedido_de_instruccion(int fd_cpu){
+op_code*esperar_pedido_de_instruccion(int fd_cpu){
     int size;
     log_info(logger, "Esperando codigo de cpu...");
     op_code*codigo = recibir_mensaje(fd_cpu, &size);
     if (*codigo == MSG_FETCH_CPU){
         log_info(logger, "FETCH RECIBIDO.");
         usleep(config_get_int_value(config,"INSTRUCTION_DELAY")*1000);
-        return true;
+        return codigo;
     }
     if (*codigo == MSG_INTERRUPT){
         log_info(logger, "INTERRUPCION RECIBIDA.");
@@ -345,10 +343,10 @@ bool esperar_pedido_de_instruccion(int fd_cpu){
         t_contexto*contexto = recibir_contexto();
         actualizar_contexto(pid, contexto);
         enviar_confirmacion_a_CPU(socket_cpu,true);
-        return false;
+        return codigo;
     }
     log_info(logger, "NO SE RECIBIÓ FETCH");
-    return false;
+    return codigo;
 }
 
 uint32_t recibir_pc(int fd_cpu){
