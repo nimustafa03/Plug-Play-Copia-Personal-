@@ -128,7 +128,7 @@ char*devolver_instruccion(uint32_t pc,char*lista_instrucciones){
     {
         instruccion = tokenizado[contador];
         contador++;
-        log(logger, "%s", instruccion);
+        log_info(logger, "%s", instruccion);
     } while (contador != pc && tokenizado[contador] != NULL); // NICO M: Nos movemos por el array tokenizado hasta donde nos indique el PC, siempre y cuando no nos encontremos en un espacio inválido, lo que indicaría que el PC se sale del rango de la lista.
     string_array_destroy(tokenizado); // NICO M: Eliminamos el tokenizado, para liberar memoria.
 
