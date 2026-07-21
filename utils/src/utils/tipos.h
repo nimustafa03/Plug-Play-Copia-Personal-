@@ -33,7 +33,7 @@ typedef struct {
 
 typedef struct {
     uint32_t pid;
-    char* script_path;
+    char* lista_instrucciones;
     t_contexto* contexto;
 } t_proceso_memoria;
 typedef struct {
