@@ -119,7 +119,7 @@ void*manejar_proceso(void*arg){
   log_info(logger, "Comenzando manejo del proceso de PID %d.", args->proceso->pid);
   t_args_proceso*args = (t_args_proceso*) arg;
   int fd_cpu = args->fd_cpu;
-  t_proceso_memoria*proceso = args->proceso;
+  t_proceso_memoria*proceso = arg->proceso;
 
   char * instrucciones = proceso->script_path;
   log_info(logger, "## PID: %d - Imprimiendo lista de instrucciones para el proceso...", proceso->pid);
@@ -147,7 +147,7 @@ void*manejar_proceso(void*arg){
   }
   log_info(logger, "## PID: %d - Proceso eliminado.",proceso -> pid);
   destruir_proceso(proceso->pid);
-  // free(args);
+  // free(arg);
   int*returnval = malloc(sizeof(1));
   pthread_exit(returnval);
 }
