@@ -20,7 +20,9 @@ void atender_creacion_proceso(){
   uint32_t*pid; char*path; int size;
 
   pid = recibir_mensaje(fd_kernel_scheduler,&size);
+  if (!pid) { log_error(logger, "## ERROR: No se ha dado ningún PID.");}
   path = recibir_mensaje(fd_kernel_scheduler, &size);
+  if (!path) { log_error(logger, "## ERROR: NO se ha dado ningún path.");}
   log_info(logger, "Creando nuevo proceso. PID: %d", *pid);
   bool exito = crear_proceso(*pid,path);
   op_code cod;
