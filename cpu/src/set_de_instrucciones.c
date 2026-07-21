@@ -50,6 +50,7 @@ uint32_t tamanio_registro(char* nombre_registro) {
     if (strcmp(nombre_registro, "EDX") == 0) return sizeof(uint32_t);
     if (strcmp(nombre_registro, "SI") == 0) return sizeof(uint32_t);
     if (strcmp(nombre_registro, "DI") == 0) return sizeof(uint32_t);
+    return -1;
 }
 
 /*------------------------ INSTRUCCIONES ------------------------*/
@@ -375,10 +376,14 @@ int syscall_mem_free(char* instruccion, t_registros* registros, int fd_ks, uint3
 }
 
 // EXIT
-int syscall_exit(int fd_ks, uint32_t pid){
+int syscall_exit(int fd_ks, int fd_km, bool proximo_a_detener, uint32_t pid){
+    // Avisa a KS que el proceso finalizo
     op_code cod = MSG_DONE;
     enviar_mensaje(fd_ks, &cod, sizeof(op_code));
     enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
+
+    // Se envia contexto final a KM
+
     return 1;
 }
 
