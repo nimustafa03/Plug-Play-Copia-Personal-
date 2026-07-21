@@ -145,6 +145,7 @@ void*manejar_proceso(void*arg){
   log_info(logger,instrucciones);
 
   while (!proceso->contexto->proximo_a_detener){
+    log_info(logger, "NO SE RECIBIÓ FETCH");
     if (esperar_pedido_de_instruccion(fd_cpu)){
       uint32_t pc = recibir_pc(fd_cpu);
       log_info(logger, "## PID: %d - Recibido PC: %d.", proceso->pid, pc);
@@ -161,7 +162,7 @@ void*manejar_proceso(void*arg){
         log_info(logger,"## PID: %d - Obtener instrucción: %d - Instrucción: %s", proceso->pid,pc,proxima_instruccion);
         enviar_confirmacion_a_CPU(fd_cpu,true);
         enviar_proxima_instruccion_a_cpu(fd_cpu,proxima_instruccion);
-      }
+      } 
     }
   }
   log_info(logger, "## PID: %d - Proceso eliminado.",proceso -> pid);

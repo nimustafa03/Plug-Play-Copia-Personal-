@@ -335,6 +335,7 @@ bool esperar_pedido_de_instruccion(int fd_cpu){
     int size;
     op_code * codigo = recibir_mensaje(fd_cpu, &size);
     if (*codigo == MSG_FETCH_CPU){
+        log_info(logger, "FETCH RECIBIDO.");
         usleep(config_get_int_value(config,"INSTRUCTION_DELAY")*1000);
         return true;
     }
