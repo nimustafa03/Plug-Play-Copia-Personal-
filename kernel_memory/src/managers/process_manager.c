@@ -115,10 +115,8 @@ bool crear_proceso(uint32_t pid, char*path){
 
   proceso->pid = pid;
   log_info(logger, "Generando lista de instrucciones...");
-  char*lista_instrucciones = generar_lista_instrucciones(path);
-  proceso->lista_instrucciones = string_duplicate(lista_instrucciones);
-  free(lista_instrucciones);
-  if(proceso->lista_instrucciones){
+  proceso->lista_instrucciones = generar_lista_instrucciones(path);
+  if(!proceso->lista_instrucciones){
     log_error(logger, "## ERROR: No se pudo crear la lista de instrucciones.");
   }
   
