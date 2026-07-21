@@ -30,13 +30,14 @@ extern t_config* config; // CP3: para leer SEGMENT_MAX_SIZE en la traducción
 char*generar_lista_instrucciones(char*path){
   log_info(logger, "Abriendo el archivo...");
   FILE*archivo = fopen(path, "r");
-  log_info(logger, "Posicionandose al inicio del archivo...");
+  log_info(logger, "Posicionandose al fin del archivo...");
   fseek(archivo, 0, SEEK_END);
+  log_info(logger, "Determinando tamaño del archivo");
   long tamanio = ftell(archivo);
   rewind(archivo);
   log_info(logger, "Alojando memoria para la lista de instrucciones...");
-  char *lista_instrucciones = malloc(tamanio + 1);
-  if (lista_instrucciones == NULL) {
+  char *lista_instrucciones = malloc;
+  if (lista_instrucciones == NULL) {(tamanio + 1)
       fclose(archivo);
       return NULL;
   }
