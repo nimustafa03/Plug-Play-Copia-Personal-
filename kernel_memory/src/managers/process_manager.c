@@ -119,7 +119,7 @@ void*manejar_proceso(void*arg){
   t_args_proceso*args = (t_args_proceso*) arg;
   log_info(logger, "Comenzando manejo del proceso de PID %d.", args->proceso->pid);
   int fd_cpu = args->fd_cpu;
-  t_proceso_memoria*proceso = arg->proceso;
+  t_proceso_memoria*proceso = args->proceso;
 
   char * instrucciones = proceso->script_path;
   log_info(logger, "## PID: %d - Imprimiendo lista de instrucciones para el proceso...", proceso->pid);
@@ -164,21 +164,21 @@ bool inicializar_proceso(uint32_t pid, int fd_cpu) {
 
   // Validaciones del proceso creado
   if (proceso == NULL) {
-  log_error(
-      logger,
-      "No se encontró el proceso con PID %u",
-      pid
-  );
-  return;
-  }
-  if (proceso->contexto == NULL) {
     log_error(
         logger,
-        "El proceso con PID %u no tiene contexto",
+        "No se encontró el proceso con PID %u",
         pid
+  );
+    return false;
+  }
+  if (proceso->contexto == NULL) {
+      log_error(
+          logger,
+          "El proceso con PID %u no tiene contexto",
+          pid
     );
-    return;
-}
+    return false;
+  }
 
   t_args_proceso*args = malloc(sizeof(t_args_proceso));
   args->fd_cpu = fd_cpu;
