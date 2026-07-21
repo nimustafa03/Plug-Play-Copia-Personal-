@@ -26,6 +26,7 @@ char*completar_path(char*path){
   if (!string_starts_with(path,prefijo))
   {
     string_append(&path_completo, prefijo);
+    string_append(&path_completo , "/");
   }
   string_append(&path_completo,path);
 
@@ -53,6 +54,7 @@ void atender_creacion_proceso(){
   else
   {
     log_info(logger,"Se ha completado el path con exito o no necesitaba ser completado.");
+    log_info(logger, "El path completo es: %s", path_completo);
     free(path);
   }
 
