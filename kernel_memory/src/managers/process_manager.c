@@ -145,6 +145,7 @@ void*manejar_proceso(void*arg){
   log_info(logger,instrucciones);
 
   while (!proceso->contexto->proximo_a_detener){
+
     if (esperar_pedido_de_instruccion(fd_cpu)){
       uint32_t pc = recibir_pc(fd_cpu);
       log_info(logger, "## PID: %d - Recibido PC: %d.", proceso->pid, pc);
@@ -177,9 +178,7 @@ bool inicializar_proceso(uint32_t pid, int fd_cpu) {
   
   char* key = pid_to_key(pid);
 
-  t_proceso_memoria* proceso = malloc(sizeof(t_proceso_memoria));
-
-  proceso = dictionary_get(administrador.procesos_por_pid, key);
+  t_proceso_memoria* proceso = dictionary_get(administrador.procesos_por_pid, key);
 
   // Validaciones del proceso creado
   if (proceso == NULL) {

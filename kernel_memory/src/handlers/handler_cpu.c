@@ -33,6 +33,21 @@ t_contexto *recibir_contexto(){
     return contexto;
 }
 
+void atender_mensaje_cpu(){
+    int size;
+    op_code*codigo;
+    while(1){
+        codigo = recibir_mensaje(socket_cpu,&size);
+        if (*codigo == MSG_INIT_CPU){
+            notificar_mapa_memory_sticks_a_cpu();
+            log_info(logger, "Mapa enviado. Esperando PID");
+            inicializar_proceso(recibir_pid(), socket_cpu);
+            free(codigo);
+            return;
+        }
+    }
+}
+
 void atender_cpu(int nuevo_socket_cpu){
     socket_cpu = nuevo_socket_cpu;
 
@@ -56,31 +71,15 @@ void atender_cpu(int nuevo_socket_cpu){
     );
 
 
-
     free(ptr_id_cpu);
     // NICO M: Loop de espera activa, hasta que reciba el mensaje de iniciar proceso.
     op_code*codigo;
 
     /* notificar_mapa_memory_sticks_a_cpu(); */
 
-    while(1){
-        codigo = recibir_mensaje(socket_cpu,&size);
-        switch(*codigo){
-            case MSG_INIT_CPU:
-                notificar_mapa_memory_sticks_a_cpu();
-                log_info(logger, "Mapa enviado. Esperando PID");
-                inicializar_proceso(recibir_pid(), socket_cpu);
-                break;
-            case MSG_INTERRUPT:
-                enviar_confirmacion_a_CPU(socket_cpu,actualizar_contexto(recibir_pid(),recibir_contexto()));
-                break;
-            default:
-                log_warning(logger, "Código desconocido recibido de CPU: %d", *codigo);
-                break;
-          break;
-        }
-    }
-    free(codigo);
+    atender_mensaje_cpu();
+    
+    return;
 }
 
 static void escribir_en_buffer(
@@ -334,22 +333,25 @@ void enviar_proxima_instruccion_a_cpu(int fd_cpu, char*proxima_instruccion){
 bool esperar_pedido_de_instruccion(int fd_cpu){
     int size;
     log_info(logger, "Esperando codigo de cpu...");
-    op_code*codigo;
-    while (1){
-        codigo = recibir_mensaje(fd_cpu, &size);
-        if (*codigo == MSG_FETCH_CPU){
-            log_info(logger, "FETCH RECIBIDO.");
-            usleep(config_get_int_value(config,"INSTRUCTION_DELAY")*1000);
-            return true;
-        }
-        log_info(logger, "NO SE RECIBIÓ FETCH");
-        return false;
+    op_code*codigo = recibir_mensaje(fd_cpu, &size);
+    if (*codigo == MSG_FETCH_CPU){
+        log_info(logger, "FETCH RECIBIDO.");
+        usleep(config_get_int_value(config,"INSTRUCTION_DELAY")*1000);
+        return true;
     }
+    if (*codigo == MSG_INTERRUPT){
+        log_info(logger, "INTERRUPCION RECIBIDA.");
+        uint32_t*pid = recibir_pid();
+        t_contexto*contexto = recibir_contexto();
+        actualizar_contexto(pid, contexto);
+        enviar_confirmacion_a_CPU(socket_cpu,true);
+    }
+    log_info(logger, "NO SE RECIBIÓ FETCH");
+    return false;
 }
 
 uint32_t recibir_pc(int fd_cpu){
     int size;
     uint32_t * pc = recibir_mensaje(fd_cpu, &size);
-
     return *pc;
 }

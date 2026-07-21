@@ -14,5 +14,6 @@ void enviar_proxima_instruccion_a_cpu(int fd_cpu, char*proxima_instruccion);
 bool cpu_esta_conectada(void);
 bool notificar_mapa_memory_sticks_a_cpu(void);
 void*serializar_contexto_inicial(t_contexto*contexto, int*tamanio_contexto);
+void atender_mensaje_cpu();
 
 #endif
