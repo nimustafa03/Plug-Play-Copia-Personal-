@@ -125,13 +125,16 @@ char*devolver_instruccion(uint32_t pc,char*lista_instrucciones){
     char** tokenizado = string_split(copia_lista_instrucciones,"\n"); 
     do
     {
-        instruccion = tokenizado[contador];
-        log_info(logger, "Instruccion %d: %s",contador+1, instruccion);
+        instruccion = string_duplicate(tokenizado[contador]);
+        log_info(logger, "Instruccion %d: %s",contador, instruccion);
         contador++;
-    } while (contador != pc && tokenizado[contador] != NULL); // NICO M: Nos movemos por el array tokenizado hasta donde nos indique el PC, siempre y cuando no nos encontremos en un espacio inválido, lo que indicaría que el PC se sale del rango de la lista.
+    } while (contador-1 != pc && instruccion != NULL); // NICO M: Nos movemos por el array tokenizado hasta donde nos indique el PC, siempre y cuando no nos encontremos en un espacio inválido, lo que indicaría que el PC se sale del rango de la lista.
     free(copia_lista_instrucciones);
+    if (tokenizado[contador-1] == NULL){
+      string_array_destroy(tokenizado);
+      return NULL;
+    }
     string_array_destroy(tokenizado); // NICO M: Eliminamos el tokenizado, para liberar memoria.
-
     return instruccion;
 }
 
@@ -156,13 +159,14 @@ void*manejar_proceso(void*arg){
       {
         log_error(logger, "## PID: %d - Obtener instruccion: %d - INSTRUCCION FUERA DE RANGO.", proceso->pid, pc);
         enviar_confirmacion_a_CPU(fd_cpu,false);
-
+        free(proxima_instruccion);
       }
       else
       {
         log_info(logger,"## PID: %d - Obtener instrucción: %d - Instrucción: %s", proceso->pid,pc,proxima_instruccion);
         enviar_confirmacion_a_CPU(fd_cpu,true);
         enviar_proxima_instruccion_a_cpu(fd_cpu,proxima_instruccion);
+        free(proxima_instruccion);
       } 
     }
   }
