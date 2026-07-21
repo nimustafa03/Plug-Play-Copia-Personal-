@@ -36,8 +36,8 @@ char*generar_lista_instrucciones(char*path){
   long tamanio = ftell(archivo);
   rewind(archivo);
   log_info(logger, "Alojando memoria para la lista de instrucciones...");
-  char *lista_instrucciones = malloc;
-  if (lista_instrucciones == NULL) {(tamanio + 1)
+  char *lista_instrucciones = malloc(tamanio + 1);
+  if (lista_instrucciones == NULL) {
       fclose(archivo);
       return NULL;
   }
