@@ -127,9 +127,9 @@ void*manejar_proceso(void*arg){
   while (proceso->contexto->proximo_a_detener){
     if (esperar_pedido_de_instruccion(fd_cpu)){
       uint32_t pc = recibir_pc(fd_cpu);
-
+      log_info(logger, "## PID: %d - Recibido PC: %d.", proceso->pid, pc);
       char*proxima_instruccion = devolver_instruccion(pc, instrucciones);
-
+      log_info(logger, "Busqueda de instrucción concluida.");
       if (proxima_instruccion == NULL)
       {
         log_error(logger, "## PID: %d - Obtener instruccion: %d - INSTRUCCION FUERA DE RANGO.", proceso->pid, pc);
