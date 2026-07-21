@@ -31,7 +31,7 @@ char*generar_lista_instrucciones(char*path){
   log_info(logger, "Abriendo el archivo...");
   FILE*archivo = fopen(path, "r");
   if (archivo == NULL){
-    log_error(Logger, "Ha ocurrido un error al abrir el archivo.");
+    log_error(logger, "Ha ocurrido un error al abrir el archivo.");
   }
   log_info(logger, "Posicionandose al fin del archivo...");
   fseek(archivo, 0, SEEK_END);
