@@ -27,6 +27,24 @@ extern t_config* config; // CP3: para leer SEGMENT_MAX_SIZE en la traducción
 //                     fisica = base_del_segmento + desplazamiento.
 
 
+char*generar_lista_instrucciones(char*path){
+
+  FILE*archivo = fopen(path, "r");
+  fseek(archivo, 0, SEEK_END);
+  long tamanio = ftell(archivo);
+  rewind(archivo);
+  char *lista_instrucciones = malloc(tamanio + 1);
+  if (lista_instrucciones == NULL) {
+      fclose(archivo);
+      return NULL;
+  }
+  size_t bytes_leidos = fread(lista_instrucciones, 1, tamanio, archivo);
+  lista_instrucciones[bytes_leidos] = '\0';
+  fclose(archivo);
+
+  return lista_instrucciones;
+}
+
 int traducir_direccion(uint32_t pid, uint32_t dir_logica, uint32_t tamanio, uint32_t* dir_global_out) {
   int seg_max = config_get_int_value(config, "SEGMENT_MAX_SIZE");
   uint32_t num_segmento = dir_logica / seg_max;
@@ -86,7 +104,7 @@ bool crear_proceso(uint32_t pid, char*path){
   t_proceso_memoria* proceso = malloc(sizeof(t_proceso_memoria));
 
   proceso->pid = pid;
-  proceso->script_path = strdup(path);
+  proceso->lista_instrucciones = generar_lista_instrucciones(path);
   
   proceso->contexto = crear_contexto_inicial();
   if (proceso->contexto==NULL){
@@ -100,6 +118,7 @@ bool crear_proceso(uint32_t pid, char*path){
 }
 
 char*devolver_instruccion(uint32_t pc,char*lista_instrucciones){
+
     char*instruccion;
     int contador = 0; // NICO M: Según los ejemplos, el PC tomaría la primera linea de una lista de instrucciones como 1.
     char*copia_lista_instrucciones = string_duplicate(lista_instrucciones); // NICO M: CREO que string_split() rompe el string que se le pase. No queremos que la lista de instrucciones se rompa.
@@ -121,11 +140,11 @@ void*manejar_proceso(void*arg){
   int fd_cpu = args->fd_cpu;
   t_proceso_memoria*proceso = args->proceso;
 
-  char * instrucciones = proceso->script_path;
+  char * instrucciones = proceso->lista_instrucciones;
   log_info(logger, "## PID: %d - Imprimiendo lista de instrucciones para el proceso...", proceso->pid);
   log_info(logger,instrucciones);
 
-  while (proceso->contexto->proximo_a_detener){
+  while (!proceso->contexto->proximo_a_detener){
     if (esperar_pedido_de_instruccion(fd_cpu)){
       uint32_t pc = recibir_pc(fd_cpu);
       log_info(logger, "## PID: %d - Recibido PC: %d.", proceso->pid, pc);
@@ -317,7 +336,7 @@ static void destruir_contexto(t_contexto* contexto) {
 static void destruir_proceso_memoria(void* elemento) {
   t_proceso_memoria* proceso = elemento;
 
-  free(proceso->script_path);
+  free(proceso->lista_instrucciones);
 
   list_destroy_and_destroy_elements(proceso->contexto->tabla_segmentos, destruir_segmento);
 
