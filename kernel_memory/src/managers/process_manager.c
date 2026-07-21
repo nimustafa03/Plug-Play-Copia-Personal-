@@ -116,6 +116,7 @@ char*devolver_instruccion(uint32_t pc,char*lista_instrucciones){
 }
 
 void*manejar_proceso(void*arg){
+  log_info(logger, "Comenzando manejo del proceso de PID %d.", args->proceso->pid);
   t_args_proceso*args = (t_args_proceso*) arg;
   int fd_cpu = args->fd_cpu;
   t_proceso_memoria*proceso = args->proceso;
@@ -146,6 +147,7 @@ void*manejar_proceso(void*arg){
   }
   log_info(logger, "## PID: %d - Proceso eliminado.",proceso -> pid);
   destruir_proceso(proceso->pid);
+  // free(args);
   int*returnval = malloc(sizeof(1));
   pthread_exit(returnval);
 }
@@ -183,7 +185,7 @@ bool inicializar_proceso(uint32_t pid, int fd_cpu) {
   args->proceso = proceso;
   pthread_t nuevo_poceso;
   pthread_create(&nuevo_poceso, NULL, manejar_proceso,args);
-  free(args);
+  // free(args);
 
   log_info(logger, "Proceso creado");
 
