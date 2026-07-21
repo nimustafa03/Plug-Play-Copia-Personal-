@@ -25,7 +25,7 @@ void atender_creacion_proceso(){
   bool exito = crear_proceso(*pid,path);
   op_code cod;
   if (exito){
-    log_info(logger, "Proceso creado. PID: %d", pid);
+    log_info(logger, "Proceso creado. PID: %d", *pid);
     cod = MSG_OK;
     
   }

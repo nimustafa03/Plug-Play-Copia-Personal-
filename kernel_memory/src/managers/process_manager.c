@@ -28,18 +28,22 @@ extern t_config* config; // CP3: para leer SEGMENT_MAX_SIZE en la traducción
 
 
 char*generar_lista_instrucciones(char*path){
-
+  log_info(logger, "Abriendo el archivo...");
   FILE*archivo = fopen(path, "r");
+  log_info(logger, "Posicionandose al inicio del archivo...");
   fseek(archivo, 0, SEEK_END);
   long tamanio = ftell(archivo);
   rewind(archivo);
+  log_info(logger, "Alojando memoria para la lista de instrucciones...");
   char *lista_instrucciones = malloc(tamanio + 1);
   if (lista_instrucciones == NULL) {
       fclose(archivo);
       return NULL;
   }
+  log_info(logger, "Escribiendo la lista de instrucciones...");
   size_t bytes_leidos = fread(lista_instrucciones, 1, tamanio, archivo);
   lista_instrucciones[bytes_leidos] = '\0';
+  log_info(logger, "Cerrando archivo...");
   fclose(archivo);
 
   return lista_instrucciones;
@@ -104,8 +108,8 @@ bool crear_proceso(uint32_t pid, char*path){
   log_info(logger, "El PID pedido está libre, alojando memoria...");
   t_proceso_memoria* proceso = malloc(sizeof(t_proceso_memoria));
 
-  log_info(logger, "Generando lista de instrucciones...");
   proceso->pid = pid;
+  log_info(logger, "Generando lista de instrucciones...");
   proceso->lista_instrucciones = generar_lista_instrucciones(path);
   
   log_info(logger, "Creando contexto inicial...");
