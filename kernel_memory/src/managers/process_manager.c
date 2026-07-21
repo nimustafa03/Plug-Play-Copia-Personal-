@@ -29,9 +29,10 @@ extern t_config* config; // CP3: para leer SEGMENT_MAX_SIZE en la traducción
 
 char*generar_lista_instrucciones(char*path){
   log_info(logger, "Abriendo el archivo...");
-  FILE*archivo = fopen(path, "r");
+  FILE*archivo = fopen(path, "rb");
   if (archivo == NULL){
     log_error(logger, "Ha ocurrido un error al abrir el archivo.");
+    return NULL;
   }
   log_info(logger, "Posicionandose al fin del archivo...");
   fseek(archivo, 0, SEEK_END);
@@ -117,6 +118,9 @@ bool crear_proceso(uint32_t pid, char*path){
   char*lista_instrucciones = generar_lista_instrucciones(path);
   proceso->lista_instrucciones = string_duplicate(lista_instrucciones);
   free(lista_instrucciones);
+  if(proceso->lista_instrucciones){
+    log_error(logger, "## ERROR: No se pudo crear la lista de instrucciones.");
+  }
   
   log_info(logger, "Creando contexto inicial...");
   proceso->contexto = crear_contexto_inicial();
