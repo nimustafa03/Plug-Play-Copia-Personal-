@@ -2,6 +2,8 @@
 
 #include <stdlib.h>
 #include <commons/log.h>
+#include <commons/config.h>
+#include <commons/string.h>
 
 #include "../../utils/src/utils/mensajes.h"
 #include "../../utils/src/utils/conexiones.h"
@@ -13,8 +15,22 @@
 #include "../../utils/src/utils/tipos.h"
 
 extern t_log* logger;
+extern t_log*config;
 
 static int fd_kernel_scheduler = -1;
+
+char*completar_path(char*path){
+  char*prefijo = config_get_string_value(config, "SCRIPTS_BASEPATH");
+  char*path_completo = string_new();
+  
+  if (!string_starts_with(path,prefijo))
+  {
+    string_append(&path_completo, prefijo);
+  }
+  string_append(&path_completo,path);
+
+  return path_completo;
+}
 
 void atender_creacion_proceso(){
   uint32_t*pid; char*path; int size;
@@ -22,11 +38,26 @@ void atender_creacion_proceso(){
   pid = recibir_mensaje(fd_kernel_scheduler,&size);
   if (!pid) { log_error(logger, "## ERROR: No se ha dado ningún PID.");}
   log_info(logger, "PID Provisto: %d", *pid);
+
   path = recibir_mensaje(fd_kernel_scheduler, &size);
   if (!path) { log_error(logger, "## ERROR: NO se ha dado ningún path.");}
   log_info(logger, "Path provisto: %s", path);
+
+  log_info(logger, "Verificando que el path se encuentre completo y rellenandolo en caso contrario...");
+  char*path_completo = completar_path(path);
+
+  if (path_completo == NULL)
+  {
+    log_error(logger, "## ERROR: Algo salió mal al completar el path.");
+  }
+  else
+  {
+    log_info(logger,"Se ha completado el path con exito o no necesitaba ser completado.");
+    free(path);
+  }
+
   log_info(logger, "Creando nuevo proceso. PID: %d", *pid);
-  bool exito = crear_proceso(*pid,path);
+  bool exito = crear_proceso(*pid,path_completop);
   op_code cod;
   if (exito){
     log_info(logger, "Proceso creado. PID: %d", *pid);
@@ -37,9 +68,9 @@ void atender_creacion_proceso(){
     log_error(logger, "El proceso no se pudo crear.");
     cod = MSG_ERROR;
   }
-  free(pid); free(path);
+
+  free(pid);
   enviar_mensaje(fd_kernel_scheduler, &cod, sizeof(op_code));
-  
   
   return;
 }

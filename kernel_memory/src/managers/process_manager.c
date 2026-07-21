@@ -29,7 +29,7 @@ extern t_config* config; // CP3: para leer SEGMENT_MAX_SIZE en la traducción
 
 char*generar_lista_instrucciones(char*path){
   log_info(logger, "Abriendo el archivo...");
-  FILE*archivo = fopen(path, "rb");
+  FILE*archivo = fopen(path, "r");
   if (archivo == NULL){
     log_error(logger, "Ha ocurrido un error al abrir el archivo.");
     return NULL;
