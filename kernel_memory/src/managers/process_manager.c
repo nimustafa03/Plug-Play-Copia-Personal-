@@ -145,7 +145,6 @@ void*manejar_proceso(void*arg){
   log_info(logger,instrucciones);
 
   while (!proceso->contexto->proximo_a_detener){
-    log_info(logger, "NO SE RECIBIÓ FETCH");
     if (esperar_pedido_de_instruccion(fd_cpu)){
       uint32_t pc = recibir_pc(fd_cpu);
       log_info(logger, "## PID: %d - Recibido PC: %d.", proceso->pid, pc);

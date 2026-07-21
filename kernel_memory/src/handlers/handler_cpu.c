@@ -339,6 +339,7 @@ bool esperar_pedido_de_instruccion(int fd_cpu){
         usleep(config_get_int_value(config,"INSTRUCTION_DELAY")*1000);
         return true;
     }
+    log_info(logger, "NO SE RECIBIÓ FETCH");
     return false;
 }
 
