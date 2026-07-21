@@ -81,7 +81,7 @@ operacion decode(char* instruccion) {
     return OP_INVALID;
 }
 
-int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_ks, int fd_km, int fd_ms, uint32_t pid, t_list* tabla_segmentos, t_log* logger_cpu, t_mapa_memory_sticks_cpu* mapa, int fd_ms_agregados[3]){
+int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_ks, int fd_km, int fd_ms, uint32_t pid, t_list* tabla_segmentos, t_log* logger_cpu, t_mapa_memory_sticks_cpu* mapa, int fd_ms_agregados[3], bool proximo_a_detener){
     switch (codigo){
         case OP_SET:
             set(instruccion, registros);
@@ -189,7 +189,7 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             }
             break;
         case OP_EXIT:
-            int op_exit = syscall_exit(fd_ks, pid);
+            int op_exit = syscall_exit(fd_ks, fd_km, proximo_a_detener, pid);
             return op_exit;
         case OP_INVALID:
             return -2;

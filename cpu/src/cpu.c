@@ -217,7 +217,7 @@ int main(int argc, char* argv[]) {
             log_info(logger_cpu, "## PID: %u - Ejecutando: %s - %s %s",pid, inst, parametro1, parametro2);
 
             //log_info(logger_cpu, "OPCODE: %d", codigo);
-            int operacion = execute(codigo, instruccion, &contexto->registros,fd_ks,fd_km,fd_ms,pid, contexto->tabla_segmentos,logger_cpu,mapa,fd_ms_agregados);
+            int operacion = execute(codigo, instruccion, &contexto->registros,fd_ks,fd_km,fd_ms,pid, contexto->tabla_segmentos,logger_cpu,mapa,fd_ms_agregados, contexto->proximo_a_detener);
 
             if (operacion == -1) {                                  //en caso de SEG FAULT en las operaciones MOV y COPY
                 op_code guardar_contexto = MSG_SEG_FAULT;

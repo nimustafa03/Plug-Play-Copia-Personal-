@@ -70,7 +70,7 @@ typedef struct {
 // CICLO DE INSTRUCCION
 char* fetch(int conexion_servidor,uint32_t pid, t_registros* cpu, t_log* logger_cpu);
 operacion decode(char* instruccion);
-int execute(operacion codigo, char* instruccion, t_registros* cpu, int fd_ks, int fd_km, int fd_ms, uint32_t pid, t_list* tabla_segmentos, t_log* logger_cpu,t_mapa_memory_sticks_cpu* mapa,int fd_ms_agregados[3]);
+int execute(operacion codigo, char* instruccion, t_registros* cpu, int fd_ks, int fd_km, int fd_ms, uint32_t pid, t_list* tabla_segmentos, t_log* logger_cpu,t_mapa_memory_sticks_cpu* mapa,int fd_ms_agregados[3],bool proximo_a_detener);
 int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto, uint32_t pid, t_log* logger_cpu);
 
 // MMU
@@ -113,7 +113,7 @@ int syscall_stdin(char* instruccion,t_registros* registro, int fd_ks, uint32_t p
 int syscall_stdout(char* instruccion,t_registros* registro, int fd_ks, uint32_t pid);
 int syscall_mem_alloc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid);
 int syscall_mem_free(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid);
-int syscall_exit(int fd_ks, uint32_t pid);
+int syscall_exit(int fd_ks, int fd_km, bool proximo_a_detener, uint32_t pid);
 t_contexto* deserializar_contexto_inicial(void* buffer,int tamanio_buffer, t_log* logger_cpu);
 
 #endif
