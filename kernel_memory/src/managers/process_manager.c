@@ -116,8 +116,8 @@ char*devolver_instruccion(uint32_t pc,char*lista_instrucciones){
 }
 
 void*manejar_proceso(void*arg){
-  log_info(logger, "Comenzando manejo del proceso de PID %d.", args->proceso->pid);
   t_args_proceso*args = (t_args_proceso*) arg;
+  log_info(logger, "Comenzando manejo del proceso de PID %d.", args->proceso->pid);
   int fd_cpu = args->fd_cpu;
   t_proceso_memoria*proceso = arg->proceso;
 
