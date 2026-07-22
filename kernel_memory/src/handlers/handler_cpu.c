@@ -93,8 +93,8 @@ t_contexto* deserializar_contexto_inicial(void* buffer,int tamanio_buffer, t_log
     memcpy(
         &contexto->proximo_a_detener,
         (char*) buffer+desplazamiento,
-        sizeof(bool);
-    )
+        sizeof(bool)
+    );
     log_info(logger_km,"Contexto recibido: PC=%u - Segmentos=%d - Próximo a detener=%d", contexto->registros.pc, list_size(contexto->tabla_segmentos),contexto->proximo_a_detener);
 
     free(buffer);
