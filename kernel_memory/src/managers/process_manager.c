@@ -17,7 +17,8 @@
 static t_administrador_procesos administrador;
 extern t_log*logger;
 extern t_config* config; // CP3: para leer SEGMENT_MAX_SIZE en la traducción
-extern pthread_mutex_t mutex_recibir_procesos;
+extern pthread_cond_t condicion_recibir_proceso;
+extern bool listo_para_recibir;
 
 // CP3: traduce (pid, dir_logica) a dirección física global. Retorna:
 //   TRADUCCION_OK        y deja la dir global en *dir_global_out
@@ -197,7 +198,10 @@ void*manejar_proceso(void*arg){
   }
   free(args);
   int*returnval = malloc(sizeof(1));
-  pthread_mutex_unlock(&mutex_recibir_procesos); // NICO M: Esto sirve para que volvamos a aceptar pedidos de iniciar nuevos procesos.
+
+  listo_para_recibir = true;
+
+  pthread_cond_signal(&condicion_recibir_proceso); // NICO M: Esto sirve para que volvamos a aceptar pedidos de iniciar nuevos procesos.
   pthread_exit(returnval);
 }
 

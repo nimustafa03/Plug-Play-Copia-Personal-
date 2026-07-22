@@ -17,6 +17,8 @@ static int socket_cpu = -1;
 
 static pthread_mutex_t mutex_envios_cpu = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_recibir_procesos = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t condicion_recibir_proceso = PTHREAD_COND_INITIALIZER;
+bool listo_para_recibir = false;
 
 uint32_t recibir_pid(){
     int size;
@@ -116,8 +118,14 @@ void atender_mensaje_cpu(){
             log_info(logger, "Mapa enviado. Esperando PID");
             inicializar_proceso(recibir_pid(), socket_cpu);
             free(codigo);
-            log_info(logger, "Bloqueando semaforo...");
+            
             pthread_mutex_lock(&mutex_recibir_procesos);
+            listo_para_recibir = false;
+            while(!listo_para_recibir){
+                log_info(logger, "Bloqueando recepcion de mensajes...");
+                pthread_cond_wait(&condicion_recibir_proceso, &mutex_recibir_procesos);
+            }
+            pthread_mutex_unlock(&mutex_recibir_procesos);
         }
     }
 }
@@ -146,7 +154,6 @@ void atender_cpu(int nuevo_socket_cpu){
 
 
     free(ptr_id_cpu);
-    // NICO M: Loop de espera activa, hasta que reciba el mensaje de iniciar proceso.
 
     /* notificar_mapa_memory_sticks_a_cpu(); */
     log_info(logger, "Atendiendo CPU...");
