@@ -296,8 +296,21 @@ void* timer_rr(void* arg) {
     // DEBUG: serializacion - interrupcion por fin de quantum
     log_debug(logger_ks, "[DBG][timer_rr] pid=%d - envío MSG_INTERRUPT (motivo=0) a fd_cpu=%d", args->pid, args->fd_cpu);
 
-    // CP3: interrupción atómica contra cualquier otro envío a la misma CPU
-    enviar_interrupcion_cpu(args->fd_cpu, args->pid, 0); // 0 = fin de quantum
+    // CP3: el timer solo debe interrumpir si el proceso SIGUE ejecutando en esta
+    // misma CPU. Si antes del quantum se bloqueó por IO / terminó / fue desalojado,
+    // este timer quedó viejo y NO debe mandar nada: la CPU ya se liberó y está en
+    // esperar_pid, donde leería el MSG_INTERRUPT (=16) como un PID basura.
+    pthread_mutex_lock(&mutex_listas);
+    Proceso* proc_rr = buscar_proceso_por_pid_sin_lock(args->pid);
+    bool sigue_exec = (proc_rr != NULL && proc_rr->estado == EXEC && proc_rr->fd_cpu == args->fd_cpu);
+    pthread_mutex_unlock(&mutex_listas);
+
+    if (sigue_exec) {
+        // interrupción atómica contra cualquier otro envío a la misma CPU
+        enviar_interrupcion_cpu(args->fd_cpu, args->pid, 0); // 0 = fin de quantum
+    } else {
+        log_debug(logger_ks, "[DBG][timer_rr] pid=%d - quantum vencido pero el proceso ya no está en EXEC en fd_cpu=%d, timer descartado", args->pid, args->fd_cpu);
+    }
 
     // DEBUG: heap
     log_debug(logger_ks, "[DBG][timer_rr] SALIDA - free(args=%p)", (void*)args);
