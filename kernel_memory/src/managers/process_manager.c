@@ -168,7 +168,7 @@ void*manejar_proceso(void*arg){
 
   bool interrumpido = false;
 
-  while (!interrumpido){
+  while (!interrumpido && !proceso->contexto->proximo_a_detener){
     op_code*codigo = esperar_pedido_de_instruccion(fd_cpu);
     if (*codigo == MSG_FETCH_CPU){
       uint32_t pc = recibir_pc(fd_cpu);
@@ -192,8 +192,9 @@ void*manejar_proceso(void*arg){
     if (*codigo == MSG_INTERRUPT) interrumpido = true;
   }
   if (proceso->contexto->proximo_a_detener) {
-    log_info(logger, "## PID: %d - Proceso eliminado.",proceso -> pid);
+    log_info(logger, "## PID: %d - El proceso ha concluido y será eliminado.", proceso -> pid);
     destruir_proceso(proceso->pid);
+    log_info(logger, "## PID: %d - Proceso eliminado.",proceso -> pid);
   }
   free(args);
   int*returnval = malloc(sizeof(1));

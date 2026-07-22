@@ -4,6 +4,7 @@
 #include "../estructuras.h"
 #include "../../utils/src/utils/tipos.h"
 #include <stdint.h>
+#include <commons/log.h>
 #include "../../utils/src/utils/mensajes.h"
 
 void atender_cpu(int fd_cpu);
@@ -16,5 +17,6 @@ bool cpu_esta_conectada(void);
 bool notificar_mapa_memory_sticks_a_cpu(void);
 void*serializar_contexto_inicial(t_contexto*contexto, int*tamanio_contexto);
 void atender_mensaje_cpu();
+t_contexto* deserializar_contexto_inicial(void* buffer,int tamanio_buffer, t_log* logger_cpu);
 
 #endif

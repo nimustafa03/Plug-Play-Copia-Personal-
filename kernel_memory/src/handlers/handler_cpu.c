@@ -25,10 +25,83 @@ uint32_t recibir_pid(){
     return *pid;
 }
 
+t_contexto* deserializar_contexto_inicial(void* buffer,int tamanio_buffer, t_log* logger_km) {
+    int tamanio_esperado =
+        sizeof(t_registros) +
+        sizeof(int);
+    
+    log_info(logger_km,"Tamanio esperado: %d", tamanio_esperado);
+    
+
+    if (buffer == NULL) {
+        log_info(logger_km, "Buffer recibido NULL");
+        return NULL;
+    }
+    if (tamanio_buffer != tamanio_esperado){
+        log_info(logger_km, "Problemas con el  tamanio");
+        return NULL;
+    }
+    
+    t_contexto* contexto = malloc(sizeof(t_contexto));
+    if (contexto == NULL) {
+        log_info(logger_km, "No se pudo asignar memoria");
+        return NULL;
+    }
+    
+    int desplazamiento = 0;
+
+    log_info(logger_km, "Se copiara contexto...");
+
+    memcpy(
+        &contexto->registros,
+        (char*) buffer + desplazamiento,
+        sizeof(t_registros)
+    );
+
+    /*printf("AX %d",contexto->registros.ax);
+    printf("BX %d",contexto->registros.bx);
+    printf("CX %d",contexto->registros.cx);
+    printf("DI %d",contexto->registros.di);
+    printf("DX %d",contexto->registros.dx);
+    printf("EAX %d",contexto->registros.eax);
+    printf("EBX %d",contexto->registros.ebx);
+    printf("ECX %d",contexto->registros.ecx);
+    printf("EDX %d",contexto->registros.edx);
+    printf("PC %d",contexto->registros.pc);
+    printf("SI %d",contexto->registros.si);*/
+    
+
+    desplazamiento += sizeof(t_registros);
+    int cantidad_segmentos;
+    log_info(logger_km,"Valos desplazamiento: %d", desplazamiento);
+
+    memcpy(
+        &cantidad_segmentos,
+        (char*) buffer + desplazamiento,
+        sizeof(int)
+    );
+    log_info(logger_km,"ok");
+
+    contexto->tabla_segmentos = list_create();
+    if (contexto->tabla_segmentos == NULL) {
+        free(contexto);
+        log_info(logger_km, "Error al generar la lista de segmentos en el contexto");
+        return NULL;
+    }
+
+    contexto->proximo_a_detener = false;
+
+    log_info(logger_km,"Contexto recibido: PC=%u - Segmentos=%d - Próximo a detener=%d", contexto->registros.pc, list_size(contexto->tabla_segmentos),contexto->proximo_a_detener);
+
+    free(buffer);
+    return contexto;
+}
+
 t_contexto *recibir_contexto(){
     int size;
     t_contexto*contexto;
-    contexto = recibir_mensaje(socket_cpu, &size);
+    void*buffer = recibir_mensaje(socket_cpu, &size);
+    contexto = deserializar_contexto_inicial(buffer, size,logger);
     return contexto;
 }
 
@@ -340,8 +413,8 @@ op_code*esperar_pedido_de_instruccion(int fd_cpu){
         usleep(config_get_int_value(config,"INSTRUCTION_DELAY")*1000);
         return codigo;
     }
-    if (*codigo == MSG_INTERRUPT){
-        log_info(logger, "INTERRUPCION RECIBIDA.");
+    if (*codigo == MSG_INTERRUPT || *codigo == MSG_EXIT_CPU){
+        log_info(logger, "INTERRUPCION O EXIT RECIBIDO.");
         uint32_t pid = recibir_pid();
         t_contexto*contexto = recibir_contexto();
         actualizar_contexto(pid, contexto);
