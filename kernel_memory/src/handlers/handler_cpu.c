@@ -37,10 +37,10 @@ t_contexto *recibir_contexto(){
 }
 
 void atender_mensaje_cpu(){
-    log_info(logger, "Kernel Memory está esperando nuevos procesos...");
     int size;
     op_code*codigo;
     while(1){
+        log_info(logger, "Kernel Memory está esperando nuevos procesos...");
         codigo = recibir_mensaje(socket_cpu,&size);
         if (*codigo == MSG_INIT_CPU){
             log_info(logger, "Se ha recibido un nuevo pedido de iniciar proceso.");

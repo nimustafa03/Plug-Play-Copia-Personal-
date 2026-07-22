@@ -170,6 +170,7 @@ void*manejar_proceso(void*arg){
 
   while (!interrumpido && !proceso->contexto->proximo_a_detener){
     op_code*codigo = esperar_pedido_de_instruccion(fd_cpu);
+
     if (*codigo == MSG_FETCH_CPU){
       uint32_t pc = recibir_pc(fd_cpu);
       log_info(logger, "## PID: %d - Recibido PC: %d.", proceso->pid, pc);
@@ -194,12 +195,14 @@ void*manejar_proceso(void*arg){
       interrumpido = true;
       }
   }
+
   log_info(logger, "Saliendo del ciclo de FETCH");
   if (proceso->contexto->proximo_a_detener) {
     log_info(logger, "## PID: %d - El proceso ha concluido y será eliminado.", proceso -> pid);
     destruir_proceso(proceso->pid);
     log_info(logger, "## PID: %d - Proceso eliminado.",proceso -> pid);
   }
+  
   log_info(logger, "Liberando memoria...");
   free(args);
   int*returnval = malloc(sizeof(1));
