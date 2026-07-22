@@ -11,11 +11,10 @@
 #include "../../utils/src/utils/conexiones.h"
 #include "../src/managers/process_manager.h"
 #include <semaphore.h>
-#include "../semaforos_km.h"
 
 extern t_log*logger;
 extern t_config*config;
-extern sem_t semRecibirProcesosNuevos;
+sem_t*semRecibirProcesosNuevos;
 static int socket_cpu = -1;
 
 static pthread_mutex_t mutex_envios_cpu = PTHREAD_MUTEX_INITIALIZER;
@@ -118,7 +117,7 @@ void atender_mensaje_cpu(){
             log_info(logger, "Mapa enviado. Esperando PID");
             inicializar_proceso(recibir_pid(), socket_cpu);
             free(codigo);
-            sem_wait(&semRecibirProcesosNuevos);
+            sem_wait(semRecibirProcesosNuevos);
         }
     }
 }
@@ -148,10 +147,9 @@ void atender_cpu(int nuevo_socket_cpu){
 
     free(ptr_id_cpu);
     // NICO M: Loop de espera activa, hasta que reciba el mensaje de iniciar proceso.
-    op_code*codigo;
 
     /* notificar_mapa_memory_sticks_a_cpu(); */
-    sem_init(&semRecibirProcesosNuevos,0,1);
+    sem_init(semRecibirProcesosNuevos,0,1);
     atender_mensaje_cpu();
     
     return;

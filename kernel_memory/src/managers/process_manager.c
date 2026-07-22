@@ -19,7 +19,7 @@
 static t_administrador_procesos administrador;
 extern t_log*logger;
 extern t_config* config; // CP3: para leer SEGMENT_MAX_SIZE en la traducción
-extern sem_t semRecibirProcesosNuevos;
+extern sem_t*semRecibirProcesosNuevos;
 
 // CP3: traduce (pid, dir_logica) a dirección física global. Retorna:
 //   TRADUCCION_OK        y deja la dir global en *dir_global_out
@@ -199,7 +199,7 @@ void*manejar_proceso(void*arg){
   }
   free(args);
   int*returnval = malloc(sizeof(1));
-  sem_post(&semRecibirProcesosNuevos); // NICO M: Esto sirve para que volvamos a aceptar pedidos de iniciar nuevos procesos.
+  sem_post(semRecibirProcesosNuevos); // NICO M: Esto sirve para que volvamos a aceptar pedidos de iniciar nuevos procesos.
   pthread_exit(returnval);
 }
 

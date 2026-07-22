@@ -3,6 +3,6 @@
 #include <semaphore.h>
 
 
-extern sem_t semRecibirProcesosNuevos;
+extern sem_t*semRecibirProcesosNuevos;
 
 #endif
