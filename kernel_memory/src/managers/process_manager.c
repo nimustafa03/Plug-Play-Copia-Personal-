@@ -194,16 +194,18 @@ void*manejar_proceso(void*arg){
       interrumpido = true;
       }
   }
+  log_info(logger, "Saliendo del ciclo de FETCH");
   if (proceso->contexto->proximo_a_detener) {
     log_info(logger, "## PID: %d - El proceso ha concluido y será eliminado.", proceso -> pid);
     destruir_proceso(proceso->pid);
     log_info(logger, "## PID: %d - Proceso eliminado.",proceso -> pid);
   }
+  log_info(logger, "Liberando memoria...");
   free(args);
   int*returnval = malloc(sizeof(1));
 
   listo_para_recibir = true;
-
+  log_info(logger,"Reactivando recepción de procesos.");
   pthread_cond_signal(&condicion_recibir_proceso); // NICO M: Esto sirve para que volvamos a aceptar pedidos de iniciar nuevos procesos.
   pthread_exit(returnval);
 }
