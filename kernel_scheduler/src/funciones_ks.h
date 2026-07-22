@@ -96,6 +96,24 @@ typedef struct {
     t_list* cola_bloqueados; // procesos esperando este mutex
 } t_mutex_ks;
 
+// mutex por conexión de CPU. Serializa TODO envío hacia un fd_cpu
+// (respuestas de syscalls + interrupciones + despacho de PID) para que dos
+// send() de hilos distintos (atender_cpu_ks, timer_rr, desalojar_por_prioridad,
+// atender_sleep/stdin/stdout, compactación) nunca se entrelacen sobre el mismo socket.
+typedef struct {
+    int fd_cpu;
+    pthread_mutex_t mutex;
+} t_conexion_cpu;
+
+extern t_list* listaConexionesCPU; // lista de t_conexion_cpu*
+extern pthread_mutex_t mutex_conexiones_cpu; // protege listaConexionesCPU
+
+pthread_mutex_t* obtener_mutex_cpu(int fd_cpu); // NULL si no está registrada
+void registrar_conexion_cpu(int fd_cpu); // llamar al conectarse una CPU
+void liberar_conexion_cpu(int fd_cpu); // llamar al desconectarse
+void enviar_ok_cpu(int fd_cpu, op_code codigo); // respuesta simple (MSG_OK/MSG_ERROR), atómica
+void enviar_interrupcion_cpu(int fd_cpu, uint32_t pid, int motivo); // MSG_INTERRUPT + t_interrupcion, atómico
+
 void inicializarListasProcesos();
 void* iniciar_planificador_largo_plazo();
 void* iniciar_planificador_corto_plazo();

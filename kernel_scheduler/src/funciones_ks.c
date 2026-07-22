@@ -44,6 +44,10 @@ volatile bool en_compactacion = false; // gate del corto plazo durante compactac
 sem_t sem_desalojo_confirmado;         // confirmaciones de CPUs desalojadas por compactación
 static long reloj_suspension = 0;      // sello incremental para desempatar por antigüedad de suspensión
 
+// CP3: mutex por conexión de CPU (ver comentario en funciones_ks.h)
+t_list* listaConexionesCPU = NULL;
+pthread_mutex_t mutex_conexiones_cpu;
+
 
 void inicializarListasProcesos() {
   // DEBUG: frontera de funcion
@@ -71,6 +75,8 @@ void inicializarListasProcesos() {
   // CP3
   pthread_mutex_init(&mutex_km, NULL);
   sem_init(&sem_desalojo_confirmado, 0, 0);
+  listaConexionesCPU = list_create();               // CP3
+  pthread_mutex_init(&mutex_conexiones_cpu, NULL);  // CP3
 
   // inicializar colas multinivel a partir de QUEUES_ALGORITHMS.
   // config_get_array_value devuelve un char** terminado en NULL.
@@ -189,14 +195,8 @@ void desalojar_por_prioridad(Proceso* proceso_entrante) {
   // DEBUG: serializacion - interrupcion a la CPU de la victima
   log_debug(logger_ks, "[DBG][desalojar_por_prioridad] envío MSG_INTERRUPT (motivo=1) a fd_cpu=%d, victima pid=%d ptr=%p", victima->fd_cpu, victima->id_proceso, (void*)victima);
 
-  // interrumpir la CPU de la victima (mismo patron que timer_rr, motivo 1 = prioridad)
-  op_code interrupcion = MSG_INTERRUPT;
-  enviar_mensaje(victima->fd_cpu, &interrupcion, sizeof(op_code));
-
-  t_interrupcion intr;
-  intr.pid = victima->id_proceso;
-  intr.motivo = 1; // 1 = desalojo por prioridad (0 = fin de quantum)
-  enviar_mensaje(victima->fd_cpu, &intr, sizeof(t_interrupcion));
+  // CP3: interrupción atómica contra cualquier otro envío a la misma CPU
+  enviar_interrupcion_cpu(victima->fd_cpu, victima->id_proceso, 1); // 1 = desalojo por prioridad
   // el resto (proceso vuelve a READY, CPU liberada) lo maneja MSG_INTERRUPCION_ATENDIDA
 }
 
@@ -296,14 +296,8 @@ void* timer_rr(void* arg) {
     // DEBUG: serializacion - interrupcion por fin de quantum
     log_debug(logger_ks, "[DBG][timer_rr] pid=%d - envío MSG_INTERRUPT (motivo=0) a fd_cpu=%d", args->pid, args->fd_cpu);
 
-    // enviamos la interrupción
-    op_code interrupcion = MSG_INTERRUPT;
-    enviar_mensaje(args->fd_cpu, &interrupcion, sizeof(op_code));
-
-    t_interrupcion intr;
-    intr.pid    = args->pid;
-    intr.motivo = 0; // fin de quantum
-    enviar_mensaje(args->fd_cpu, &intr, sizeof(t_interrupcion));
+    // CP3: interrupción atómica contra cualquier otro envío a la misma CPU
+    enviar_interrupcion_cpu(args->fd_cpu, args->pid, 0); // 0 = fin de quantum
 
     // DEBUG: heap
     log_debug(logger_ks, "[DBG][timer_rr] SALIDA - free(args=%p)", (void*)args);
@@ -429,7 +423,11 @@ void* iniciar_planificador_corto_plazo() {
     log_debug(logger_ks, "[DBG][planif_corto] pid=%d - envío PID a CPU fd=%d (nivel CMN=%d)", proceso->id_proceso, fd_cpu, nivel);
 
     // envia el PID a la CPU para que empiece a ejecutar
+    // CP3: protegido para que un timer_rr rezagado no se entrelace con el despacho
+    pthread_mutex_t* m_cpu = obtener_mutex_cpu(fd_cpu);
+    if (m_cpu) pthread_mutex_lock(m_cpu);
     enviar_mensaje(fd_cpu, &proceso->id_proceso, sizeof(uint32_t));
+    if (m_cpu) pthread_mutex_unlock(m_cpu);
  
     // Determina si hay que lanzar timer de quantum:
     // - FIFO/RR plano: segun PLANIFICATION_ALGORITHM
@@ -685,10 +683,9 @@ void mutex_lock(char* nombre, Proceso* proceso) {
       m->pid_tomador = proceso->id_proceso;
       log_info(logger_ks, "## (%d) Toma el Mutex %s", proceso->id_proceso, nombre);
       pthread_mutex_unlock(&mutex_listas);
-      op_code ok = MSG_OK;
       // DEBUG: serializacion
       log_debug(logger_ks, "[DBG][mutex_lock] pid=%d - envío MSG_OK a fd_cpu=%d", proceso->id_proceso, proceso->fd_cpu);
-      enviar_mensaje(proceso->fd_cpu, &ok, sizeof(op_code));
+      enviar_ok_cpu(proceso->fd_cpu, MSG_OK); // CP3: envío atómico
   } else {
       // ocupado, bloquear el proceso
       log_info(logger_ks, "## (%d) MUTEX_LOCK: bloqueado esperando mutex '%s'", proceso->id_proceso, nombre);
@@ -748,18 +745,89 @@ void mutex_unlock(char* nombre, Proceso* proceso) {
       log_info(logger_ks, "## (%d) Toma el Mutex %s", siguiente->id_proceso, nombre);
       actualizarEstadoProceso(siguiente, READY);
       sem_post(&sem_hay_proceso_ready);
-      op_code ok = MSG_OK;
       // DEBUG: serializacion
       log_debug(logger_ks, "[DBG][mutex_unlock] pid=%d - envío MSG_OK a fd_cpu=%d del desbloqueado", siguiente->id_proceso, siguiente->fd_cpu);
-      enviar_mensaje(siguiente->fd_cpu, &ok, sizeof(op_code));
+      enviar_ok_cpu(siguiente->fd_cpu, MSG_OK); // CP3: envío atómico
   }
   // DEBUG: frontera de funcion
   log_debug(logger_ks, "[DBG][mutex_unlock] SALIDA - nombre='%s'", nombre);
 }
 
+// ============================================================
+// CP3: mutex por conexión de CPU — serializa todo envío a un fd_cpu
+// ============================================================
+
+// Busca el mutex asociado a una conexión de CPU ya registrada.
+// Devuelve NULL si no está registrada (no debería pasar si se llamó
+// registrar_conexion_cpu al conectarse).
+pthread_mutex_t* obtener_mutex_cpu(int fd_cpu) {
+    pthread_mutex_lock(&mutex_conexiones_cpu);
+    for (int i = 0; i < list_size(listaConexionesCPU); i++) {
+        t_conexion_cpu* con = list_get(listaConexionesCPU, i);
+        if (con->fd_cpu == fd_cpu) {
+            pthread_mutex_unlock(&mutex_conexiones_cpu);
+            return &con->mutex;
+        }
+    }
+    pthread_mutex_unlock(&mutex_conexiones_cpu);
+    return NULL;
+}
+
+void registrar_conexion_cpu(int fd_cpu) {
+    t_conexion_cpu* con = malloc(sizeof(t_conexion_cpu));
+    // DEBUG: heap
+    log_debug(logger_ks, "[DBG][registrar_conexion_cpu] malloc con=%p (fd=%d)", (void*)con, fd_cpu);
+    con->fd_cpu = fd_cpu;
+    pthread_mutex_init(&con->mutex, NULL);
+    pthread_mutex_lock(&mutex_conexiones_cpu);
+    list_add(listaConexionesCPU, con);
+    pthread_mutex_unlock(&mutex_conexiones_cpu);
+}
+
+void liberar_conexion_cpu(int fd_cpu) {
+    pthread_mutex_lock(&mutex_conexiones_cpu);
+    for (int i = 0; i < list_size(listaConexionesCPU); i++) {
+        t_conexion_cpu* con = list_get(listaConexionesCPU, i);
+        if (con->fd_cpu == fd_cpu) {
+            list_remove(listaConexionesCPU, i);
+            pthread_mutex_destroy(&con->mutex);
+            // DEBUG: heap
+            log_debug(logger_ks, "[DBG][liberar_conexion_cpu] free con=%p (fd=%d)", (void*)con, fd_cpu);
+            free(con);
+            break;
+        }
+    }
+    pthread_mutex_unlock(&mutex_conexiones_cpu);
+}
+
+// Envío simple (un solo op_code, ej. MSG_OK/MSG_ERROR) protegido por el mutex
+// de esa conexión de CPU. Si la conexión no está registrada, manda igual (sin
+// lock) para no romper el flujo, pero eso no debería pasar.
+void enviar_ok_cpu(int fd_cpu, op_code codigo) {
+    pthread_mutex_t* m = obtener_mutex_cpu(fd_cpu);
+    if (m) pthread_mutex_lock(m);
+    enviar_mensaje(fd_cpu, &codigo, sizeof(op_code));
+    if (m) pthread_mutex_unlock(m);
+}
+
+// Envío de interrupción (opcode + t_interrupcion) atómico respecto a
+// cualquier otro mensaje que se esté por mandar a la misma CPU.
+void enviar_interrupcion_cpu(int fd_cpu, uint32_t pid, int motivo) {
+    pthread_mutex_t* m = obtener_mutex_cpu(fd_cpu);
+    if (m) pthread_mutex_lock(m);
+    op_code interrupcion = MSG_INTERRUPT;
+    enviar_mensaje(fd_cpu, &interrupcion, sizeof(op_code));
+    t_interrupcion intr;
+    intr.pid = pid;
+    intr.motivo = motivo;
+    enviar_mensaje(fd_cpu, &intr, sizeof(t_interrupcion));
+    if (m) pthread_mutex_unlock(m);
+}
+
 void atender_cpu_ks(int fd_cpu) {
     // DEBUG: frontera de funcion
     log_debug(logger_ks, "[DBG][atender_cpu_ks] ENTRADA - fd_cpu=%d", fd_cpu);
+    registrar_conexion_cpu(fd_cpu); // CP3: habilita envíos serializados a esta CPU
     // CPU recién conectada, entonces esta libre
     pthread_mutex_lock(&mutex_listas);
     int* fd_libre = malloc(sizeof(int));
@@ -775,6 +843,7 @@ void atender_cpu_ks(int fd_cpu) {
         op_code* codigo = recibir_mensaje(fd_cpu, &size);
         if (codigo == NULL) {
             log_warning(logger_ks, "CPU FD:%d desconectada", fd_cpu);
+            liberar_conexion_cpu(fd_cpu); // CP3
             break;
         }
         // DEBUG: deserializacion - opcode recibido de la CPU
@@ -888,10 +957,9 @@ void atender_cpu_ks(int fd_cpu) {
                 log_debug(logger_ks, "[DBG][atender_cpu_ks:MUTEX_CREATE] nombre=%p ('%s'), pid_ptr=%p (pid=%d)", (void*)nombre, nombre ? nombre : "NULL", (void*)pid_ptr, pid_ptr ? (int)*pid_ptr : -1);
                 log_info(logger_ks, "## (%d) - Solicitó syscall: MUTEX_CREATE", *pid_ptr);
                 mutex_create(nombre);
-                op_code ok = MSG_OK;
                 // DEBUG: serializacion
                 log_debug(logger_ks, "[DBG][atender_cpu_ks:MUTEX_CREATE] envío MSG_OK a fd=%d", fd_cpu);
-                enviar_mensaje(fd_cpu, &ok, sizeof(op_code));
+                enviar_ok_cpu(fd_cpu, MSG_OK); // CP3: envío atómico
                 free(nombre);
                 free(pid_ptr);
                 break;
@@ -921,10 +989,9 @@ void atender_cpu_ks(int fd_cpu) {
                 // DEBUG: si proceso=(nil), mutex_unlock lo desreferencia y segfaultea
                 log_debug(logger_ks, "[DBG][atender_cpu_ks:MUTEX_UNLOCK] pid=%d - buscar_proceso -> ptr=%p", *pid_ptr, (void*)proceso);
                 mutex_unlock(nombre, proceso);
-                op_code ok = MSG_OK;
                 // DEBUG: serializacion
                 log_debug(logger_ks, "[DBG][atender_cpu_ks:MUTEX_UNLOCK] envío MSG_OK a fd=%d", fd_cpu);
-                enviar_mensaje(fd_cpu, &ok, sizeof(op_code));
+                enviar_ok_cpu(fd_cpu, MSG_OK); // CP3: envío atómico
                 free(nombre);
                 free(pid_ptr);
                 break;
@@ -963,10 +1030,9 @@ void atender_cpu_ks(int fd_cpu) {
                 log_info(logger_ks, "## (%d) - Solicitó syscall: MEM_ALLOC", *pid_ptr);
 
                 bool ok = km_mem_alloc(*pid_ptr, *id_ptr, *tam_ptr);
-                op_code r = ok ? MSG_OK : MSG_ERROR;
                 // DEBUG: serializacion
                 log_debug(logger_ks, "[DBG][atender_cpu_ks:MEM_ALLOC] pid=%d - envío %s a fd=%d", *pid_ptr, ok ? "MSG_OK" : "MSG_ERROR", fd_cpu);
-                enviar_mensaje(fd_cpu, &r, sizeof(op_code));
+                enviar_ok_cpu(fd_cpu, ok ? MSG_OK : MSG_ERROR); // CP3: envío atómico
                 free(pid_ptr); free(id_ptr); free(tam_ptr);
                 break;
             }
@@ -979,10 +1045,9 @@ void atender_cpu_ks(int fd_cpu) {
                 log_info(logger_ks, "## (%d) - Solicitó syscall: MEM_FREE", *pid_ptr);
 
                 bool ok = km_mem_free(*pid_ptr, *id_ptr);
-                op_code r = ok ? MSG_OK : MSG_ERROR;
                 // DEBUG: serializacion
                 log_debug(logger_ks, "[DBG][atender_cpu_ks:MEM_FREE] pid=%d - envío %s a fd=%d", *pid_ptr, ok ? "MSG_OK" : "MSG_ERROR", fd_cpu);
-                enviar_mensaje(fd_cpu, &r, sizeof(op_code));
+                enviar_ok_cpu(fd_cpu, ok ? MSG_OK : MSG_ERROR); // CP3: envío atómico
                 // se liberó memoria -> intentar des-suspender procesos (mediano plazo)
                 if (ok) intentar_desuspender_procesos();
                 free(pid_ptr); free(id_ptr);
@@ -998,10 +1063,9 @@ void atender_cpu_ks(int fd_cpu) {
                 log_info(logger_ks, "## (%d) - Solicitó syscall: INIT_PROC", *pid_ptr);
 
                 crear_proceso(path, *prio_ptr);
-                op_code r = MSG_OK;
                 // DEBUG: serializacion
                 log_debug(logger_ks, "[DBG][atender_cpu_ks:INIT_PROC] envío MSG_OK a fd=%d", fd_cpu);
-                enviar_mensaje(fd_cpu, &r, sizeof(op_code));
+                enviar_ok_cpu(fd_cpu, MSG_OK); // CP3: envío atómico
                 free(pid_ptr); free(prio_ptr); free(path);
                 break;
             }
@@ -1209,10 +1273,9 @@ void* atender_sleep_ks(void* arg) {
     finalizar_io_y_desbloquear(proceso);
 
     // recién ahora destrabamos a la CPU que pidió el sleep
-    op_code ok = MSG_OK;
     // DEBUG: serializacion
     log_debug(logger_ks, "[DBG][atender_sleep_ks] pid=%d - envío MSG_OK a fd_cpu=%d", args->pid, args->fd_cpu);
-    enviar_mensaje(args->fd_cpu, &ok, sizeof(op_code));
+    enviar_ok_cpu(args->fd_cpu, MSG_OK); // CP3: envío atómico
 
     // DEBUG: heap
     log_debug(logger_ks, "[DBG][atender_sleep_ks] SALIDA - free(args=%p)", (void*)args);
@@ -1384,12 +1447,8 @@ void manejar_solicitud_desalojo(uint32_t pid_issuer) {
         if (p->id_proceso == (int) pid_issuer) continue; // su CPU está en la syscall, no la interrumpimos
         // DEBUG: serializacion - interrupcion por compactacion
         log_debug(logger_ks, "[DBG][manejar_solicitud_desalojo] envío MSG_INTERRUPT (motivo=2) a fd_cpu=%d, pid=%d ptr=%p", p->fd_cpu, p->id_proceso, (void*)p);
-        op_code intr = MSG_INTERRUPT;
-        enviar_mensaje(p->fd_cpu, &intr, sizeof(op_code));
-        t_interrupcion t;
-        t.pid = p->id_proceso;
-        t.motivo = 2; // 2 = desalojo por compactación
-        enviar_mensaje(p->fd_cpu, &t, sizeof(t_interrupcion));
+        // CP3: interrupción atómica contra cualquier otro envío a la misma CPU
+        enviar_interrupcion_cpu(p->fd_cpu, p->id_proceso, 2); // 2 = desalojo por compactación
         a_esperar++;
     }
     pthread_mutex_unlock(&mutex_listas);
@@ -1537,10 +1596,9 @@ void* atender_stdin_ks(void* arg) {
 
     // destrabamos a la CPU (ver nota del modelo de bloqueo: en SEG_FAULT igual
     // la liberamos para que no quede colgada; el proceso ya fue finalizado)
-    op_code ok = MSG_OK;
     // DEBUG: serializacion
     log_debug(logger_ks, "[DBG][atender_stdin_ks] pid=%d - envío MSG_OK a fd_cpu=%d", a->pid, a->fd_cpu);
-    enviar_mensaje(a->fd_cpu, &ok, sizeof(op_code));
+    enviar_ok_cpu(a->fd_cpu, MSG_OK); // CP3: envío atómico
     // DEBUG: heap
     log_debug(logger_ks, "[DBG][atender_stdin_ks] SALIDA - free(args=%p)", (void*)a);
     free(a);
@@ -1590,8 +1648,7 @@ void* atender_stdout_ks(void* arg) {
 
     if (resultado == MSG_SEG_FAULT) {
         finalizar_proceso(proceso, "SEG_FAULT");
-        op_code ok_sf = MSG_OK;
-        enviar_mensaje(a->fd_cpu, &ok_sf, sizeof(op_code));
+        enviar_ok_cpu(a->fd_cpu, MSG_OK); // CP3: envío atómico
         free(a);
         return NULL;
     }
@@ -1626,10 +1683,9 @@ void* atender_stdout_ks(void* arg) {
 
     finalizar_io_y_desbloquear(proceso);
 
-    op_code ok = MSG_OK;
     // DEBUG: serializacion
     log_debug(logger_ks, "[DBG][atender_stdout_ks] pid=%d - envío MSG_OK a fd_cpu=%d", a->pid, a->fd_cpu);
-    enviar_mensaje(a->fd_cpu, &ok, sizeof(op_code));
+    enviar_ok_cpu(a->fd_cpu, MSG_OK); // CP3: envío atómico
     // DEBUG: heap
     log_debug(logger_ks, "[DBG][atender_stdout_ks] SALIDA - free(args=%p)", (void*)a);
     free(a);
