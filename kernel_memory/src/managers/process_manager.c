@@ -19,6 +19,7 @@
 static t_administrador_procesos administrador;
 extern t_log*logger;
 extern t_config* config; // CP3: para leer SEGMENT_MAX_SIZE en la traducción
+extern sem_t semRecibirProcesosNuevos;
 
 // CP3: traduce (pid, dir_logica) a dirección física global. Retorna:
 //   TRADUCCION_OK        y deja la dir global en *dir_global_out

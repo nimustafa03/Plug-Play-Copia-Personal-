@@ -15,6 +15,7 @@
 
 extern t_log*logger;
 extern t_config*config;
+extern sem_t semRecibirProcesosNuevos;
 static int socket_cpu = -1;
 
 static pthread_mutex_t mutex_envios_cpu = PTHREAD_MUTEX_INITIALIZER;
