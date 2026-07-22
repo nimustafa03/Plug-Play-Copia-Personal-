@@ -1,3 +1,8 @@
+#ifndef SEMAFOROS_KM
+#define SEMAFOROS_KM
 #include <semaphore.h>
 
-sem_t semRecibirProcesosNuevos;
+
+extern sem_t semRecibirProcesosNuevos;
+
+#endif
