@@ -112,6 +112,7 @@ void jnz(char* instruccion, t_registros* registro) {
         registro->pc++;
     }
 }
+
 // NOOP
 void noop(t_registros* registros) {
     registros->pc++;
@@ -246,11 +247,10 @@ int copy_mem(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_
 }
 
 // STDIN
-int syscall_stdin(char* instruccion, t_registros* registros, int fd_ks, uint32_t pid) {
+int syscall_stdin(char* instruccion, t_registros* registros, int fd_ks, int fd_km, uint32_t pid, t_contexto* contexto, t_log* logger_cpu) {
 
     char registro_direccion[32];
     char registro_tamanio[32];
-
     sscanf(instruccion, "%*s %31s %31s", registro_direccion, registro_tamanio);
 
     uint32_t direccion_logica = obtener_valor(registro_direccion, registros);
@@ -271,25 +271,49 @@ int syscall_stdin(char* instruccion, t_registros* registros, int fd_ks, uint32_t
         free(respuesta);
         return -1;
     }
-
     free(respuesta);
+
+    // Se envia contexto a KM
+
+    contexto->proximo_a_detener = true;
+
+    enviar_mensaje(fd_km, &codigo, sizeof(op_code));
+    log_info(logger_cpu, "Se envio MSG_STDIN");
+    enviar_mensaje(fd_km, &pid, sizeof(pid));
+    log_info(logger_cpu, "Se envio PID");
+
+    void* buffer = serializar_contexto(contexto, &size, logger_cpu);
+    if (buffer == NULL) {
+    log_info(logger_cpu, "Error al serializar el contexto");
+        return -1;
+    }
+
+    enviar_mensaje(fd_km, buffer, size);
+    op_code* ok = recibir_mensaje(fd_km, &size);
+    if (ok == NULL)
+        return -1;
+    if (*ok != MSG_OK) {
+        free(ok);
+        return -1;
+    }
+    free(ok);
+    free(buffer);
+
     registros->pc++;
     return 0;
 }
 
 // STDOUT
-int syscall_stdout(char* instruccion, t_registros* registros, int fd_ks, uint32_t pid) {
+int syscall_stdout(char* instruccion, t_registros* registros, int fd_ks, int fd_km, uint32_t pid, t_contexto* contexto, t_log* logger_cpu){
 
     char registro_direccion[32];
     char registro_tamanio[32];
-
     sscanf(instruccion, "%*s %31s %31s", registro_direccion, registro_tamanio);
 
     uint32_t direccion_logica = obtener_valor(registro_direccion, registros);
     uint32_t tamanio = obtener_valor(registro_tamanio, registros);
 
     op_code codigo = MSG_STDOUT;
-
     enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
     enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
     enviar_mensaje(fd_ks, &direccion_logica, sizeof(uint32_t)); 
@@ -305,6 +329,33 @@ int syscall_stdout(char* instruccion, t_registros* registros, int fd_ks, uint32_
         return -1;
     }
     free(respuesta);
+
+    // Se envia contexto a KM
+
+    contexto->proximo_a_detener = true;
+
+    enviar_mensaje(fd_km, &codigo, sizeof(op_code));
+    log_info(logger_cpu, "Se envio MSG_STDOUT");
+    enviar_mensaje(fd_km, &pid, sizeof(pid));
+    log_info(logger_cpu, "Se envio PID");
+
+    void* buffer = serializar_contexto(contexto, &size, logger_cpu);
+    if (buffer == NULL) {
+    log_info(logger_cpu, "Error al serializar el contexto");
+        return -1;
+    }
+
+    enviar_mensaje(fd_km, buffer, size);
+    op_code* ok = recibir_mensaje(fd_km, &size);
+    if (ok == NULL)
+        return -1;
+    if (*ok != MSG_OK) {
+        free(ok);
+        return -1;
+    }
+    free(ok);
+    free(buffer);
+
     registros->pc++;
     return 0;
 }
@@ -397,14 +448,21 @@ int syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log
     log_info(logger_cpu, "Se envio PID");
 
     int size;
-    void* buffer = serializar_contexto_inicial(contexto, &size, logger_cpu);
+    void* buffer = serializar_contexto(contexto, &size, logger_cpu);
     if (buffer == NULL) {
     log_info(logger_cpu, "Error al serializar el contexto");
         return -1;
     }
 
     enviar_mensaje(fd_km, buffer, size);
-    log_info(logger_cpu, "Se contexto. El valor del booleano es: %d", contexto->proximo_a_detener);
+    op_code* ok = recibir_mensaje(fd_km, &size);
+    if (ok == NULL)
+        return -1;
+    if (*ok != MSG_OK) {
+        free(ok);
+        return -1;
+    }
+    free(ok);
 
     free(buffer);
     return 0;
@@ -482,25 +540,42 @@ int syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros
 }
 
 // SLEEP
-// Bloquea hasta que KS responda (el proceso vuelve a READY y la CPU recién ahí recibe el MSG_OK que la destraba).
-void syscall_sleep(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu) {
+void syscall_sleep(char* instruccion, int fd_ks, int fd_km, uint32_t pid, t_registros* registros, t_contexto* contexto, t_log* logger_cpu) {
     char tiempo_str[32];
     sscanf(instruccion, "SLEEP %s", tiempo_str);
     int tiempo = atoi(tiempo_str);
 
+    // Envio de instruccion a KS
     op_code cod = MSG_SLEEP;
     enviar_mensaje(fd_ks, &cod, sizeof(op_code));
     enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
     enviar_mensaje(fd_ks, &tiempo, sizeof(int));
 
-    // bloqueante - espera hasta que KS confirme que el sleep terminó
+    // Se avisa a KM que se entro en SLEEP
+    enviar_mensaje(fd_km, &cod, sizeof(op_code));
+    log_info(logger_cpu, "Se envio MSG_SLEEP_A_KM");
+    enviar_mensaje(fd_km, &pid, sizeof(pid));
+    log_info(logger_cpu, "Se envio PID");
+
     int size;
-    op_code* ok = recibir_mensaje(fd_ks, &size);
+    void* buffer = serializar_contexto(contexto, &size, logger_cpu);
+    if (buffer == NULL) {
+    log_info(logger_cpu, "Error al serializar el contexto");
+        return -1;
+    }
+
+    enviar_mensaje(fd_km, buffer, size);
+    op_code* ok = recibir_mensaje(fd_km, &size);
+    if (ok == NULL)
+        return -1;
     if (*ok != MSG_OK) {
         free(ok);
-        return;
+        return -1;
     }
-    free(ok);
 
-    cpu->pc++;
+    free(ok);
+    free(buffer);
+
+    registros->pc++;
+    return 0;
 }

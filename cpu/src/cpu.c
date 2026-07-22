@@ -21,6 +21,7 @@
 #include <cpu.h>
 #include <utils/tipos.h>
 
+
 int conexionCPUKernelMemory (t_config* config, int identificador_cpu) {
     char *km_port = config_get_string_value(config, "KM_PORT");
     char *km_ip = config_get_string_value(config, "KM_IP");
@@ -80,6 +81,7 @@ int esperar_pid(int fd_ks, t_log* logger_cpu) {
 }
 int ms_conectados = 1;
 int fd_ms_agregados[3] = {-1, -1, -1};
+bool romper_ciclo = false;
 
 /*----------------------------- MAIN -----------------------------*/
 
@@ -134,7 +136,6 @@ int main(int argc, char* argv[]) {
         } else log_info(logger_cpu, "Conexion exitosa con Memory Stick");
 
     //WHILE PID
-    bool op_exit;
     while (1) {
         // CPU espera la llegada de un pid por parte del KS
         int pid = esperar_pid(fd_ks, logger_cpu);
@@ -171,13 +172,11 @@ int main(int argc, char* argv[]) {
                 exit(EXIT_FAILURE);
             }
 
-        t_contexto* contexto = deserializar_contexto_inicial(buffer,size,logger_cpu);
-        if (contexto == NULL) {
-            log_info(logger_cpu, "Error al recibir contexto");
+        t_contexto* contexto = deserializar_contexto(buffer,size,logger_cpu);
+        if (contexto == NULL) {log_info(logger_cpu, "Error al recibir contexto");
             break;
         }
-
-        printf("AX %d",contexto->registros.ax);
+        /*printf("AX %d",contexto->registros.ax);
         printf("BX %d",contexto->registros.bx);
         printf("CX %d",contexto->registros.cx);
         printf("DI %d",contexto->registros.di);
@@ -187,14 +186,13 @@ int main(int argc, char* argv[]) {
         printf("ECX %d",contexto->registros.ecx);
         printf("EDX %d",contexto->registros.edx);
         printf("PC %d",contexto->registros.pc);
-        printf("SI %d",contexto->registros.si);
-
+        printf("SI %d",contexto->registros.si);*/
 
         log_info(logger_cpu, "Inicia ejecucion de proceso: %d", pid);
 
         // WHILE CICLO DE INSTRUCCION
-        op_exit = false;
-        while (op_exit != true) {
+        romper_ciclo = false;
+        while (romper_ciclo != true) {
             // FETCH
             log_info(logger_cpu, "## PID: %u - FETCH - Program Counter: %d", pid, contexto->registros.pc);
             char* instruccion = fetch(fd_km, pid, &contexto->registros, logger_cpu);
@@ -225,9 +223,9 @@ int main(int argc, char* argv[]) {
                 free(instruccion);
                 break;
             } else if (operacion == 1)
-                op_exit = true;
+                romper_ciclo = true;
             else if (operacion == -2){
-                log_info(logger_cpu, "Operacion invalida en proceso %d", pid);
+                log_info(logger_cpu, "Operacion invalida en proceso %d.",pid);
                 exit(EXIT_FAILURE);
             }
 
@@ -247,10 +245,13 @@ int main(int argc, char* argv[]) {
                 exit(EXIT_FAILURE);
             }
             free(instruccion);
+            log_info(logger_cpu, "evalua EXIT");
+            if (romper_ciclo == true){
+                log_info(logger_cpu, "Concluyo proceso %d con EXIT", pid);
+                free(contexto);
+                break;
+            }
         }
-        if (op_exit == true)    
-            log_info(logger_cpu, "Concluyo proceso %d con EXIT", pid);
-        free(contexto);
     destruir_mapa_memory_sticks(mapa);
     }
 }

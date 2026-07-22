@@ -8,8 +8,8 @@
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
 #include <stdint.h>
-#include <utils/tipos.h>  // t_interrupcion viene de acá
-
+#include <utils/tipos.h>
+#include <utils/serializacion.h>
 
 // OPCODES
 typedef enum {
@@ -51,11 +51,6 @@ typedef struct {
     uint32_t pc;
 } t_fetch;
 typedef struct {
-    uint32_t id_segmento;
-    uint32_t base;
-    uint32_t tamanio;
-} t_segmento;
-typedef struct {
     char* ip;
     char* puerto;
     uint32_t base_global;
@@ -78,7 +73,7 @@ int memory_management_unit(uint32_t direccion_logica, uint32_t tamanio_acceso, t
 void* lectura_ms(uint32_t direccion_global,uint32_t tamanio_lectura,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3]);
 int escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio_escritura,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3]);
 
-// RECEPCION DE INFORMACION
+// MANEJO DE INFORMACION
 t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu);
 void destruir_mapa_memory_sticks(t_mapa_memory_sticks_cpu* mapa);
 int conectar_memory_sticks_faltantes(t_mapa_memory_sticks_cpu* mapa,t_log* logger_cpu);
@@ -88,7 +83,9 @@ extern int fd_ms_agregados[3];
 int buscar_indice_ms(uint32_t direccion_global,t_mapa_memory_sticks_cpu* mapa);
 int obtener_fd_ms(uint32_t indice_ms,int fd_ms,int fd_ms_agregados[3]);
 void escribir_en_buffer(void* buffer,uint32_t* desplazamiento,const void* dato,uint32_t tamanio);
-void* serializar_contexto_inicial(t_contexto* contexto,int* tamanio_buffer, t_log* logger_cpu);
+void* serializar_contexto(t_contexto* contexto,int* tamanio_buffer, t_log* logger_cpu);
+t_contexto* deserializar_contexto(void* buffer,int tamanio_buffer, t_log* logger_cpu);
+void enviar_contexto(t_contexto* contexto, int fd_km, t_log* logger_cpu);
 
 // OPERACIONES CON REGISTROS
 uint32_t obtener_valor(char* posicion, t_registros* registro);
@@ -110,12 +107,11 @@ void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint
 int syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
 int syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
 int syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
-void syscall_sleep(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
-int syscall_stdin(char* instruccion,t_registros* registro, int fd_ks, uint32_t pid);
-int syscall_stdout(char* instruccion,t_registros* registro, int fd_ks, uint32_t pid);
+void syscall_sleep(char* instruccion, int fd_ks, int fd_km, uint32_t pid, t_registros* cpu, t_contexto* contexto, t_log* logger_cpu);
+int syscall_stdin(char* instruccion, t_registros* registros, int fd_ks, int fd_km, uint32_t pid, t_contexto* contexto, t_log* logger_cpu);
+int syscall_stdout(char* instruccion,t_registros* registro, int fd_ks, int fd_km, uint32_t pid, t_contexto* contexto, t_log* logger_cpu);
 int syscall_mem_alloc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid);
 int syscall_mem_free(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid);
 int syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log* logger_cpu);
-t_contexto* deserializar_contexto_inicial(void* buffer,int tamanio_buffer, t_log* logger_cpu);
 
 #endif
