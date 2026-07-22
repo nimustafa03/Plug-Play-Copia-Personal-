@@ -244,21 +244,12 @@ bool inicializar_proceso(uint32_t pid, int fd_cpu) {
   // free(args);
 
   log_info(logger, "Proceso creado");
-
-  int tamanio_buffer =0 ;
-  void*buffer = serializar_contexto_inicial(proceso->contexto, &tamanio_buffer);
-
-  if (buffer==NULL)
-  {
-    log_error(logger, "## ERROR: Ha ocurrido un error al serializar el contexto inicial.");
-  }
   
-  log_info(logger, "se creo el contexto y se va a enviar contexto");
+  log_info(logger, "Se va a enviar contexto");
 
-  enviar_contexto_ejecucion_a_cpu(fd_cpu, buffer, tamanio_buffer);
+  enviar_contexto_ejecucion_a_cpu(fd_cpu, proceso->contexto);
   log_info(logger, "se envio contexto");
 
-  free(buffer);
   free(key);
   return true;
 }

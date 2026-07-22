@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include "../src/managers/memory_manager.h"
 #include "../../utils/src/utils/conexiones.h"
+#include "../../utils/src/utils/serializacion.h"
 #include "../src/managers/process_manager.h"
 
 extern t_log*logger;
@@ -26,86 +27,12 @@ uint32_t recibir_pid(){
     return *pid;
 }
 
-t_contexto* deserializar_contexto_inicial(void* buffer,int tamanio_buffer, t_log* logger_km) {
-    int tamanio_esperado =
-        sizeof(t_registros) +
-        sizeof(int);
-    
-    log_info(logger_km,"Tamanio esperado: %d", tamanio_esperado);
-    
-
-    if (buffer == NULL) {
-        log_info(logger_km, "Buffer recibido NULL");
-        return NULL;
-    }
-    if (tamanio_buffer != tamanio_esperado){
-        log_info(logger_km, "Problemas con el  tamanio");
-        return NULL;
-    }
-    
-    t_contexto* contexto = malloc(sizeof(t_contexto));
-    if (contexto == NULL) {
-        log_info(logger_km, "No se pudo asignar memoria");
-        return NULL;
-    }
-    
-    int desplazamiento = 0;
-
-    log_info(logger_km, "Se copiara contexto...");
-
-    memcpy(
-        &contexto->registros,
-        (char*) buffer + desplazamiento,
-        sizeof(t_registros)
-    );
-
-    /*printf("AX %d",contexto->registros.ax);
-    printf("BX %d",contexto->registros.bx);
-    printf("CX %d",contexto->registros.cx);
-    printf("DI %d",contexto->registros.di);
-    printf("DX %d",contexto->registros.dx);
-    printf("EAX %d",contexto->registros.eax);
-    printf("EBX %d",contexto->registros.ebx);
-    printf("ECX %d",contexto->registros.ecx);
-    printf("EDX %d",contexto->registros.edx);
-    printf("PC %d",contexto->registros.pc);
-    printf("SI %d",contexto->registros.si);*/
-    
-
-    desplazamiento += sizeof(t_registros);
-    int cantidad_segmentos;
-    log_info(logger_km,"Valos desplazamiento: %d", desplazamiento);
-
-    memcpy(
-        &cantidad_segmentos,
-        (char*) buffer + desplazamiento,
-        sizeof(int)
-    );
-    log_info(logger_km,"ok");
-
-    contexto->tabla_segmentos = list_create();
-    if (contexto->tabla_segmentos == NULL) {
-        free(contexto);
-        log_info(logger_km, "Error al generar la lista de segmentos en el contexto");
-        return NULL;
-    }
-    desplazamiento += sizeof(contexto->tabla_segmentos);
-    memcpy(
-        &contexto->proximo_a_detener,
-        (char*) buffer+desplazamiento,
-        sizeof(bool)
-    );
-    log_info(logger_km,"Contexto recibido: PC=%u - Segmentos=%d - Próximo a detener=%d", contexto->registros.pc, list_size(contexto->tabla_segmentos),contexto->proximo_a_detener);
-
-    free(buffer);
-    return contexto;
-}
 
 t_contexto *recibir_contexto(){
     int size;
     t_contexto*contexto;
     void*buffer = recibir_mensaje(socket_cpu, &size);
-    contexto = deserializar_contexto_inicial(buffer, size,logger);
+    contexto = deserializar_contexto(buffer, size,logger);
     return contexto;
 }
 
@@ -164,21 +91,6 @@ void atender_cpu(int nuevo_socket_cpu){
     atender_mensaje_cpu();
     
     return;
-}
-
-static void escribir_en_buffer(
-    void* buffer,
-    uint32_t* desplazamiento,
-    const void* dato,
-    uint32_t tamanio
-) {
-    memcpy(
-        (uint8_t*) buffer + *desplazamiento,
-        dato,
-        tamanio
-    );
-
-    *desplazamiento += tamanio;
 }
 
 
@@ -303,49 +215,7 @@ static void* serializar_mapa_memory_sticks(
     return buffer;
 }
 
-void* serializar_contexto_inicial(
-    t_contexto* contexto,
-    int* tamanio_buffer
-) {
-    if(contexto == NULL) {
-        log_warning(
-            logger,
-            "Contexto vacío al momento de serializar contexto inicial."
-        );
-        return NULL;
-    }
 
-    int cantidad_segmentos = 0;
-
-    *tamanio_buffer =
-        sizeof(t_registros) + sizeof(int);
-
-    void* buffer = malloc(*tamanio_buffer);
-
-    if (buffer == NULL) {
-        return NULL;
-    }
-
-    uint32_t desplazamiento = 0;
-
-    escribir_en_buffer(
-        buffer,
-        &desplazamiento,
-        &contexto->registros,
-        sizeof(t_registros)
-    );
-    log_info(logger, "Registros guardados: %d", contexto->registros.pc);
-
-    escribir_en_buffer(
-        buffer,
-        &desplazamiento,
-        &cantidad_segmentos,
-        sizeof(int)
-    );
-    log_info(logger, "Segmentos guardados: %d", cantidad_segmentos);
-
-    return buffer;
-}
 
 bool cpu_esta_conectada(void) {
     return socket_cpu != -1;
@@ -400,8 +270,16 @@ bool notificar_mapa_memory_sticks_a_cpu(void) {
     return true;
 }
 
-void enviar_contexto_ejecucion_a_cpu(int fd_cpu, void*contexto, int tamanio_buffer){
-    enviar_mensaje(fd_cpu, contexto, tamanio_buffer);
+void enviar_contexto_ejecucion_a_cpu(int fd_cpu, t_contexto*contexto){
+    int tamanio_buffer;
+    void*buffer = serializar_contexto(contexto,&tamanio_buffer,logger);
+    if (buffer==NULL)
+    {
+    log_error(logger, "## ERROR: Ha ocurrido un error al serializar el contexto inicial.");
+    }
+    enviar_mensaje(fd_cpu, buffer, tamanio_buffer);
+    free(buffer);
+    return;
 }
 
 void enviar_confirmacion_a_CPU(int fd_cpu, bool OKERROR){

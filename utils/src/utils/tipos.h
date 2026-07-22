@@ -5,6 +5,12 @@
 #include <commons/collections/list.h>
 
 typedef struct {
+    uint32_t id_segmento;
+    uint32_t base;
+    uint32_t tamanio;
+} t_segmento;
+
+typedef struct {
     uint32_t pid;
     int motivo;
 } t_interrupcion;

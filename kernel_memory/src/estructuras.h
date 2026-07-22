@@ -7,11 +7,7 @@
 #include <commons/collections/dictionary.h>
 #include "../../utils/src/utils/tipos.h"
 
-typedef struct {
-    uint32_t id_segmento;
-    uint32_t base;
-    uint32_t tamanio;
-} t_segmento;
+
 
 typedef struct {
     uint32_t base;
