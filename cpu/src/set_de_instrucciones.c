@@ -290,9 +290,12 @@ int syscall_stdin(char* instruccion, t_registros* registros, int fd_ks, int fd_k
 
     enviar_mensaje(fd_km, buffer, size);
     op_code* ok = recibir_mensaje(fd_km, &size);
-    if (ok == NULL)
+    if (ok == NULL){
+        log_info(logger_cpu, "Recibio NULL");
         return -1;
+    }
     if (*ok != MSG_OK) {
+        log_info(logger_cpu, "Se recibio un mensaje distinto al esperado: %d", *ok);
         free(ok);
         return -1;
     }
@@ -347,9 +350,12 @@ int syscall_stdout(char* instruccion, t_registros* registros, int fd_ks, int fd_
 
     enviar_mensaje(fd_km, buffer, size);
     op_code* ok = recibir_mensaje(fd_km, &size);
-    if (ok == NULL)
+    if (ok == NULL){
+        log_info(logger_cpu, "Recibio NULL");
         return -1;
+    }
     if (*ok != MSG_OK) {
+        log_info(logger_cpu, "Se recibio un mensaje distinto al esperado: %d", *ok);
         free(ok);
         return -1;
     }
@@ -456,9 +462,12 @@ int syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log
 
     enviar_mensaje(fd_km, buffer, size);
     op_code* ok = recibir_mensaje(fd_km, &size);
-    if (ok == NULL)
+    if (ok == NULL){
+        log_info(logger_cpu, "Recibio NULL");
         return -1;
+    }
     if (*ok != MSG_OK) {
+        log_info(logger_cpu, "Se recibio un mensaje distinto al esperado: %d", *ok);
         free(ok);
         return -1;
     }
@@ -540,7 +549,7 @@ int syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros
 }
 
 // SLEEP
-void syscall_sleep(char* instruccion, int fd_ks, int fd_km, uint32_t pid, t_registros* registros, t_contexto* contexto, t_log* logger_cpu) {
+int syscall_sleep(char* instruccion, int fd_ks, int fd_km, uint32_t pid, t_registros* registros, t_contexto* contexto, t_log* logger_cpu) {
     char tiempo_str[32];
     sscanf(instruccion, "SLEEP %s", tiempo_str);
     int tiempo = atoi(tiempo_str);
@@ -566,9 +575,12 @@ void syscall_sleep(char* instruccion, int fd_ks, int fd_km, uint32_t pid, t_regi
 
     enviar_mensaje(fd_km, buffer, size);
     op_code* ok = recibir_mensaje(fd_km, &size);
-    if (ok == NULL)
+    if (ok == NULL){
+        log_info(logger_cpu, "Recibio NULL");
         return -1;
+    }
     if (*ok != MSG_OK) {
+        log_info(logger_cpu, "Se recibio un mensaje distinto al esperado: %d", *ok);
         free(ok);
         return -1;
     }

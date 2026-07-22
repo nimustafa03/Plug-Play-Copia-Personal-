@@ -148,7 +148,10 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             syscall_init_proc(instruccion, registros, fd_ks, pid); 
             break;
         case OP_SLEEP:
-            syscall_sleep(instruccion, fd_ks, fd_km, pid, registros, contexto, logger_cpu); 
+            int sys_sleep = syscall_sleep(instruccion, fd_ks, fd_km, pid, registros, contexto, logger_cpu); 
+            if (sys_sleep == -1){
+                exit(EXIT_FAILURE);
+            }
             romper_ciclo = true;
             break;
         case OP_MEM_ALLOC:
@@ -176,17 +179,15 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             }; 
             break;
         case OP_STDIN:
-            int comprobacion_stdin = syscall_stdin(instruccion, registros, fd_ks, fd_km, pid, contexto, logger_cpu);
-            if (comprobacion_stdin == -1){
-                log_info(logger_cpu, "ERROR - STDIN devolvio -1");
+            int sys_stdin = syscall_stdin(instruccion, registros, fd_ks, fd_km, pid, contexto, logger_cpu);
+            if (sys_stdin == -1){
                 exit(EXIT_FAILURE);
             }
             romper_ciclo = true;
             break;
         case OP_STDOUT:
-            int comprobacion_stdout = syscall_stdout(instruccion, registros, fd_ks, fd_km, pid, contexto, logger_cpu);
-            if (comprobacion_stdout == -1){
-                log_info(logger_cpu, "ERROR - STDOUT devolvio -1");
+            int sys_stdout = syscall_stdout(instruccion, registros, fd_ks, fd_km, pid, contexto, logger_cpu);
+            if (sys_stdout == -1){
                 exit(EXIT_FAILURE);
             }
             romper_ciclo = true;

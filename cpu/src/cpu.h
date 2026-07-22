@@ -107,7 +107,7 @@ void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint
 int syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
 int syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
 int syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
-void syscall_sleep(char* instruccion, int fd_ks, int fd_km, uint32_t pid, t_registros* cpu, t_contexto* contexto, t_log* logger_cpu);
+int syscall_sleep(char* instruccion, int fd_ks, int fd_km, uint32_t pid, t_registros* cpu, t_contexto* contexto, t_log* logger_cpu);
 int syscall_stdin(char* instruccion, t_registros* registros, int fd_ks, int fd_km, uint32_t pid, t_contexto* contexto, t_log* logger_cpu);
 int syscall_stdout(char* instruccion,t_registros* registro, int fd_ks, int fd_km, uint32_t pid, t_contexto* contexto, t_log* logger_cpu);
 int syscall_mem_alloc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid);
