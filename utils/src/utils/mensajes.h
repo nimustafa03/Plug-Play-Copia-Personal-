@@ -35,7 +35,7 @@ typedef enum {
     // ── CP2 ──────────────────────────────────────────────────
     MSG_FETCH_CPU = 12, // CPU le pide instruccion a KM
     MSG_CONTEXTO_EJECUCION_KM = 13, // KM le envía contexto a CPU
-    MSG_CONTEXTO_EJECUCION_CPU = 22,
+    MSG_CONTEXTO_EJECUCION_CPU = 22, // CPU le envía contexto de ejecucion a KM
     MSG_INIT_CPU = 14, // CPU ordena a KM crear un proceso
     MSG_REQUEST_PID = 15, // CPU pide PID a KS
     MSG_INTERRUPT = 16, // interrupciones hacia CPU
@@ -70,6 +70,7 @@ typedef enum {
     MSG_SWAP_WRITE = 37, // KM -> SWAP, escribir un bloque
     MSG_SWAP_READ  = 38, // KM -> SWAP, leer un bloque
     // 39 usado en MSG_ACTUALIZAR_MEMORY_STICK
+    MSG_EXIT_CPU = 40 // CPU Le avisa a KM que va a cerrar un proceso.
     
 } op_code;
 
