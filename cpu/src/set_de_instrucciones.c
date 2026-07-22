@@ -376,15 +376,37 @@ int syscall_mem_free(char* instruccion, t_registros* registros, int fd_ks, uint3
 }
 
 // EXIT
-int syscall_exit(int fd_ks, int fd_km, bool proximo_a_detener, uint32_t pid){
+int syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log* logger_cpu){
+    if (contexto == NULL) {
+        log_info(logger_cpu, "Error al utilizar contexto en instruccion: EXIT");
+        return -1;
+    }
     // Avisa a KS que el proceso finalizo
     op_code cod = MSG_DONE;
     enviar_mensaje(fd_ks, &cod, sizeof(op_code));
-    enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
+    enviar_mensaje(fd_ks, &pid, sizeof(pid));
 
     // Se envia contexto final a KM
 
-    return 1;
+    contexto->proximo_a_detener = true;
+
+    op_code codigo = MSG_EXIT_CPU;
+    enviar_mensaje(fd_km, &codigo, sizeof(op_code));
+    log_info(logger_cpu, "Se envio MSG_EXIT_CPU");
+    enviar_mensaje(fd_km, &pid, sizeof(pid));
+    log_info(logger_cpu, "Se envio PID");
+
+    int size;
+    void* buffer = serializar_contexto_inicial(contexto, &size, logger_cpu);
+    if (buffer == NULL) {
+    log_info(logger_cpu, "Error al serializar el contexto");
+        return -1;
+    }
+    enviar_mensaje(fd_km, buffer, size);
+    log_info(logger_cpu, "Se contexto. El valor del booleano es: %d", contexto->proximo_a_detener);
+
+    free(buffer);
+    return 0;
 }
 
 // MUTEX_CREATE

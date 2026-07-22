@@ -70,7 +70,7 @@ typedef struct {
 // CICLO DE INSTRUCCION
 char* fetch(int conexion_servidor,uint32_t pid, t_registros* cpu, t_log* logger_cpu);
 operacion decode(char* instruccion);
-int execute(operacion codigo, char* instruccion, t_registros* cpu, int fd_ks, int fd_km, int fd_ms, uint32_t pid, t_list* tabla_segmentos, t_log* logger_cpu,t_mapa_memory_sticks_cpu* mapa,int fd_ms_agregados[3],bool proximo_a_detener);
+int execute(operacion codigo, char* instruccion, t_registros* cpu, int fd_ks, int fd_km, int fd_ms, uint32_t pid, t_list* tabla_segmentos, t_log* logger_cpu,t_mapa_memory_sticks_cpu* mapa,int fd_ms_agregados[3], t_contexto* contexto);
 int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto, uint32_t pid, t_log* logger_cpu);
 
 // MMU
@@ -87,6 +87,8 @@ extern int ms_conectados;
 extern int fd_ms_agregados[3];
 int buscar_indice_ms(uint32_t direccion_global,t_mapa_memory_sticks_cpu* mapa);
 int obtener_fd_ms(uint32_t indice_ms,int fd_ms,int fd_ms_agregados[3]);
+void escribir_en_buffer(void* buffer,uint32_t* desplazamiento,const void* dato,uint32_t tamanio);
+void* serializar_contexto_inicial(t_contexto* contexto,int* tamanio_buffer, t_log* logger_cpu);
 
 // OPERACIONES CON REGISTROS
 uint32_t obtener_valor(char* posicion, t_registros* registro);
@@ -113,7 +115,7 @@ int syscall_stdin(char* instruccion,t_registros* registro, int fd_ks, uint32_t p
 int syscall_stdout(char* instruccion,t_registros* registro, int fd_ks, uint32_t pid);
 int syscall_mem_alloc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid);
 int syscall_mem_free(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid);
-int syscall_exit(int fd_ks, int fd_km, bool proximo_a_detener, uint32_t pid);
+int syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log* logger_cpu);
 t_contexto* deserializar_contexto_inicial(void* buffer,int tamanio_buffer, t_log* logger_cpu);
 
 #endif
