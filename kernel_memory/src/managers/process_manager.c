@@ -189,7 +189,7 @@ void*manejar_proceso(void*arg){
         free(proxima_instruccion);
       } 
     }
-    if (*codigo == MSG_INTERRUPT) {
+    if (*codigo == MSG_INTERRUPT || *codigo == MSG_EXIT_CPU) {
       log_info(logger, "Interrumpiendo proceso...");
       interrumpido = true;
       }
