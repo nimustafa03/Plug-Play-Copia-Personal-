@@ -204,8 +204,8 @@ void*manejar_proceso(void*arg){
   free(args);
   int*returnval = malloc(sizeof(1));
 
-  listo_para_recibir = true;
   log_info(logger,"Reactivando recepción de procesos.");
+  listo_para_recibir = true;
   pthread_cond_signal(&condicion_recibir_proceso); // NICO M: Esto sirve para que volvamos a aceptar pedidos de iniciar nuevos procesos.
   pthread_exit(returnval);
 }

@@ -89,9 +89,12 @@ t_contexto* deserializar_contexto_inicial(void* buffer,int tamanio_buffer, t_log
         log_info(logger_km, "Error al generar la lista de segmentos en el contexto");
         return NULL;
     }
-
-    contexto->proximo_a_detener = false;
-
+    desplazamiento += sizeof(contexto->tabla_segmentos);
+    memcpy(
+        &contexto->proximo_a_detener,
+        (char*) buffer+desplazamiento,
+        sizeof(bool);
+    )
     log_info(logger_km,"Contexto recibido: PC=%u - Segmentos=%d - Próximo a detener=%d", contexto->registros.pc, list_size(contexto->tabla_segmentos),contexto->proximo_a_detener);
 
     free(buffer);
@@ -124,6 +127,7 @@ void atender_mensaje_cpu(){
             while(!listo_para_recibir){
                 log_info(logger, "Bloqueando recepcion de mensajes...");
                 pthread_cond_wait(&condicion_recibir_proceso, &mutex_recibir_procesos);
+                log_info(logger, "Despertando rececpión de procesos...");
             }
             pthread_mutex_unlock(&mutex_recibir_procesos);
         }
