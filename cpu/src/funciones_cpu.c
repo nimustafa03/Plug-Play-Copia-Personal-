@@ -247,18 +247,25 @@ int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto, uint32_t pid,
         op_code avisar_km = MSG_INTERRUPT;
         enviar_mensaje(fd_km, &avisar_km, sizeof(op_code));
         enviar_mensaje(fd_km, &pid, sizeof(uint32_t));
-        enviar_mensaje(fd_km, contexto, sizeof(t_contexto));
+        int size;
+        void* buffer = serializar_contexto_inicial(contexto, &size, logger_cpu);
+        if (buffer == NULL) {
+        log_info(logger_cpu, "Error al serializar el contexto");
+            return -1;
+        }
+
+        enviar_mensaje(fd_km, buffer, size);
+        log_info(logger_cpu, "Se envio el contexto a KM por interrupcion: %u", pid_int);
+        free(buffer);
 
         int size_respuesta;
         op_code* respuesta_km = recibir_mensaje(fd_km, &size_respuesta);
-
         if (respuesta_km == NULL) 
             return -1;
         if (size_respuesta != sizeof(op_code)) {
             free(respuesta_km);
             return -1;
         }
-        
         if (*respuesta_km == MSG_ERROR){
             free(respuesta_km);
             return -1;
