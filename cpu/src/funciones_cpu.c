@@ -148,12 +148,7 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             syscall_init_proc(instruccion, registros, fd_ks, pid); 
             break;
         case OP_SLEEP:
-            int sys_sleep = syscall_sleep(instruccion, fd_ks, fd_km, pid, registros, contexto, logger_cpu); 
-            if (sys_sleep == -1){
-                exit(EXIT_FAILURE);
-            }
-            romper_ciclo = true;
-            break;
+            return syscall_sleep(instruccion, fd_ks, fd_km, pid, registros, contexto, logger_cpu); // CP3: 2 = bloqueo IO
         case OP_MEM_ALLOC:
             switch (syscall_mem_alloc(instruccion, registros, fd_ks, pid)){
                 case 1:
@@ -179,19 +174,9 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             }; 
             break;
         case OP_STDIN:
-            int sys_stdin = syscall_stdin(instruccion, registros, fd_ks, fd_km, pid, contexto, logger_cpu);
-            if (sys_stdin == -1){
-                exit(EXIT_FAILURE);
-            }
-            romper_ciclo = true;
-            break;
+            return syscall_stdin(instruccion, registros, fd_ks, fd_km, pid, contexto, logger_cpu); // CP3: 2 = bloqueo IO
         case OP_STDOUT:
-            int sys_stdout = syscall_stdout(instruccion, registros, fd_ks, fd_km, pid, contexto, logger_cpu);
-            if (sys_stdout == -1){
-                exit(EXIT_FAILURE);
-            }
-            romper_ciclo = true;
-            break;
+            return syscall_stdout(instruccion, registros, fd_ks, fd_km, pid, contexto, logger_cpu); // CP3: 2 = bloqueo IO
         case OP_EXIT:
             int sys_exit = syscall_exit(fd_km, fd_ks, contexto, pid, logger_cpu);
             if (sys_exit == -1){

@@ -110,6 +110,7 @@ int syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros
 int syscall_sleep(char* instruccion, int fd_ks, int fd_km, uint32_t pid, t_registros* cpu, t_contexto* contexto, t_log* logger_cpu);
 int syscall_stdin(char* instruccion, t_registros* registros, int fd_ks, int fd_km, uint32_t pid, t_contexto* contexto, t_log* logger_cpu);
 int syscall_stdout(char* instruccion,t_registros* registro, int fd_ks, int fd_km, uint32_t pid, t_contexto* contexto, t_log* logger_cpu);
+int guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* logger_cpu); // CP3
 int syscall_mem_alloc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid);
 int syscall_mem_free(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid);
 int syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log* logger_cpu);

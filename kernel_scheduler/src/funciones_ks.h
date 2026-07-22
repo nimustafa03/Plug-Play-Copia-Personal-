@@ -112,6 +112,7 @@ pthread_mutex_t* obtener_mutex_cpu(int fd_cpu); // NULL si no está registrada
 void registrar_conexion_cpu(int fd_cpu); // llamar al conectarse una CPU
 void liberar_conexion_cpu(int fd_cpu); // llamar al desconectarse
 void enviar_ok_cpu(int fd_cpu, op_code codigo); // respuesta simple (MSG_OK/MSG_ERROR), atómica
+void liberar_cpu(int fd_cpu); // CP3: marca la CPU como libre (bloqueo por IO)
 void enviar_interrupcion_cpu(int fd_cpu, uint32_t pid, int motivo); // MSG_INTERRUPT + t_interrupcion, atómico
 
 void inicializarListasProcesos();
