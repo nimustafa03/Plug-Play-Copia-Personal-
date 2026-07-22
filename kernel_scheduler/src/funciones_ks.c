@@ -824,6 +824,18 @@ void enviar_interrupcion_cpu(int fd_cpu, uint32_t pid, int motivo) {
     if (m) pthread_mutex_unlock(m);
 }
 
+// CP3: marca la CPU como libre para que el corto plazo despache otro proceso.
+// Se usa cuando un proceso se bloquea por IO (SLEEP/STDIN/STDOUT): la CPU no
+// espera a que termine la IO, queda disponible de inmediato.
+void liberar_cpu(int fd_cpu) {
+    pthread_mutex_lock(&mutex_listas);
+    int* p = malloc(sizeof(int));
+    *p = fd_cpu;
+    list_add(listaCPUsLibres, p);
+    pthread_mutex_unlock(&mutex_listas);
+    sem_post(&sem_hay_cpu_libre);
+}
+
 void atender_cpu_ks(int fd_cpu) {
     // DEBUG: frontera de funcion
     log_debug(logger_ks, "[DBG][atender_cpu_ks] ENTRADA - fd_cpu=%d", fd_cpu);
@@ -1018,6 +1030,7 @@ void atender_cpu_ks(int fd_cpu) {
                 pthread_t thread_sleep;
                 pthread_create(&thread_sleep, NULL, atender_sleep_ks, args_sleep);
                 pthread_detach(thread_sleep);
+                liberar_cpu(fd_cpu); // CP3: la CPU queda libre para otro proceso
                 break;
             }
             case MSG_MEM_ALLOC: {
@@ -1086,6 +1099,7 @@ void atender_cpu_ks(int fd_cpu) {
                 free(pid_ptr); free(dir_ptr); free(tam_ptr);
 
                 pthread_t t; pthread_create(&t, NULL, atender_stdin_ks, a); pthread_detach(t);
+                liberar_cpu(fd_cpu); // CP3
                 break;
             }
             case MSG_STDOUT: {
@@ -1105,6 +1119,7 @@ void atender_cpu_ks(int fd_cpu) {
                 free(pid_ptr); free(dir_ptr); free(tam_ptr);
 
                 pthread_t t; pthread_create(&t, NULL, atender_stdout_ks, a); pthread_detach(t);
+                liberar_cpu(fd_cpu); // CP3
                 break;
             }
             default:
@@ -1274,8 +1289,7 @@ void* atender_sleep_ks(void* arg) {
 
     // recién ahora destrabamos a la CPU que pidió el sleep
     // DEBUG: serializacion
-    log_debug(logger_ks, "[DBG][atender_sleep_ks] pid=%d - envío MSG_OK a fd_cpu=%d", args->pid, args->fd_cpu);
-    enviar_ok_cpu(args->fd_cpu, MSG_OK); // CP3: envío atómico
+    // CP3: la CPU ya se liberó al recibir la syscall; NO se le manda MSG_OK.
 
     // DEBUG: heap
     log_debug(logger_ks, "[DBG][atender_sleep_ks] SALIDA - free(args=%p)", (void*)args);
@@ -1597,8 +1611,7 @@ void* atender_stdin_ks(void* arg) {
     // destrabamos a la CPU (ver nota del modelo de bloqueo: en SEG_FAULT igual
     // la liberamos para que no quede colgada; el proceso ya fue finalizado)
     // DEBUG: serializacion
-    log_debug(logger_ks, "[DBG][atender_stdin_ks] pid=%d - envío MSG_OK a fd_cpu=%d", a->pid, a->fd_cpu);
-    enviar_ok_cpu(a->fd_cpu, MSG_OK); // CP3: envío atómico
+    // CP3: la CPU ya se liberó al recibir la syscall; NO se le manda MSG_OK.
     // DEBUG: heap
     log_debug(logger_ks, "[DBG][atender_stdin_ks] SALIDA - free(args=%p)", (void*)a);
     free(a);
@@ -1648,7 +1661,7 @@ void* atender_stdout_ks(void* arg) {
 
     if (resultado == MSG_SEG_FAULT) {
         finalizar_proceso(proceso, "SEG_FAULT");
-        enviar_ok_cpu(a->fd_cpu, MSG_OK); // CP3: envío atómico
+        // CP3: la CPU ya se liberó al recibir la syscall; NO se le manda MSG_OK.
         free(a);
         return NULL;
     }
@@ -1684,8 +1697,7 @@ void* atender_stdout_ks(void* arg) {
     finalizar_io_y_desbloquear(proceso);
 
     // DEBUG: serializacion
-    log_debug(logger_ks, "[DBG][atender_stdout_ks] pid=%d - envío MSG_OK a fd_cpu=%d", a->pid, a->fd_cpu);
-    enviar_ok_cpu(a->fd_cpu, MSG_OK); // CP3: envío atómico
+    // CP3: la CPU ya se liberó al recibir la syscall; NO se le manda MSG_OK.
     // DEBUG: heap
     log_debug(logger_ks, "[DBG][atender_stdout_ks] SALIDA - free(args=%p)", (void*)a);
     free(a);

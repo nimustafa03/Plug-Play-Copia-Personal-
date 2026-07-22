@@ -224,6 +224,12 @@ int main(int argc, char* argv[]) {
                 break;
             } else if (operacion == 1)
                 romper_ciclo = true;
+            else if (operacion == 2){                            // CP3: syscall de IO -> desalojo voluntario
+                log_info(logger_cpu, "## PID: %u - Bloqueado por IO, se libera la CPU", pid);
+                free(instruccion);
+                free(contexto);                                  // se retoma con el contexto guardado en KM
+                break;                                           // vuelve a esperar_pid -> CPU libre
+            }
             else if (operacion == -2){
                 log_info(logger_cpu, "Operacion invalida en proceso %d.",pid);
                 exit(EXIT_FAILURE);
