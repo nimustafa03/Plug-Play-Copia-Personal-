@@ -9,7 +9,7 @@
 #include <string.h>
 #include "cpu.h"
 #include <utils/tipos.h>
-#include <sys/socket.h> // Para el recv() que tiene que recibir el MSG_DONTWAIT de esa biblioteca
+#include <sys/socket.h> 
 #include <errno.h>
 
 #define MMU_ERROR (-1)
@@ -835,19 +835,6 @@ t_contexto* deserializar_contexto_inicial(void* buffer,int tamanio_buffer, t_log
         (char*) buffer + desplazamiento,
         sizeof(t_registros)
     );
-
-    /*printf("AX %d",contexto->registros.ax);
-    printf("BX %d",contexto->registros.bx);
-    printf("CX %d",contexto->registros.cx);
-    printf("DI %d",contexto->registros.di);
-    printf("DX %d",contexto->registros.dx);
-    printf("EAX %d",contexto->registros.eax);
-    printf("EBX %d",contexto->registros.ebx);
-    printf("ECX %d",contexto->registros.ecx);
-    printf("EDX %d",contexto->registros.edx);
-    printf("PC %d",contexto->registros.pc);
-    printf("SI %d",contexto->registros.si);*/
-    
 
     desplazamiento += sizeof(t_registros);
     int cantidad_segmentos;
