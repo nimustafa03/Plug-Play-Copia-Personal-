@@ -206,9 +206,8 @@ int main(int argc, char* argv[]) {
             // DECODE
             operacion codigo = decode(instruccion);
             if (codigo == OP_INVALID) {
-                log_info(logger_cpu,"PID %u - Instrucción inválida: %s",pid,instruccion);
+                log_info(logger_cpu,"PID %u - Instrucción INVALIDA: %s",pid,instruccion);
                 exit(EXIT_FAILURE);
-                break;
             }
 
             // EXECUTE
