@@ -192,6 +192,7 @@ void*manejar_proceso(void*arg){
     if (*codigo == MSG_INTERRUPT) {
       log_info(logger, "Interrumpiendo proceso...");
       interrumpido = true;
+      }
   }
   if (proceso->contexto->proximo_a_detener) {
     log_info(logger, "## PID: %d - El proceso ha concluido y será eliminado.", proceso -> pid);
