@@ -237,12 +237,12 @@ int main(int argc, char* argv[]) {
                 log_info(logger_cpu, "## Interrupcion recibida");
                 free(instruccion);
                 break;
-            }
-            else if (atender == -1){
+            } else if (atender == 1){
+                log_info(logger_cpu, "No llego interrupcion");
+            } else if (atender == -1){
                 log_info(logger_cpu, "Error (-1) en la atencion de interrupcion del proceso %d", pid);
                 exit(EXIT_FAILURE);
-            }
-            else if (atender == -2){
+            } else if (atender == -2){
                 log_info(logger_cpu, "Error (-2) en la atencion de interrupcion del proceso %d", pid);
                 exit(EXIT_FAILURE);
             }

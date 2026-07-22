@@ -402,6 +402,7 @@ int syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log
     log_info(logger_cpu, "Error al serializar el contexto");
         return -1;
     }
+
     enviar_mensaje(fd_km, buffer, size);
     log_info(logger_cpu, "Se contexto. El valor del booleano es: %d", contexto->proximo_a_detener);
 

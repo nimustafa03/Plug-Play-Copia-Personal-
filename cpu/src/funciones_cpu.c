@@ -345,12 +345,12 @@ t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu) {
     void* buffer = recibir_mensaje(fd_km, &tamanio_buffer); //  BUFFER
 
     if (buffer == NULL) {
-        log_error(logger_cpu, "No se pudo recibir el buffer del mapa");
+        log_info(logger_cpu, "No se pudo recibir el buffer del mapa");
         return NULL;
     }
 
     if (tamanio_buffer < (int)sizeof(uint32_t)) {
-        log_error(logger_cpu, "Buffer del mapa demasiado pequeño: %d bytes", tamanio_buffer);
+        log_info(logger_cpu, "Buffer del mapa demasiado pequeño: %d bytes", tamanio_buffer);
         free(buffer);
         return NULL;
     }
@@ -409,7 +409,7 @@ t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu) {
         mapa->memory_sticks[i].ip = malloc(longitud_ip);
 
         if (mapa->memory_sticks[i].ip == NULL) {
-            log_error(logger_cpu, "No se pudo reservar memoria para la IP del MS %u", i);
+            log_info(logger_cpu, "No se pudo reservar memoria para la IP del MS %u", i);
             destruir_mapa_memory_sticks(mapa);
             free(buffer);
             return NULL;
@@ -446,7 +446,7 @@ t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu) {
         mapa->memory_sticks[i].puerto = malloc(longitud_puerto);
 
         if (mapa->memory_sticks[i].puerto == NULL) {
-            log_error(logger_cpu, "No se pudo reservar memoria para el puerto del MS %u",i);
+            log_info(logger_cpu, "No se pudo reservar memoria para el puerto del MS %u",i);
             destruir_mapa_memory_sticks(mapa);
             free(buffer);
             return NULL;
@@ -507,7 +507,7 @@ int actualizar_conexiones_ms(t_info_memory_stick_cpu* info_ms,t_log* logger_cpu)
 
     int fd_ms = crear_conexion(info_ms->ip,info_ms->puerto);
     if (fd_ms == -1) {
-        log_error(logger_cpu,"No se pudo conectar al MS %s:%s",info_ms->ip,info_ms->puerto);
+        log_info(logger_cpu,"No se pudo conectar al MS %s:%s",info_ms->ip,info_ms->puerto);
         return -1;
     }
 
@@ -536,7 +536,7 @@ int conectar_memory_sticks_faltantes(t_mapa_memory_sticks_cpu* mapa,t_log* logge
 
         int nuevo_fd = actualizar_conexiones_ms(nuevo_ms, logger_cpu);
         if (nuevo_fd == -1) {
-            log_error(logger_cpu,"No se pudo conectar al MS %u: %s:%s",i,nuevo_ms->ip,nuevo_ms->puerto);
+            log_info(logger_cpu,"No se pudo conectar al MS %u: %s:%s",i,nuevo_ms->ip,nuevo_ms->puerto);
             return -1;
         }
         fd_ms_agregados[i-1] = nuevo_fd;
@@ -708,7 +708,7 @@ int escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio_
     return 0;
 }
 
-t_contexto* deserializar_contexto_inicial(void* buffer,int tamanio_buffer, t_log* logger_cpu) {
+/*t_contexto* deserializar_contexto_inicial(void* buffer,int tamanio_buffer, t_log* logger_cpu) {
     int tamanio_esperado =
         sizeof(t_registros) +
         sizeof(int);
@@ -765,7 +765,7 @@ t_contexto* deserializar_contexto_inicial(void* buffer,int tamanio_buffer, t_log
 
     free(buffer);
     return contexto;
-}
+}*/
 
 void escribir_en_buffer(
     void* buffer,
@@ -782,7 +782,7 @@ void escribir_en_buffer(
     *desplazamiento += tamanio;
 }
 
-void* serializar_contexto_inicial(t_contexto* contexto, int* tamanio_buffer, t_log* logger_cpu){
+/*void* serializar_contexto_inicial(t_contexto* contexto, int* tamanio_buffer, t_log* logger_cpu){
     if(contexto == NULL) {
         log_info(
             logger_cpu,
@@ -821,4 +821,336 @@ void* serializar_contexto_inicial(t_contexto* contexto, int* tamanio_buffer, t_l
     log_info(logger_cpu, "Segmentos guardados: %d", cantidad_segmentos);
 
     return buffer;
+}*/
+
+void* serializar_contexto_inicial(t_contexto* contexto,int* tamanio_buffer,t_log* logger_cpu){
+    if (contexto == NULL || tamanio_buffer == NULL) {
+        log_info(
+            logger_cpu,
+            "Contexto o puntero de tamaño NULL al serializar."
+        );
+        return NULL;
+    }
+    if (contexto->tabla_segmentos == NULL) {
+        log_info(
+            logger_cpu,
+            "La tabla de segmentos es NULL."
+        );
+        return NULL;
+    }
+
+    int cantidad_segmentos =
+        list_size(contexto->tabla_segmentos);
+
+    /*
+     * Estructura del buffer:
+     *
+     * t_registros
+     * int cantidad_segmentos
+     * t_segmento segmento_0
+     * t_segmento segmento_1
+     * ...
+     * bool proximo_a_detener
+     */
+    *tamanio_buffer =
+        sizeof(t_registros)
+        + sizeof(int)
+        + cantidad_segmentos * sizeof(t_segmento)
+        + sizeof(bool);
+
+    void* buffer = malloc(*tamanio_buffer);
+
+    if (buffer == NULL) {
+        log_info(
+            logger_cpu,
+            "No se pudo reservar memoria para serializar el contexto."
+        );
+        return NULL;
+    }
+
+    uint32_t desplazamiento = 0;
+
+    /* Registros */
+    escribir_en_buffer(
+        buffer,
+        &desplazamiento,
+        &contexto->registros,
+        sizeof(t_registros)
+    );
+
+    /* Cantidad de segmentos */
+    escribir_en_buffer(
+        buffer,
+        &desplazamiento,
+        &cantidad_segmentos,
+        sizeof(int)
+    );
+
+    /* Segmentos */
+    for (int i = 0; i < cantidad_segmentos; i++) {
+        t_segmento* segmento =
+            list_get(contexto->tabla_segmentos, i);
+
+        if (segmento == NULL) {
+            log_info(logger_cpu,"El segmento de la posición %d es NULL.",i);
+            free(buffer);
+            return NULL;
+        }
+
+        escribir_en_buffer(
+            buffer,
+            &desplazamiento,
+            segmento,
+            sizeof(t_segmento)
+        );
+    }
+    /* Estado del contexto */
+    escribir_en_buffer(
+        buffer,
+        &desplazamiento,
+        &contexto->proximo_a_detener,
+        sizeof(bool)
+    );
+
+    /*
+     * Validación final:
+     * el desplazamiento debe coincidir con el tamaño calculado.
+     */
+    if (desplazamiento != (uint32_t)*tamanio_buffer) {
+        log_info(
+            logger_cpu,
+            "Error de serialización: desplazamiento=%u, tamaño=%d",
+            desplazamiento,
+            *tamanio_buffer
+        );
+
+        free(buffer);
+        return NULL;
+    }
+
+    log_info(logger_cpu, "===== CONTEXTO SERIALIZADO =====");
+    log_info(logger_cpu,"Registros:");
+    log_info(
+        logger_cpu,
+        "AX=%u BX=%u CX=%u DX=%u",
+        contexto->registros.ax,
+        contexto->registros.bx,
+        contexto->registros.cx,
+        contexto->registros.dx);
+    log_info(
+        logger_cpu,
+        "EAX=%u EBX=%u ECX=%u EDX=%u",
+        contexto->registros.eax,
+        contexto->registros.ebx,
+        contexto->registros.ecx,
+        contexto->registros.edx);
+    log_info(
+        logger_cpu,
+        "SI=%u DI=%u PC=%u",
+        contexto->registros.si,
+        contexto->registros.di,
+        contexto->registros.pc);
+    log_info(
+        logger_cpu,
+        "Cantidad de segmentos: %d",
+        cantidad_segmentos);
+
+    for (int i = 0; i < cantidad_segmentos; i++) {
+            t_segmento* segmento = list_get(
+            contexto->tabla_segmentos,
+            i);
+        log_info(
+            logger_cpu,
+            "Segmento[%d] -> ID=%u BASE=%u TAMANIO=%u",
+            i,
+            segmento->id_segmento,
+            segmento->base,
+            segmento->tamanio);
+    }
+    log_info(
+        logger_cpu,
+        "Proximo a detener: %s",
+        contexto->proximo_a_detener ? "true" : "false");
+    log_info(
+        logger_cpu,
+        "Tamaño buffer serializado: %d bytes",
+        *tamanio_buffer);
+    log_info(logger_cpu, "===== FIN CONTEXTO =====");
+    return buffer;
+}
+
+t_contexto* deserializar_contexto_inicial(void* buffer,int tamanio_buffer,t_log* logger_cpu){
+    if (buffer == NULL) {
+        log_info(logger_cpu, "No se puede deserializar: buffer NULL.");
+        return NULL;
+    }
+    if (tamanio_buffer < (int)(
+        sizeof(t_registros) +
+        sizeof(int) +
+        sizeof(bool))) {
+        log_info(logger_cpu,"Buffer demasiado pequeño: %d bytes.",tamanio_buffer);
+        return NULL;
+        }
+    uint32_t desplazamiento = 0;
+
+    t_contexto* contexto = calloc(1, sizeof(t_contexto));
+
+    if (contexto == NULL) {
+        log_info(logger_cpu,"No se pudo reservar memoria para t_contexto.");
+        return NULL;
+    }
+
+    // 1. Deserializar registros.
+
+    memcpy(
+        &contexto->registros,
+        (uint8_t*)buffer + desplazamiento,
+        sizeof(t_registros)
+    );
+
+    desplazamiento += sizeof(t_registros);
+
+    // 2. Deserializar cantidad de segmentos.
+
+    int cantidad_segmentos = 0;
+
+    memcpy(
+        &cantidad_segmentos,
+        (uint8_t*)buffer + desplazamiento,
+        sizeof(int)
+    );
+
+    desplazamiento += sizeof(int);
+
+    if (cantidad_segmentos < 0) {
+        log_info(logger_cpu,"Cantidad de segmentos inválida: %d.",cantidad_segmentos);
+        free(contexto);
+        return NULL;
+    }
+
+    /*
+     * Antes de continuar, calculamos el tamaño que debería tener
+     * el buffer según la cantidad de segmentos recibida.
+     */
+    size_t tamanio_esperado =
+        sizeof(t_registros)
+        + sizeof(int)
+        + ((size_t)cantidad_segmentos * sizeof(t_segmento))
+        + sizeof(bool);
+
+    if ((size_t)tamanio_buffer != tamanio_esperado) {
+        log_info(logger_cpu,
+            "Tamaño de contexto incorrecto. Recibido: %d - Esperado: %zu",
+            tamanio_buffer,
+            tamanio_esperado);
+
+        free(contexto);
+        return NULL;
+    }
+
+     // 3. Crear la lista de segmentos.
+    contexto->tabla_segmentos = list_create();
+
+    if (contexto->tabla_segmentos == NULL) {
+        log_info(logger_cpu,"No se pudo crear la tabla de segmentos.");
+        free(contexto);
+        return NULL;
+    }
+
+    // 4. Deserializar cada segmento.
+
+    for (int i = 0; i < cantidad_segmentos; i++) {
+        t_segmento* segmento = malloc(sizeof(t_segmento));
+
+        if (segmento == NULL) {
+            log_info(logger_cpu,"No se pudo reservar memoria para el segmento %d.",i);
+            list_destroy_and_destroy_elements(
+                contexto->tabla_segmentos,
+                free);
+            free(contexto);
+            return NULL;
+        }
+
+        memcpy(
+            segmento,
+            (uint8_t*)buffer + desplazamiento,
+            sizeof(t_segmento)
+        );
+
+        desplazamiento += sizeof(t_segmento);
+
+        list_add(
+            contexto->tabla_segmentos,
+            segmento
+        );
+    }
+
+    //5. Deserializar proximo_a_detener.
+
+    memcpy(
+        &contexto->proximo_a_detener,
+        (uint8_t*)buffer + desplazamiento,
+        sizeof(bool)
+    );
+    desplazamiento += sizeof(bool);
+
+    // 6. Validación final.
+    if (desplazamiento != (uint32_t)tamanio_buffer) {
+        log_info(
+            logger_cpu,
+            "Deserialización inconsistente. Leídos: %u - Buffer: %d",
+            desplazamiento,
+            tamanio_buffer
+        );
+
+        list_destroy_and_destroy_elements(
+            contexto->tabla_segmentos,
+            free
+        );
+        free(contexto);
+        return NULL;
+    }
+
+    //7. Mostrar el contexto reconstruido.
+
+    log_info(logger_cpu, "===== CONTEXTO DESERIALIZADO =====");
+    log_info(
+        logger_cpu,
+        "AX=%u BX=%u CX=%u DX=%u",
+        contexto->registros.ax,
+        contexto->registros.bx,
+        contexto->registros.cx,
+        contexto->registros.dx);
+    log_info(logger_cpu,
+        "EAX=%u EBX=%u ECX=%u EDX=%u",
+        contexto->registros.eax,
+        contexto->registros.ebx,
+        contexto->registros.ecx,
+        contexto->registros.edx);
+    log_info(logger_cpu,
+        "SI=%u DI=%u PC=%u",
+        contexto->registros.si,
+        contexto->registros.di,
+        contexto->registros.pc);
+    log_info(logger_cpu,"Cantidad de segmentos: %d",cantidad_segmentos);
+
+    for (int i = 0; i < cantidad_segmentos; i++) {
+        t_segmento* segmento = list_get(
+            contexto->tabla_segmentos,
+            i
+        );
+        log_info(logger_cpu,
+            "Segmento[%d] -> ID=%u BASE=%u TAMANIO=%u",
+            i,
+            segmento->id_segmento,
+            segmento->base,
+            segmento->tamanio);
+    }
+    log_info(logger_cpu,"Proximo a detener: %s",
+        contexto->proximo_a_detener
+            ? "true"
+            : "false");
+    log_info(logger_cpu,"Bytes deserializados: %u",desplazamiento);
+    log_info(logger_cpu, "===== FIN CONTEXTO =====");
+    return contexto;
 }
