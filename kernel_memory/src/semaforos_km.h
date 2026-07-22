@@ -1,5 +1,5 @@
-#ifndef SEMAFOROS_KM
-#define SEMAFOROS_KM
+#ifndef SEMAFOROS_KM_H
+#define SEMAFOROS_KM_H
 #include <semaphore.h>
 
 
