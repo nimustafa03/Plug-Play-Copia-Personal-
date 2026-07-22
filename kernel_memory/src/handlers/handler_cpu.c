@@ -10,7 +10,8 @@
 #include "../src/managers/memory_manager.h"
 #include "../../utils/src/utils/conexiones.h"
 #include "../src/managers/process_manager.h"
-
+#include <semaphore.h>
+#include "../semaforos_km.h"
 
 extern t_log*logger;
 extern t_config*config;
@@ -32,16 +33,18 @@ t_contexto *recibir_contexto(){
 }
 
 void atender_mensaje_cpu(){
+    log_info(logger, "Kernel Memory está esperando nuevos procesos...");
     int size;
     op_code*codigo;
     while(1){
         codigo = recibir_mensaje(socket_cpu,&size);
         if (*codigo == MSG_INIT_CPU){
+            log_info(logger, "Se ha recibido un nuevo pedido de iniciar proceso.");
             notificar_mapa_memory_sticks_a_cpu();
             log_info(logger, "Mapa enviado. Esperando PID");
             inicializar_proceso(recibir_pid(), socket_cpu);
             free(codigo);
-            return;
+            sem_wait(&semRecibirProcesosNuevos);
         }
     }
 }
@@ -74,7 +77,7 @@ void atender_cpu(int nuevo_socket_cpu){
     op_code*codigo;
 
     /* notificar_mapa_memory_sticks_a_cpu(); */
-
+    sem_init(&semRecibirProcesosNuevos,0,1);
     atender_mensaje_cpu();
     
     return;

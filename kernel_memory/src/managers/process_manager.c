@@ -11,6 +11,8 @@
 #include "../handlers/handler_cpu.h"
 #include "../../utils/src/utils/tipos.h"
 #include "memory_manager.h"
+#include "../semaforos_km.h"
+#include <semaphore.h>
 
 #include "process_manager.h"
 
@@ -193,10 +195,9 @@ void*manejar_proceso(void*arg){
     log_info(logger, "## PID: %d - Proceso eliminado.",proceso -> pid);
     destruir_proceso(proceso->pid);
   }
-
-  // NICO M: Acá debería volver a atender mensajes de INIT_PROC_CPU, por lo que debería iniciar atender_mensajes_cpu() de nuevo. El problema es que si lo llamo a secas, no puedo cerrar el thread porque sino dejo de atender esa función.
-  // free(arg);
+  free(args);
   int*returnval = malloc(sizeof(1));
+  sem_post(&semRecibirProcesosNuevos); // NICO M: Esto sirve para que volvamos a aceptar pedidos de iniciar nuevos procesos.
   pthread_exit(returnval);
 }
 
