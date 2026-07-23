@@ -318,7 +318,7 @@ bool notificar_segmentos_a_cpu(t_contexto*proceso){
         log_warning(
             logger,
             "No se pudo enviar los segmentos: CPU no conectada."
-        )
+        );
         return false;
     }
 
