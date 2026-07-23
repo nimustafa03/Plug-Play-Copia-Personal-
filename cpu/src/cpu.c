@@ -201,7 +201,7 @@ int main(int argc, char* argv[]) {
                 exit(EXIT_FAILURE);
             }
 
-            
+            actualizar_tabla_segmentos(contexto,fd_km,logger_cpu);
 
             // DECODE
             operacion codigo = decode(instruccion);
@@ -236,10 +236,6 @@ int main(int argc, char* argv[]) {
                 log_info(logger_cpu, "Operacion invalida en proceso %d.",pid);
                 exit(EXIT_FAILURE);
             }
-
-            // Recibe segmentos actualizados del proceso
-            
-            // Actualiza el contexto
 
             // INTERRUPCIONES
             int atender = atender_interrupcion(fd_ks, fd_km, contexto, pid, logger_cpu);

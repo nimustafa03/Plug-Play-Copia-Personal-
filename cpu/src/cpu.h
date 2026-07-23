@@ -87,6 +87,7 @@ void* serializar_contexto(t_contexto* contexto,int* tamanio_buffer, t_log* logge
 t_contexto* deserializar_contexto(void* buffer,int tamanio_buffer, t_log* logger_cpu);
 void enviar_contexto(t_contexto* contexto, int fd_km, t_log* logger_cpu);
 int guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* logger_cpu); 
+void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km,t_log* logger_cpu);
 
 // OPERACIONES CON REGISTROS
 uint32_t obtener_valor(char* posicion, t_registros* registro);
@@ -115,4 +116,7 @@ int syscall_mem_alloc(char* instruccion, t_registros* registro, int fd_ks, uint3
 int syscall_mem_free(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid);
 int syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log* logger_cpu);
 
+
+
+t_list* deserializar_tabla_segmentos(void* buffer, int tamanio_buffer);
 #endif
