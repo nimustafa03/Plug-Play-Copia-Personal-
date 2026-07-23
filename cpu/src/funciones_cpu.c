@@ -763,11 +763,6 @@ int guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* lo
 }
 
 void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km,t_log* logger_cpu){
-    if (contexto == NULL) {
-        log_error(logger_cpu,"## ERROR: El contexto es NULL.");
-        return;
-    }
-
     int tamanio_buffer = 0;
 
     void* buffer = recibir_mensaje(fd_km,&tamanio_buffer);
@@ -777,7 +772,7 @@ void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km,t_log* logger_cpu
         return;
     }
 
-    t_list* tabla_actualizada =deserializar_tabla_segmentos(buffer,tamanio_buffer,);
+    t_list* tabla_actualizada = deserializar_tabla_segmentos(buffer,tamanio_buffer);
 
     free(buffer);
 
@@ -814,7 +809,7 @@ void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km,t_log* logger_cpu
     }
 }
 
-t_list* deserrializar_tabla_segmentos(void* buffer, int tamanio_buffer){
+t_list* deserializar_tabla_segmentos(void* buffer, int tamanio_buffer){
     if (buffer == NULL)
         return NULL;
 
