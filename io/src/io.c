@@ -200,6 +200,10 @@ int main(int argc, char* argv[]) {
                 enviar_mensaje(fd_ks, &done, sizeof(op_code));
                 break;
             }
+		
+            default: 
+		log_error(logger, "ERROR, se espera STDIN/STDOUT/SLEEP y se recibió: %d", *orden);
+                break;
             }
 
             log_info(logger, "## PID: %d - Fin de IO", pid);
