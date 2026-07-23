@@ -761,3 +761,90 @@ int guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* lo
     free(ok);
     return r;
 }
+
+void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km,t_log* logger_cpu){
+    if (contexto == NULL) {
+        log_error(logger_cpu,"## ERROR: El contexto es NULL.");
+        return;
+    }
+
+    int tamanio_buffer = 0;
+
+    void* buffer = recibir_mensaje(fd_km,&tamanio_buffer);
+
+    if (buffer == NULL) {
+        log_error(logger_cpu,"## ERROR: No se pudo recibir el buffer de segmentos.");
+        return;
+    }
+
+    t_list* tabla_actualizada =deserializar_tabla_segmentos(buffer,tamanio_buffer,);
+
+    free(buffer);
+
+    if (tabla_actualizada == NULL) {
+        log_error(logger_cpu,"## ERROR: No se pudo deserializar la tabla de segmentos."
+        );
+        return;
+    }
+
+    /*
+     * Se elimina la tabla anterior junto con
+     * los segmentos que contenía.
+     */
+    if (contexto->tabla_segmentos != NULL) {
+        list_destroy_and_destroy_elements(
+            contexto->tabla_segmentos,
+            free
+        );
+    }
+
+    contexto->tabla_segmentos = tabla_actualizada;
+
+    log_info(logger_cpu,"Tabla de segmentos actualizada. Cantidad: %d",list_size(contexto->tabla_segmentos));
+    for (int i = 0; i < list_size(contexto->tabla_segmentos); i++) {
+
+    t_segmento* segmento =list_get(contexto->tabla_segmentos, i);
+
+    log_info(logger_cpu,
+        "Segmento[%d] -> ID=%u BASE=%u TAMANIO=%u",
+        i,
+        segmento->id_segmento,
+        segmento->base,
+        segmento->tamanio);
+    }
+}
+
+t_list* deserrializar_tabla_segmentos(void* buffer, int tamanio_buffer){
+    if (buffer == NULL)
+        return NULL;
+
+    if (tamanio_buffer % sizeof(t_segmento) != 0) 
+        return NULL;
+    
+    int cantidad_segmentos = tamanio_buffer / sizeof(t_segmento);
+
+    t_list* segmentos = list_create();
+    if (segmentos == NULL)
+        return NULL;
+
+    uint32_t desplazamiento = 0;
+
+    for (int i = 0; i < cantidad_segmentos; i++) {
+
+        t_segmento* segmento = malloc(sizeof(t_segmento));
+
+        if (segmento == NULL)
+            return NULL;
+
+        memcpy(
+            segmento,
+            (char*)buffer + desplazamiento,
+            sizeof(t_segmento)
+        );
+
+        desplazamiento += sizeof(t_segmento);
+
+        list_add(segmentos, segmento);
+    }
+    return segmentos;
+}
