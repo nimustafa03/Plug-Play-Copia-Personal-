@@ -240,6 +240,7 @@ int main(int argc, char* argv[]) {
             // Recibe segmentos actualizados del proceso
             
             // Actualiza el contexto
+            actualizar_tabla_segmentos(contexto->tabla_segmentos, fd_km);
 
             // INTERRUPCIONES
             int atender = atender_interrupcion(fd_ks, fd_km, contexto, pid, logger_cpu);
