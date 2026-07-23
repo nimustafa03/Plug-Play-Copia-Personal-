@@ -1,1503 +1,1086 @@
 KS
-[INFO] 00:24:47:359 KernelScheduler/(26021:26040): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 00:24:47:359 KernelScheduler/(26021:26040): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 00:24:47:359 KernelScheduler/(26021:26025): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 00:24:47:359 KernelScheduler/(26021:26025): proceso 5 agregado a lista EXEC
-[INFO] 00:24:48:215 KernelScheduler/(26021:26040): ## (5) - Desalojado por fin de quantum
-[INFO] 00:24:48:215 KernelScheduler/(26021:26025): ## (4) Pasa del estado READY al estado EXEC
-[INFO] 00:24:48:216 KernelScheduler/(26021:26025): proceso 4 agregado a lista EXEC
-[INFO] 00:24:48:217 KernelScheduler/(26021:26040): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 00:24:48:220 KernelScheduler/(26021:26040): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 00:24:48:220 KernelScheduler/(26021:26040): ## (4) Prioridad: 2 - Desalojado por cola más prioritaria por el proceso 5 con prioridad 1
-[INFO] 00:24:48:783 KernelScheduler/(26021:26040): ## (4) - Desalojado por cola más prioritaria
-[INFO] 00:24:48:783 KernelScheduler/(26021:26025): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 00:24:48:783 KernelScheduler/(26021:26025): proceso 5 agregado a lista EXEC
-[INFO] 00:24:48:784 KernelScheduler/(26021:26040): ## (4) Pasa del estado EXEC al estado READY
-[INFO] 00:24:48:784 KernelScheduler/(26021:26040): proceso 4 agregado a cola CMN de prioridad 2
-[INFO] 00:24:49:635 KernelScheduler/(26021:26040): ## (5) - Desalojado por fin de quantum
-[INFO] 00:24:49:637 KernelScheduler/(26021:26025): ## (3) Pasa del estado READY al estado EXEC
-[INFO] 00:24:49:637 KernelScheduler/(26021:26025): proceso 3 agregado a lista EXEC
-[INFO] 00:24:49:637 KernelScheduler/(26021:26040): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 00:24:49:637 KernelScheduler/(26021:26040): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 00:24:49:638 KernelScheduler/(26021:26040): ## (3) Prioridad: 2 - Desalojado por cola más prioritaria por el proceso 5 con prioridad 1
-[INFO] 00:24:50:192 KernelScheduler/(26021:26040): ## (3) - Desalojado por cola más prioritaria
-[INFO] 00:24:50:192 KernelScheduler/(26021:26040): ## (3) Pasa del estado EXEC al estado READY
-[INFO] 00:24:50:192 KernelScheduler/(26021:26040): proceso 3 agregado a cola CMN de prioridad 2
-[INFO] 00:24:50:192 KernelScheduler/(26021:26025): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 00:24:50:192 KernelScheduler/(26021:26025): proceso 5 agregado a lista EXEC
-[INFO] 00:24:51:047 KernelScheduler/(26021:26040): ## (5) - Desalojado por fin de quantum
-[INFO] 00:24:51:047 KernelScheduler/(26021:26025): ## (4) Pasa del estado READY al estado EXEC
-[INFO] 00:24:51:047 KernelScheduler/(26021:26025): proceso 4 agregado a lista EXEC
-[INFO] 00:24:51:048 KernelScheduler/(26021:26040): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 00:24:51:048 KernelScheduler/(26021:26040): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 00:24:51:048 KernelScheduler/(26021:26040): ## (4) Prioridad: 2 - Desalojado por cola más prioritaria por el proceso 5 con prioridad 1
-[INFO] 00:24:51:607 KernelScheduler/(26021:26040): ## (4) - Desalojado por cola más prioritaria
-[INFO] 00:24:51:607 KernelScheduler/(26021:26040): ## (4) Pasa del estado EXEC al estado READY
-[INFO] 00:24:51:607 KernelScheduler/(26021:26040): proceso 4 agregado a cola CMN de prioridad 2
-[INFO] 00:24:51:607 KernelScheduler/(26021:26025): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 00:24:51:607 KernelScheduler/(26021:26025): proceso 5 agregado a lista EXEC
-[INFO] 00:24:52:479 KernelScheduler/(26021:26040): ## (5) - Desalojado por fin de quantum
-[INFO] 00:24:52:479 KernelScheduler/(26021:26025): ## (3) Pasa del estado READY al estado EXEC
-[INFO] 00:24:52:479 KernelScheduler/(26021:26025): proceso 3 agregado a lista EXEC
-[INFO] 00:24:52:479 KernelScheduler/(26021:26040): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 00:24:52:479 KernelScheduler/(26021:26040): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 00:24:52:480 KernelScheduler/(26021:26040): ## (3) Prioridad: 2 - Desalojado por cola más prioritaria por el proceso 5 con prioridad 1
-[INFO] 00:24:53:069 KernelScheduler/(26021:26025): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 00:24:53:079 KernelScheduler/(26021:26025): proceso 5 agregado a lista EXEC
-[INFO] 00:24:53:082 KernelScheduler/(26021:26040): ## (3) - Desalojado por cola más prioritaria
-[INFO] 00:24:53:082 KernelScheduler/(26021:26040): ## (3) Pasa del estado EXEC al estado READY
-[INFO] 00:24:53:082 KernelScheduler/(26021:26040): proceso 3 agregado a cola CMN de prioridad 2
-[INFO] 00:24:53:647 KernelScheduler/(26021:26040): ## (5) - Solicitó syscall: SLEEP
-[INFO] 00:24:53:647 KernelScheduler/(26021:26025): ## (4) Pasa del estado READY al estado EXEC
-[INFO] 00:24:53:647 KernelScheduler/(26021:26025): proceso 4 agregado a lista EXEC
-[INFO] 00:24:53:647 KernelScheduler/(26021:26083): ## (5) Pasa del estado EXEC al estado BLOCK
-[INFO] 00:24:53:648 KernelScheduler/(26021:26083): Proceso 5 agregado a lista BLOCK
-[INFO] 00:24:53:752 KernelScheduler/(26021:26083): ## (5) finalizó IO y pasa a READY
-[INFO] 00:24:53:763 KernelScheduler/(26021:26083): ## (5) Pasa del estado BLOCK al estado READY
-[INFO] 00:24:53:764 KernelScheduler/(26021:26083): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 00:24:53:765 KernelScheduler/(26021:26083): ## (4) Prioridad: 2 - Desalojado por cola más prioritaria por el proceso 5 con prioridad 1
-[INFO] 00:24:54:211 KernelScheduler/(26021:26040): ## (4) - Desalojado por cola más prioritaria
-[INFO] 00:24:54:211 KernelScheduler/(26021:26040): ## (4) Pasa del estado EXEC al estado READY
-[INFO] 00:24:54:211 KernelScheduler/(26021:26040): proceso 4 agregado a cola CMN de prioridad 2
-[INFO] 00:24:54:211 KernelScheduler/(26021:26025): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 00:24:54:211 KernelScheduler/(26021:26025): proceso 5 agregado a lista EXEC
-[INFO] 00:24:55:059 KernelScheduler/(26021:26040): ## (5) - Desalojado por fin de quantum
-[INFO] 00:24:55:059 KernelScheduler/(26021:26040): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 00:24:55:059 KernelScheduler/(26021:26040): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 00:24:55:059 KernelScheduler/(26021:26025): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 00:24:55:060 KernelScheduler/(26021:26025): proceso 5 agregado a lista EXEC
-[INFO] 00:24:55:915 KernelScheduler/(26021:26040): ## (5) - Desalojado por fin de quantum
-[INFO] 00:24:55:915 KernelScheduler/(26021:26025): ## (3) Pasa del estado READY al estado EXEC
-[INFO] 00:24:55:915 KernelScheduler/(26021:26025): proceso 3 agregado a lista EXEC
-[INFO] 00:24:55:916 KernelScheduler/(26021:26040): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 00:24:55:916 KernelScheduler/(26021:26040): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 00:24:55:916 KernelScheduler/(26021:26040): ## (3) Prioridad: 2 - Desalojado por cola más prioritaria por el proceso 5 con prioridad 1
-[INFO] 00:24:56:475 KernelScheduler/(26021:26040): ## (3) - Desalojado por cola más prioritaria
-[INFO] 00:24:56:475 KernelScheduler/(26021:26040): ## (3) Pasa del estado EXEC al estado READY
-[INFO] 00:24:56:475 KernelScheduler/(26021:26040): proceso 3 agregado a cola CMN de prioridad 2
-[INFO] 00:24:56:475 KernelScheduler/(26021:26025): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 00:24:56:475 KernelScheduler/(26021:26025): proceso 5 agregado a lista EXEC
-[INFO] 00:24:57:332 KernelScheduler/(26021:26040): ## (5) - Desalojado por fin de quantum
-[INFO] 00:24:57:332 KernelScheduler/(26021:26025): ## (4) Pasa del estado READY al estado EXEC
-[INFO] 00:24:57:335 KernelScheduler/(26021:26025): proceso 4 agregado a lista EXEC
-[INFO] 00:24:57:336 KernelScheduler/(26021:26040): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 00:24:57:336 KernelScheduler/(26021:26040): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 00:24:57:336 KernelScheduler/(26021:26040): ## (4) Prioridad: 2 - Desalojado por cola más prioritaria por el proceso 5 con prioridad 1
-[INFO] 00:24:57:902 KernelScheduler/(26021:26040): ## (4) - Desalojado por cola más prioritaria
-[INFO] 00:24:57:903 KernelScheduler/(26021:26040): ## (4) Pasa del estado EXEC al estado READY
-[INFO] 00:24:57:903 KernelScheduler/(26021:26040): proceso 4 agregado a cola CMN de prioridad 2
-[INFO] 00:24:57:903 KernelScheduler/(26021:26025): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 00:24:57:903 KernelScheduler/(26021:26025): proceso 5 agregado a lista EXEC
-[INFO] 00:24:58:759 KernelScheduler/(26021:26040): ## (5) - Desalojado por fin de quantum
-[INFO] 00:24:58:759 KernelScheduler/(26021:26040): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 00:24:58:759 KernelScheduler/(26021:26040): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 00:24:58:759 KernelScheduler/(26021:26025): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 00:24:58:759 KernelScheduler/(26021:26025): proceso 5 agregado a lista EXEC
-[INFO] 00:24:59:615 KernelScheduler/(26021:26040): ## (5) - Desalojado por fin de quantum
-[INFO] 00:24:59:615 KernelScheduler/(26021:26025): ## (3) Pasa del estado READY al estado EXEC
-[INFO] 00:24:59:615 KernelScheduler/(26021:26025): proceso 3 agregado a lista EXEC
-[INFO] 00:24:59:616 KernelScheduler/(26021:26040): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 00:24:59:616 KernelScheduler/(26021:26040): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 00:24:59:616 KernelScheduler/(26021:26040): ## (3) Prioridad: 2 - Desalojado por cola más prioritaria por el proceso 5 con prioridad 1
-[INFO] 00:25:00:175 KernelScheduler/(26021:26040): ## (3) - Desalojado por cola más prioritaria
-[INFO] 00:25:00:176 KernelScheduler/(26021:26040): ## (3) Pasa del estado EXEC al estado READY
-[INFO] 00:25:00:176 KernelScheduler/(26021:26040): proceso 3 agregado a cola CMN de prioridad 2
-[INFO] 00:25:00:176 KernelScheduler/(26021:26025): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 00:25:00:176 KernelScheduler/(26021:26025): proceso 5 agregado a lista EXEC
-[INFO] 00:25:00:733 KernelScheduler/(26021:26040): ## (5) - Solicitó syscall: SLEEP
-[INFO] 00:25:00:734 KernelScheduler/(26021:26025): ## (4) Pasa del estado READY al estado EXEC
-[INFO] 00:25:00:738 KernelScheduler/(26021:26025): proceso 4 agregado a lista EXEC
-[INFO] 00:25:00:738 KernelScheduler/(26021:26101): ## (5) Pasa del estado EXEC al estado BLOCK
-[INFO] 00:25:00:738 KernelScheduler/(26021:26101): Proceso 5 agregado a lista BLOCK
-[INFO] 00:25:00:839 KernelScheduler/(26021:26101): ## (5) finalizó IO y pasa a READY
-[INFO] 00:25:00:839 KernelScheduler/(26021:26101): ## (5) Pasa del estado BLOCK al estado READY
-[INFO] 00:25:00:839 KernelScheduler/(26021:26101): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 00:25:00:839 KernelScheduler/(26021:26101): ## (4) Prioridad: 2 - Desalojado por cola más prioritaria por el proceso 5 con prioridad 1
-[INFO] 00:25:01:298 KernelScheduler/(26021:26040): ## (4) - Desalojado por cola más prioritaria
-[INFO] 00:25:01:299 KernelScheduler/(26021:26025): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 00:25:01:299 KernelScheduler/(26021:26025): proceso 5 agregado a lista EXEC
-[INFO] 00:25:01:299 KernelScheduler/(26021:26040): ## (4) Pasa del estado EXEC al estado READY
-[INFO] 00:25:01:299 KernelScheduler/(26021:26040): proceso 4 agregado a cola CMN de prioridad 2
-[INFO] 00:25:02:151 KernelScheduler/(26021:26040): ## (5) - Desalojado por fin de quantum
-[INFO] 00:25:02:151 KernelScheduler/(26021:26040): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 00:25:02:151 KernelScheduler/(26021:26040): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 00:25:02:151 KernelScheduler/(26021:26025): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 00:25:02:151 KernelScheduler/(26021:26025): proceso 5 agregado a lista EXEC
-[INFO] 00:25:03:007 KernelScheduler/(26021:26040): ## (5) - Desalojado por fin de quantum
-[INFO] 00:25:03:007 KernelScheduler/(26021:26040): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 00:25:03:007 KernelScheduler/(26021:26040): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 00:25:03:007 KernelScheduler/(26021:26025): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 00:25:03:007 KernelScheduler/(26021:26025): proceso 5 agregado a lista EXEC
-[INFO] 00:25:03:867 KernelScheduler/(26021:26040): ## (5) - Desalojado por fin de quantum
-[INFO] 00:25:03:867 KernelScheduler/(26021:26025): ## (3) Pasa del estado READY al estado EXEC
-[INFO] 00:25:03:868 KernelScheduler/(26021:26025): proceso 3 agregado a lista EXEC
-[INFO] 00:25:03:868 KernelScheduler/(26021:26040): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 00:25:03:868 KernelScheduler/(26021:26040): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 00:25:03:868 KernelScheduler/(26021:26040): ## (3) Prioridad: 2 - Desalojado por cola más prioritaria por el proceso 5 con prioridad 1
-[INFO] 00:25:04:423 KernelScheduler/(26021:26040): ## (3) - Desalojado por cola más prioritaria
-[INFO] 00:25:04:423 KernelScheduler/(26021:26040): ## (3) Pasa del estado EXEC al estado READY
-[INFO] 00:25:04:423 KernelScheduler/(26021:26040): proceso 3 agregado a cola CMN de prioridad 2
-[INFO] 00:25:04:423 KernelScheduler/(26021:26025): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 00:25:04:423 KernelScheduler/(26021:26025): proceso 5 agregado a lista EXEC
-[INFO] 00:25:05:283 KernelScheduler/(26021:26040): ## (5) - Desalojado por fin de quantum
-[INFO] 00:25:05:283 KernelScheduler/(26021:26025): ## (4) Pasa del estado READY al estado EXEC
-[INFO] 00:25:05:283 KernelScheduler/(26021:26025): proceso 4 agregado a lista EXEC
-[INFO] 00:25:05:284 KernelScheduler/(26021:26040): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 00:25:05:284 KernelScheduler/(26021:26040): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 00:25:05:284 KernelScheduler/(26021:26040): ## (4) Prioridad: 2 - Desalojado por cola más prioritaria por el proceso 5 con prioridad 1
-[INFO] 00:25:05:839 KernelScheduler/(26021:26040): ## (4) - Desalojado por cola más prioritaria
-[INFO] 00:25:05:839 KernelScheduler/(26021:26040): ## (4) Pasa del estado EXEC al estado READY
-[INFO] 00:25:05:839 KernelScheduler/(26021:26040): proceso 4 agregado a cola CMN de prioridad 2
-[INFO] 00:25:05:839 KernelScheduler/(26021:26025): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 00:25:05:839 KernelScheduler/(26021:26025): proceso 5 agregado a lista EXEC
-[INFO] 00:25:06:707 KernelScheduler/(26021:26040): ## (5) - Desalojado por fin de quantum
-[INFO] 00:25:06:707 KernelScheduler/(26021:26040): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 00:25:06:707 KernelScheduler/(26021:26040): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 00:25:06:707 KernelScheduler/(26021:26025): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 00:25:06:707 KernelScheduler/(26021:26025): proceso 5 agregado a lista EXEC
-[ERROR] 00:25:07:283 KernelScheduler/(26021:26040): ## KM no confirmó la liberación de memoria del PID 5
-[INFO] 00:25:07:283 KernelScheduler/(26021:26040): ## (5) Pasa del estado EXEC al estado EXIT
-[INFO] 00:25:07:283 KernelScheduler/(26021:26040): Se terminó la proceso 5 agregado a lista EXIT
-[INFO] 00:25:07:283 KernelScheduler/(26021:26040): ## (5) finalizó su ejecución con motivo de EXIT
-[INFO] 00:25:07:284 KernelScheduler/(26021:26025): ## (3) Pasa del estado READY al estado EXEC
-[INFO] 00:25:07:284 KernelScheduler/(26021:26025): proceso 3 agregado a lista EXEC
-[ERROR] 00:25:49:771 KernelScheduler/(26021:26040): ## KM no confirmó la liberación de memoria del PID 3
-[INFO] 00:25:49:771 KernelScheduler/(26021:26040): ## (3) Pasa del estado EXEC al estado EXIT
-[INFO] 00:25:49:771 KernelScheduler/(26021:26040): Se terminó la proceso 3 agregado a lista EXIT
-[INFO] 00:25:49:771 KernelScheduler/(26021:26040): ## (3) finalizó su ejecución con motivo de EXIT
-[INFO] 00:25:49:771 KernelScheduler/(26021:26025): ## (4) Pasa del estado READY al estado EXEC
-[INFO] 00:25:49:771 KernelScheduler/(26021:26025): proceso 4 agregado a lista EXEC
-[ERROR] 00:26:32:388 KernelScheduler/(26021:26040): ## KM no confirmó la liberación de memoria del PID 4
-[INFO] 00:26:32:388 KernelScheduler/(26021:26040): ## (4) Pasa del estado EXEC al estado EXIT
-[INFO] 00:26:32:388 KernelScheduler/(26021:26040): Se terminó la proceso 4 agregado a lista EXIT
-[INFO] 00:26:32:388 KernelScheduler/(26021:26040): ## (4) finalizó su ejecución con motivo de EXIT
-[INFO] 00:26:32:388 KernelScheduler/(26021:26025): ## (1) Pasa del estado READY al estado EXEC
-[INFO] 00:26:32:388 KernelScheduler/(26021:26025): proceso 1 agregado a lista EXEC
-[INFO] 00:26:33:235 KernelScheduler/(26021:26040): ## (1) - Desalojado por fin de quantum
-[INFO] 00:26:33:235 KernelScheduler/(26021:26040): ## (1) Pasa del estado EXEC al estado READY
-[INFO] 00:26:33:235 KernelScheduler/(26021:26040): proceso 1 agregado a cola CMN de prioridad 3
-[INFO] 00:26:33:235 KernelScheduler/(26021:26025): ## (2) Pasa del estado READY al estado EXEC
-[INFO] 00:26:33:235 KernelScheduler/(26021:26025): proceso 2 agregado a lista EXEC
-[INFO] 00:26:34:143 KernelScheduler/(26021:26040): ## (2) - Desalojado por fin de quantum
-[INFO] 00:26:34:143 KernelScheduler/(26021:26040): ## (2) Pasa del estado EXEC al estado READY
-[INFO] 00:26:34:143 KernelScheduler/(26021:26040): proceso 2 agregado a cola CMN de prioridad 3
-[INFO] 00:26:34:144 KernelScheduler/(26021:26025): ## (1) Pasa del estado READY al estado EXEC
-[INFO] 00:26:34:144 KernelScheduler/(26021:26025): proceso 1 agregado a lista EXEC
-[INFO] 00:26:34:715 KernelScheduler/(26021:26040): ## (1) - Solicitó syscall: SLEEP
-[INFO] 00:26:34:716 KernelScheduler/(26021:26025): ## (2) Pasa del estado READY al estado EXEC
-[INFO] 00:26:34:716 KernelScheduler/(26021:26025): proceso 2 agregado a lista EXEC
-[INFO] 00:26:34:717 KernelScheduler/(26021:26131): ## (1) Pasa del estado EXEC al estado BLOCK
-[INFO] 00:26:34:718 KernelScheduler/(26021:26131): Proceso 1 agregado a lista BLOCK
-[INFO] 00:26:35:298 KernelScheduler/(26021:26040): ## (2) - Solicitó syscall: SLEEP
-[INFO] 00:26:35:299 KernelScheduler/(26021:26135): ## (2) Pasa del estado EXEC al estado BLOCK
-[INFO] 00:26:35:299 KernelScheduler/(26021:26135): Proceso 2 agregado a lista BLOCK
-[INFO] 00:26:54:728 KernelScheduler/(26021:26131): ## (1) finalizó IO y pasa a READY
-[INFO] 00:26:54:728 KernelScheduler/(26021:26131): ## (1) Pasa del estado BLOCK al estado READY
-[INFO] 00:26:54:728 KernelScheduler/(26021:26131): proceso 1 agregado a cola CMN de prioridad 3
-[INFO] 00:26:54:728 KernelScheduler/(26021:26025): ## (1) Pasa del estado READY al estado EXEC
-[INFO] 00:26:54:728 KernelScheduler/(26021:26025): proceso 1 agregado a lista EXEC
-[INFO] 00:26:55:535 KernelScheduler/(26021:26040): ## (1) - Desalojado por fin de quantum
-[INFO] 00:26:55:535 KernelScheduler/(26021:26040): ## (1) Pasa del estado EXEC al estado READY
-[INFO] 00:26:55:535 KernelScheduler/(26021:26040): proceso 1 agregado a cola CMN de prioridad 3
-[INFO] 00:26:55:535 KernelScheduler/(26021:26025): ## (1) Pasa del estado READY al estado EXEC
-[INFO] 00:26:55:535 KernelScheduler/(26021:26025): proceso 1 agregado a lista EXEC
-[INFO] 00:26:56:135 KernelScheduler/(26021:26040): ## (1) - Solicitó syscall: SLEEP
-[INFO] 00:26:56:135 KernelScheduler/(26021:26141): ## (1) Pasa del estado EXEC al estado BLOCK
-[INFO] 00:26:56:136 KernelScheduler/(26021:26141): Proceso 1 agregado a lista BLOCK
-[INFO] 00:27:14:771 KernelScheduler/(26021:26135): ## (2) finalizó IO y pasa a READY
-[INFO] 00:27:14:771 KernelScheduler/(26021:26135): ## (2) Pasa del estado BLOCK al estado READY
-[INFO] 00:27:14:771 KernelScheduler/(26021:26135): proceso 2 agregado a cola CMN de prioridad 3
-[INFO] 00:27:14:771 KernelScheduler/(26021:26025): ## (2) Pasa del estado READY al estado EXEC
-[INFO] 00:27:14:772 KernelScheduler/(26021:26025): proceso 2 agregado a lista EXEC
-[INFO] 00:27:15:579 KernelScheduler/(26021:26040): ## (2) - Desalojado por fin de quantum
-[INFO] 00:27:15:579 KernelScheduler/(26021:26040): ## (2) Pasa del estado EXEC al estado READY
-[INFO] 00:27:15:579 KernelScheduler/(26021:26040): proceso 2 agregado a cola CMN de prioridad 3
-[INFO] 00:27:15:579 KernelScheduler/(26021:26025): ## (2) Pasa del estado READY al estado EXEC
-[INFO] 00:27:15:579 KernelScheduler/(26021:26025): proceso 2 agregado a lista EXEC
-[INFO] 00:27:16:180 KernelScheduler/(26021:26040): ## (2) - Solicitó syscall: SLEEP
-[INFO] 00:27:16:180 KernelScheduler/(26021:26148): ## (2) Pasa del estado EXEC al estado BLOCK
-[INFO] 00:27:16:180 KernelScheduler/(26021:26148): Proceso 2 agregado a lista BLOCK
-[INFO] 00:27:34:732 KernelScheduler/(26021:26133): ## (1) Pasa del estado BLOCK al estado SUSP_BLOCK
-[INFO] 00:27:34:733 KernelScheduler/(26021:26133): Proceso 1 agregado a lista SUSP BLOCK
-[INFO] 00:27:34:819 KernelScheduler/(26021:26141): ## (1) finalizó IO y pasa a SUSP. READY
-[INFO] 00:27:34:819 KernelScheduler/(26021:26141): ## (1) Pasa del estado SUSP_BLOCK al estado SUSP_READY
-[INFO] 00:27:34:819 KernelScheduler/(26021:26141): Proceso 1 agregado a lista SUSP READY
-[INFO] 00:27:35:299 KernelScheduler/(26021:26136): ## (2) Pasa del estado BLOCK al estado SUSP_BLOCK
-[INFO] 00:27:35:299 KernelScheduler/(26021:26136): Proceso 2 agregado a lista SUSP BLOCK
-[INFO] 00:27:54:862 KernelScheduler/(26021:26148): ## (2) finalizó IO y pasa a SUSP. READY
-[INFO] 00:27:54:863 KernelScheduler/(26021:26148): ## (2) Pasa del estado SUSP_BLOCK al estado SUSP_READY
-[INFO] 00:27:54:863 KernelScheduler/(26021:26148): Proceso 2 agregado a lista SUSP READY
-[WARNING] 01:09:37:161 KernelScheduler/(26021:26040): CPU FD:7 desconectada
-^C
 utnso@utnso:~/Desktop/tp-2026-1c-Grupo3113/kernel_scheduler$ ./bin/kernel_scheduler ../config/pruebaBase/KernelScheduler.config /home/utnso/plug-n-pray-pruebas/PLANI_PRE_0.prc
-[INFO] 01:12:37:838 KernelScheduler/(26441:26441): ## Conectado a Kernel Memory
-[INFO] 01:12:37:838 KernelScheduler/(26441:26441): ## Conectado a Kernel Memory y aceptado
-[INFO] 01:12:37:838 KernelScheduler/(26441:26441): Servidor KS listo en puerto 9001
-[INFO] 01:12:37:838 KernelScheduler/(26441:26441): CMN: 4 colas de prioridad inicializadas
-[INFO] 01:12:37:838 KernelScheduler/(26441:26441): ## (0) Se crea el proceso - Estado: NEW
-[INFO] 01:12:37:923 KernelScheduler/(26441:26445): Planificador de Corto Plazo iniciado.
-[INFO] 01:12:37:923 KernelScheduler/(26441:26444): Planificador de Largo Plazo iniciado.
-[INFO] 01:12:37:923 KernelScheduler/(26441:26444): ## (0) Pasa del estado NEW al estado READY
-[INFO] 01:12:37:923 KernelScheduler/(26441:26444): proceso 0 agregado a cola CMN de prioridad 0
-[INFO] 01:13:04:171 KernelScheduler/(26441:26452): ## IO SLEEP conectada - FD: 6
-[INFO] 01:13:50:348 KernelScheduler/(26441:26463): CPU conectado - FD: 7
-[INFO] 01:13:50:349 KernelScheduler/(26441:26445): ## (0) Pasa del estado READY al estado EXEC
-[INFO] 01:13:50:349 KernelScheduler/(26441:26445): proceso 0 agregado a lista EXEC
-[INFO] 01:13:50:903 KernelScheduler/(26441:26463): ## (0) - Solicitó syscall: INIT_PROC
-[INFO] 01:13:50:903 KernelScheduler/(26441:26463): ## (1) Se crea el proceso - Estado: NEW
-[INFO] 01:13:50:947 KernelScheduler/(26441:26444): ## (1) Pasa del estado NEW al estado READY
-[INFO] 01:13:50:947 KernelScheduler/(26441:26444): proceso 1 agregado a cola CMN de prioridad 3
-[INFO] 01:13:51:198 KernelScheduler/(26441:26463): ## (0) - Solicitó syscall: INIT_PROC
-[INFO] 01:13:51:198 KernelScheduler/(26441:26463): ## (2) Se crea el proceso - Estado: NEW
-[INFO] 01:13:51:241 KernelScheduler/(26441:26444): ## (2) Pasa del estado NEW al estado READY
-[INFO] 01:13:51:241 KernelScheduler/(26441:26444): proceso 2 agregado a cola CMN de prioridad 3
-[INFO] 01:13:51:491 KernelScheduler/(26441:26463): ## (0) - Solicitó syscall: INIT_PROC
-[INFO] 01:13:51:491 KernelScheduler/(26441:26463): ## (3) Se crea el proceso - Estado: NEW
-[INFO] 01:13:51:532 KernelScheduler/(26441:26444): ## (3) Pasa del estado NEW al estado READY
-[INFO] 01:13:51:532 KernelScheduler/(26441:26444): proceso 3 agregado a cola CMN de prioridad 2
-[INFO] 01:13:51:783 KernelScheduler/(26441:26463): ## (0) - Solicitó syscall: INIT_PROC
-[INFO] 01:13:51:783 KernelScheduler/(26441:26463): ## (4) Se crea el proceso - Estado: NEW
-[INFO] 01:13:51:829 KernelScheduler/(26441:26444): ## (4) Pasa del estado NEW al estado READY
-[INFO] 01:13:51:829 KernelScheduler/(26441:26444): proceso 4 agregado a cola CMN de prioridad 2
-[INFO] 01:13:52:078 KernelScheduler/(26441:26463): ## (0) - Solicitó syscall: INIT_PROC
-[INFO] 01:13:52:078 KernelScheduler/(26441:26463): ## (5) Se crea el proceso - Estado: NEW
-[INFO] 01:13:52:120 KernelScheduler/(26441:26444): ## (5) Pasa del estado NEW al estado READY
-[INFO] 01:13:52:120 KernelScheduler/(26441:26444): proceso 5 agregado a cola CMN de prioridad 1
-[ERROR] 01:13:52:415 KernelScheduler/(26441:26463): ## KM no confirmó la liberación de memoria del PID 0
-[INFO] 01:13:52:415 KernelScheduler/(26441:26463): ## (0) Pasa del estado EXEC al estado EXIT
-[INFO] 01:13:52:415 KernelScheduler/(26441:26463): Se terminó la proceso 0 agregado a lista EXIT
-[INFO] 01:13:52:415 KernelScheduler/(26441:26463): ## (0) finalizó su ejecución con motivo de EXIT
-[INFO] 01:13:52:415 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:13:52:415 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:13:53:263 KernelScheduler/(26441:26463): ## (5) - Desalojado por fin de quantum
-[INFO] 01:13:53:263 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 01:13:53:263 KernelScheduler/(26441:26463): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:13:53:263 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:13:53:263 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:13:54:155 KernelScheduler/(26441:26463): ## (5) - Desalojado por fin de quantum
-[INFO] 01:13:54:155 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 01:13:54:155 KernelScheduler/(26441:26463): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:13:54:155 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:13:54:155 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:13:55:003 KernelScheduler/(26441:26463): ## (5) - Desalojado por fin de quantum
-[INFO] 01:13:55:003 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 01:13:55:003 KernelScheduler/(26441:26463): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:13:55:003 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:13:55:003 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:13:55:854 KernelScheduler/(26441:26463): ## (5) - Desalojado por fin de quantum
-[INFO] 01:13:55:855 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 01:13:55:855 KernelScheduler/(26441:26463): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:13:55:855 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:13:55:855 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:13:56:702 KernelScheduler/(26441:26463): ## (5) - Desalojado por fin de quantum
-[INFO] 01:13:56:702 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 01:13:56:702 KernelScheduler/(26441:26463): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:13:56:702 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:13:56:702 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:13:57:259 KernelScheduler/(26441:26463): ## (5) - Solicitó syscall: SLEEP
-[INFO] 01:13:57:259 KernelScheduler/(26441:26445): ## (3) Pasa del estado READY al estado EXEC
-[INFO] 01:13:57:259 KernelScheduler/(26441:26445): proceso 3 agregado a lista EXEC
-[INFO] 01:13:57:260 KernelScheduler/(26441:26478): ## (5) Pasa del estado EXEC al estado BLOCK
-[INFO] 01:13:57:260 KernelScheduler/(26441:26478): Proceso 5 agregado a lista BLOCK
-[INFO] 01:13:57:403 KernelScheduler/(26441:26478): ## (5) finalizó IO y pasa a READY
-[INFO] 01:13:57:403 KernelScheduler/(26441:26478): ## (5) Pasa del estado BLOCK al estado READY
-[INFO] 01:13:57:403 KernelScheduler/(26441:26478): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:13:57:403 KernelScheduler/(26441:26478): ## (3) Prioridad: 2 - Desalojado por cola más prioritaria por el proceso 5 con prioridad 1
-[INFO] 01:13:57:814 KernelScheduler/(26441:26463): ## (3) - Desalojado por cola más prioritaria
-[INFO] 01:13:57:814 KernelScheduler/(26441:26463): ## (3) Pasa del estado EXEC al estado READY
-[INFO] 01:13:57:814 KernelScheduler/(26441:26463): proceso 3 agregado a cola CMN de prioridad 2
-[INFO] 01:13:57:814 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:13:57:814 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:13:58:667 KernelScheduler/(26441:26463): ## (5) - Desalojado por fin de quantum
-[INFO] 01:13:58:667 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 01:13:58:667 KernelScheduler/(26441:26463): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:13:58:667 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:13:58:667 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:13:59:514 KernelScheduler/(26441:26463): ## (5) - Desalojado por fin de quantum
-[INFO] 01:13:59:514 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 01:13:59:514 KernelScheduler/(26441:26463): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:13:59:514 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:13:59:515 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:14:00:367 KernelScheduler/(26441:26463): ## (5) - Desalojado por fin de quantum
-[INFO] 01:14:00:367 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 01:14:00:367 KernelScheduler/(26441:26463): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:14:00:367 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:14:00:367 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:14:01:215 KernelScheduler/(26441:26463): ## (5) - Desalojado por fin de quantum
-[INFO] 01:14:01:215 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 01:14:01:215 KernelScheduler/(26441:26463): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:14:01:215 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:14:01:215 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:14:02:062 KernelScheduler/(26441:26463): ## (5) - Desalojado por fin de quantum
-[INFO] 01:14:02:062 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 01:14:02:062 KernelScheduler/(26441:26463): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:14:02:062 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:14:02:062 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:14:02:618 KernelScheduler/(26441:26463): ## (5) - Solicitó syscall: SLEEP
-[INFO] 01:14:02:619 KernelScheduler/(26441:26445): ## (4) Pasa del estado READY al estado EXEC
-[INFO] 01:14:02:619 KernelScheduler/(26441:26445): proceso 4 agregado a lista EXEC
-[INFO] 01:14:02:619 KernelScheduler/(26441:26493): ## (5) Pasa del estado EXEC al estado BLOCK
-[INFO] 01:14:02:619 KernelScheduler/(26441:26493): Proceso 5 agregado a lista BLOCK
-[INFO] 01:14:02:720 KernelScheduler/(26441:26493): ## (5) finalizó IO y pasa a READY
-[INFO] 01:14:02:720 KernelScheduler/(26441:26493): ## (5) Pasa del estado BLOCK al estado READY
-[INFO] 01:14:02:720 KernelScheduler/(26441:26493): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:14:02:720 KernelScheduler/(26441:26493): ## (4) Prioridad: 2 - Desalojado por cola más prioritaria por el proceso 5 con prioridad 1
-[INFO] 01:14:03:175 KernelScheduler/(26441:26463): ## (4) - Desalojado por cola más prioritaria
-[INFO] 01:14:03:175 KernelScheduler/(26441:26463): ## (4) Pasa del estado EXEC al estado READY
-[INFO] 01:14:03:175 KernelScheduler/(26441:26463): proceso 4 agregado a cola CMN de prioridad 2
-[INFO] 01:14:03:175 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:14:03:175 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:14:04:023 KernelScheduler/(26441:26463): ## (5) - Desalojado por fin de quantum
-[INFO] 01:14:04:023 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 01:14:04:023 KernelScheduler/(26441:26463): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:14:04:023 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:14:04:023 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:14:04:871 KernelScheduler/(26441:26463): ## (5) - Desalojado por fin de quantum
-[INFO] 01:14:04:871 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 01:14:04:871 KernelScheduler/(26441:26463): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:14:04:871 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:14:04:871 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:14:05:718 KernelScheduler/(26441:26463): ## (5) - Desalojado por fin de quantum
-[INFO] 01:14:05:718 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 01:14:05:719 KernelScheduler/(26441:26463): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:14:05:719 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:14:05:719 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:14:06:567 KernelScheduler/(26441:26463): ## (5) - Desalojado por fin de quantum
-[INFO] 01:14:06:567 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 01:14:06:567 KernelScheduler/(26441:26463): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:14:06:567 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:14:06:567 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:14:07:414 KernelScheduler/(26441:26463): ## (5) - Desalojado por fin de quantum
-[INFO] 01:14:07:414 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 01:14:07:414 KernelScheduler/(26441:26463): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:14:07:414 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:14:07:414 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:14:07:971 KernelScheduler/(26441:26463): ## (5) - Solicitó syscall: SLEEP
-[INFO] 01:14:07:971 KernelScheduler/(26441:26445): ## (3) Pasa del estado READY al estado EXEC
-[INFO] 01:14:07:971 KernelScheduler/(26441:26445): proceso 3 agregado a lista EXEC
-[INFO] 01:14:07:971 KernelScheduler/(26441:26508): ## (5) Pasa del estado EXEC al estado BLOCK
-[INFO] 01:14:07:971 KernelScheduler/(26441:26508): Proceso 5 agregado a lista BLOCK
-[INFO] 01:14:08:072 KernelScheduler/(26441:26508): ## (5) finalizó IO y pasa a READY
-[INFO] 01:14:08:072 KernelScheduler/(26441:26508): ## (5) Pasa del estado BLOCK al estado READY
-[INFO] 01:14:08:072 KernelScheduler/(26441:26508): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:14:08:072 KernelScheduler/(26441:26508): ## (3) Prioridad: 2 - Desalojado por cola más prioritaria por el proceso 5 con prioridad 1
-[INFO] 01:14:08:527 KernelScheduler/(26441:26463): ## (3) - Desalojado por cola más prioritaria
-[INFO] 01:14:08:527 KernelScheduler/(26441:26463): ## (3) Pasa del estado EXEC al estado READY
-[INFO] 01:14:08:527 KernelScheduler/(26441:26463): proceso 3 agregado a cola CMN de prioridad 2
-[INFO] 01:14:08:527 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:14:08:527 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:14:09:374 KernelScheduler/(26441:26463): ## (5) - Desalojado por fin de quantum
-[INFO] 01:14:09:374 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 01:14:09:375 KernelScheduler/(26441:26463): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:14:09:375 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:14:09:375 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:14:10:222 KernelScheduler/(26441:26463): ## (5) - Desalojado por fin de quantum
-[INFO] 01:14:10:223 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 01:14:10:223 KernelScheduler/(26441:26463): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:14:10:223 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:14:10:223 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:14:11:071 KernelScheduler/(26441:26463): ## (5) - Desalojado por fin de quantum
-[INFO] 01:14:11:071 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 01:14:11:071 KernelScheduler/(26441:26463): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:14:11:071 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:14:11:071 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:14:11:918 KernelScheduler/(26441:26463): ## (5) - Desalojado por fin de quantum
-[INFO] 01:14:11:918 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 01:14:11:918 KernelScheduler/(26441:26463): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:14:11:919 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:14:11:919 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[INFO] 01:14:12:767 KernelScheduler/(26441:26463): ## (5) - Desalojado por fin de quantum
-[INFO] 01:14:12:767 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado READY
-[INFO] 01:14:12:767 KernelScheduler/(26441:26463): proceso 5 agregado a cola CMN de prioridad 1
-[INFO] 01:14:12:767 KernelScheduler/(26441:26445): ## (5) Pasa del estado READY al estado EXEC
-[INFO] 01:14:12:767 KernelScheduler/(26441:26445): proceso 5 agregado a lista EXEC
-[ERROR] 01:14:13:323 KernelScheduler/(26441:26463): ## KM no confirmó la liberación de memoria del PID 5
-[INFO] 01:14:13:323 KernelScheduler/(26441:26463): ## (5) Pasa del estado EXEC al estado EXIT
-[INFO] 01:14:13:323 KernelScheduler/(26441:26463): Se terminó la proceso 5 agregado a lista EXIT
-[INFO] 01:14:13:323 KernelScheduler/(26441:26463): ## (5) finalizó su ejecución con motivo de EXIT
-[INFO] 01:14:13:323 KernelScheduler/(26441:26445): ## (4) Pasa del estado READY al estado EXEC
-[INFO] 01:14:13:323 KernelScheduler/(26441:26445): proceso 4 agregado a lista EXEC
-[ERROR] 01:14:57:655 KernelScheduler/(26441:26463): ## KM no confirmó la liberación de memoria del PID 4
-[INFO] 01:14:57:655 KernelScheduler/(26441:26463): ## (4) Pasa del estado EXEC al estado EXIT
-[INFO] 01:14:57:655 KernelScheduler/(26441:26463): Se terminó la proceso 4 agregado a lista EXIT
-[INFO] 01:14:57:655 KernelScheduler/(26441:26463): ## (4) finalizó su ejecución con motivo de EXIT
-[INFO] 01:14:57:655 KernelScheduler/(26441:26445): ## (3) Pasa del estado READY al estado EXEC
-[INFO] 01:14:57:655 KernelScheduler/(26441:26445): proceso 3 agregado a lista EXEC
-[ERROR] 01:15:41:879 KernelScheduler/(26441:26463): ## KM no confirmó la liberación de memoria del PID 3
-[INFO] 01:15:41:879 KernelScheduler/(26441:26463): ## (3) Pasa del estado EXEC al estado EXIT
-[INFO] 01:15:41:880 KernelScheduler/(26441:26463): Se terminó la proceso 3 agregado a lista EXIT
-[INFO] 01:15:41:880 KernelScheduler/(26441:26463): ## (3) finalizó su ejecución con motivo de EXIT
-[INFO] 01:15:41:880 KernelScheduler/(26441:26445): ## (1) Pasa del estado READY al estado EXEC
-[INFO] 01:15:41:880 KernelScheduler/(26441:26445): proceso 1 agregado a lista EXEC
-[INFO] 01:15:42:727 KernelScheduler/(26441:26463): ## (1) - Desalojado por fin de quantum
-[INFO] 01:15:42:727 KernelScheduler/(26441:26445): ## (2) Pasa del estado READY al estado EXEC
-[INFO] 01:15:42:727 KernelScheduler/(26441:26445): proceso 2 agregado a lista EXEC
-[INFO] 01:15:42:727 KernelScheduler/(26441:26463): ## (1) Pasa del estado EXEC al estado READY
-[INFO] 01:15:42:727 KernelScheduler/(26441:26463): proceso 1 agregado a cola CMN de prioridad 3
-[INFO] 01:15:43:623 KernelScheduler/(26441:26463): ## (2) - Desalojado por fin de quantum
-[INFO] 01:15:43:623 KernelScheduler/(26441:26445): ## (1) Pasa del estado READY al estado EXEC
-[INFO] 01:15:43:623 KernelScheduler/(26441:26445): proceso 1 agregado a lista EXEC
-[INFO] 01:15:43:624 KernelScheduler/(26441:26463): ## (2) Pasa del estado EXEC al estado READY
-[INFO] 01:15:43:624 KernelScheduler/(26441:26463): proceso 2 agregado a cola CMN de prioridad 3
-[INFO] 01:15:44:179 KernelScheduler/(26441:26463): ## (1) - Solicitó syscall: SLEEP
-[INFO] 01:15:44:179 KernelScheduler/(26441:26445): ## (2) Pasa del estado READY al estado EXEC
-[INFO] 01:15:44:179 KernelScheduler/(26441:26445): proceso 2 agregado a lista EXEC
-[INFO] 01:15:44:179 KernelScheduler/(26441:26753): ## (1) Pasa del estado EXEC al estado BLOCK
-[INFO] 01:15:44:179 KernelScheduler/(26441:26753): Proceso 1 agregado a lista BLOCK
-[INFO] 01:15:44:740 KernelScheduler/(26441:26463): ## (2) - Solicitó syscall: SLEEP
-[INFO] 01:15:44:749 KernelScheduler/(26441:26757): ## (2) Pasa del estado EXEC al estado BLOCK
-[INFO] 01:15:44:749 KernelScheduler/(26441:26757): Proceso 2 agregado a lista BLOCK
-[INFO] 01:16:04:180 KernelScheduler/(26441:26753): ## (1) finalizó IO y pasa a READY
-[INFO] 01:16:04:180 KernelScheduler/(26441:26753): ## (1) Pasa del estado BLOCK al estado READY
-[INFO] 01:16:04:181 KernelScheduler/(26441:26753): proceso 1 agregado a cola CMN de prioridad 3
-[INFO] 01:16:04:181 KernelScheduler/(26441:26445): ## (1) Pasa del estado READY al estado EXEC
-[INFO] 01:16:04:181 KernelScheduler/(26441:26445): proceso 1 agregado a lista EXEC
-[INFO] 01:16:04:983 KernelScheduler/(26441:26463): ## (1) - Desalojado por fin de quantum
-[INFO] 01:16:04:983 KernelScheduler/(26441:26463): ## (1) Pasa del estado EXEC al estado READY
-[INFO] 01:16:04:983 KernelScheduler/(26441:26463): proceso 1 agregado a cola CMN de prioridad 3
-[INFO] 01:16:04:983 KernelScheduler/(26441:26445): ## (1) Pasa del estado READY al estado EXEC
-[INFO] 01:16:04:983 KernelScheduler/(26441:26445): proceso 1 agregado a lista EXEC
-[INFO] 01:16:05:583 KernelScheduler/(26441:26463): ## (1) - Solicitó syscall: SLEEP
-[INFO] 01:16:05:583 KernelScheduler/(26441:26763): ## (1) Pasa del estado EXEC al estado BLOCK
-[INFO] 01:16:05:583 KernelScheduler/(26441:26763): Proceso 1 agregado a lista BLOCK
-[INFO] 01:16:24:223 KernelScheduler/(26441:26757): ## (2) finalizó IO y pasa a READY
-[INFO] 01:16:24:223 KernelScheduler/(26441:26757): ## (2) Pasa del estado BLOCK al estado READY
-[INFO] 01:16:24:223 KernelScheduler/(26441:26757): proceso 2 agregado a cola CMN de prioridad 3
-[INFO] 01:16:24:223 KernelScheduler/(26441:26445): ## (2) Pasa del estado READY al estado EXEC
-[INFO] 01:16:24:223 KernelScheduler/(26441:26445): proceso 2 agregado a lista EXEC
-[INFO] 01:16:25:027 KernelScheduler/(26441:26463): ## (2) - Desalojado por fin de quantum
-[INFO] 01:16:25:027 KernelScheduler/(26441:26463): ## (2) Pasa del estado EXEC al estado READY
-[INFO] 01:16:25:027 KernelScheduler/(26441:26463): proceso 2 agregado a cola CMN de prioridad 3
-[INFO] 01:16:25:027 KernelScheduler/(26441:26445): ## (2) Pasa del estado READY al estado EXEC
-[INFO] 01:16:25:027 KernelScheduler/(26441:26445): proceso 2 agregado a lista EXEC
-[INFO] 01:16:25:628 KernelScheduler/(26441:26463): ## (2) - Solicitó syscall: SLEEP
-[INFO] 01:16:25:628 KernelScheduler/(26441:26769): ## (2) Pasa del estado EXEC al estado BLOCK
-[INFO] 01:16:25:628 KernelScheduler/(26441:26769): Proceso 2 agregado a lista BLOCK
-[INFO] 01:16:44:180 KernelScheduler/(26441:26755): ## (1) Pasa del estado BLOCK al estado SUSP_BLOCK
-[INFO] 01:16:44:181 KernelScheduler/(26441:26755): Proceso 1 agregado a lista SUSP BLOCK
-[INFO] 01:16:44:267 KernelScheduler/(26441:26763): ## (1) finalizó IO y pasa a SUSP. READY
-[INFO] 01:16:44:267 KernelScheduler/(26441:26763): ## (1) Pasa del estado SUSP_BLOCK al estado SUSP_READY
-[INFO] 01:16:44:267 KernelScheduler/(26441:26763): Proceso 1 agregado a lista SUSP READY
-[INFO] 01:16:44:756 KernelScheduler/(26441:26758): ## (2) Pasa del estado BLOCK al estado SUSP_BLOCK
-[INFO] 01:16:44:756 KernelScheduler/(26441:26758): Proceso 2 agregado a lista SUSP BLOCK
-[INFO] 01:17:04:311 KernelScheduler/(26441:26769): ## (2) finalizó IO y pasa a SUSP. READY
-[INFO] 01:17:04:311 KernelScheduler/(26441:26769): ## (2) Pasa del estado SUSP_BLOCK al estado SUSP_READY
-[INFO] 01:17:04:311 KernelScheduler/(26441:26769): Proceso 2 agregado a lista SUSP READY
+[INFO] 15:34:03:197 KernelScheduler/(2635:2635): ## Conectado a Kernel Memory
+[INFO] 15:34:03:198 KernelScheduler/(2635:2635): ## Conectado a Kernel Memory y aceptado
+[INFO] 15:34:03:199 KernelScheduler/(2635:2635): Servidor KS listo en puerto 9001
+[INFO] 15:34:03:199 KernelScheduler/(2635:2635): CMN: 4 colas de prioridad inicializadas
+[INFO] 15:34:03:199 KernelScheduler/(2635:2635): ## (0) Se crea el proceso - Estado: NEW
+[INFO] 15:34:03:285 KernelScheduler/(2635:2639): Planificador de Corto Plazo iniciado.
+[INFO] 15:34:03:286 KernelScheduler/(2635:2638): Planificador de Largo Plazo iniciado.
+[INFO] 15:34:03:286 KernelScheduler/(2635:2638): ## (0) Pasa del estado NEW al estado READY
+[INFO] 15:34:03:286 KernelScheduler/(2635:2638): proceso 0 agregado a cola CMN de prioridad 0
+[INFO] 15:34:06:361 KernelScheduler/(2635:2641): ## IO SLEEP conectada - FD: 6
+[INFO] 15:34:17:658 KernelScheduler/(2635:2650): CPU conectado - FD: 7
+[INFO] 15:34:17:659 KernelScheduler/(2635:2639): ## (0) Pasa del estado READY al estado EXEC
+[INFO] 15:34:17:659 KernelScheduler/(2635:2639): proceso 0 agregado a lista EXEC
+[INFO] 15:34:18:213 KernelScheduler/(2635:2650): ## (0) - Solicitó syscall: INIT_PROC
+[INFO] 15:34:18:213 KernelScheduler/(2635:2650): ## (1) Se crea el proceso - Estado: NEW
+[INFO] 15:34:18:258 KernelScheduler/(2635:2638): ## (1) Pasa del estado NEW al estado READY
+[INFO] 15:34:18:259 KernelScheduler/(2635:2638): proceso 1 agregado a cola CMN de prioridad 3
+[INFO] 15:34:18:508 KernelScheduler/(2635:2650): ## (0) - Solicitó syscall: INIT_PROC
+[INFO] 15:34:18:508 KernelScheduler/(2635:2650): ## (2) Se crea el proceso - Estado: NEW
+[INFO] 15:34:18:550 KernelScheduler/(2635:2638): ## (2) Pasa del estado NEW al estado READY
+[INFO] 15:34:18:550 KernelScheduler/(2635:2638): proceso 2 agregado a cola CMN de prioridad 3
+[INFO] 15:34:18:800 KernelScheduler/(2635:2650): ## (0) - Solicitó syscall: INIT_PROC
+[INFO] 15:34:18:800 KernelScheduler/(2635:2650): ## (3) Se crea el proceso - Estado: NEW
+[INFO] 15:34:18:841 KernelScheduler/(2635:2638): ## (3) Pasa del estado NEW al estado READY
+[INFO] 15:34:18:841 KernelScheduler/(2635:2638): proceso 3 agregado a cola CMN de prioridad 2
+[INFO] 15:34:19:092 KernelScheduler/(2635:2650): ## (0) - Solicitó syscall: INIT_PROC
+[INFO] 15:34:19:092 KernelScheduler/(2635:2650): ## (4) Se crea el proceso - Estado: NEW
+[INFO] 15:34:19:134 KernelScheduler/(2635:2638): ## (4) Pasa del estado NEW al estado READY
+[INFO] 15:34:19:134 KernelScheduler/(2635:2638): proceso 4 agregado a cola CMN de prioridad 2
+[INFO] 15:34:19:384 KernelScheduler/(2635:2650): ## (0) - Solicitó syscall: INIT_PROC
+[INFO] 15:34:19:384 KernelScheduler/(2635:2650): ## (5) Se crea el proceso - Estado: NEW
+[INFO] 15:34:19:426 KernelScheduler/(2635:2638): ## (5) Pasa del estado NEW al estado READY
+[INFO] 15:34:19:426 KernelScheduler/(2635:2638): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:19:717 KernelScheduler/(2635:2650): ## (0) Pasa del estado EXEC al estado EXIT
+[INFO] 15:34:19:717 KernelScheduler/(2635:2650): Se terminó la proceso 0 agregado a lista EXIT
+[INFO] 15:34:19:717 KernelScheduler/(2635:2650): ## (0) finalizó su ejecución con motivo de EXIT
+[INFO] 15:34:19:717 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:19:717 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:20:565 KernelScheduler/(2635:2650): ## (5) - Desalojado por fin de quantum
+[INFO] 15:34:20:565 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 15:34:20:565 KernelScheduler/(2635:2650): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:20:565 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:20:565 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:21:457 KernelScheduler/(2635:2650): ## (5) - Desalojado por fin de quantum
+[INFO] 15:34:21:457 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 15:34:21:457 KernelScheduler/(2635:2650): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:21:457 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:21:457 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:22:305 KernelScheduler/(2635:2650): ## (5) - Desalojado por fin de quantum
+[INFO] 15:34:22:305 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 15:34:22:305 KernelScheduler/(2635:2650): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:22:305 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:22:305 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:23:153 KernelScheduler/(2635:2650): ## (5) - Desalojado por fin de quantum
+[INFO] 15:34:23:153 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 15:34:23:153 KernelScheduler/(2635:2650): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:23:153 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:23:153 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:24:006 KernelScheduler/(2635:2650): ## (5) - Desalojado por fin de quantum
+[INFO] 15:34:24:006 KernelScheduler/(2635:2639): ## (3) Pasa del estado READY al estado EXEC
+[INFO] 15:34:24:006 KernelScheduler/(2635:2639): proceso 3 agregado a lista EXEC
+[INFO] 15:34:24:006 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 15:34:24:006 KernelScheduler/(2635:2650): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:24:006 KernelScheduler/(2635:2650): ## (3) Prioridad: 2 - Desalojado por cola más prioritaria por el proceso 5 con prioridad 1
+[INFO] 15:34:24:561 KernelScheduler/(2635:2650): ## (3) - Desalojado por cola más prioritaria
+[INFO] 15:34:24:561 KernelScheduler/(2635:2650): ## (3) Pasa del estado EXEC al estado READY
+[INFO] 15:34:24:561 KernelScheduler/(2635:2650): proceso 3 agregado a cola CMN de prioridad 2
+[INFO] 15:34:24:561 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:24:561 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:25:117 KernelScheduler/(2635:2650): ## (5) - Solicitó syscall: SLEEP
+[INFO] 15:34:25:117 KernelScheduler/(2635:2639): ## (4) Pasa del estado READY al estado EXEC
+[INFO] 15:34:25:117 KernelScheduler/(2635:2639): proceso 4 agregado a lista EXEC
+[INFO] 15:34:25:117 KernelScheduler/(2635:2666): ## (5) Pasa del estado EXEC al estado BLOCK
+[INFO] 15:34:25:117 KernelScheduler/(2635:2666): Proceso 5 agregado a lista BLOCK
+[INFO] 15:34:25:261 KernelScheduler/(2635:2666): ## (5) finalizó IO y pasa a READY
+[INFO] 15:34:25:261 KernelScheduler/(2635:2666): ## (5) Pasa del estado BLOCK al estado READY
+[INFO] 15:34:25:261 KernelScheduler/(2635:2666): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:25:261 KernelScheduler/(2635:2666): ## (4) Prioridad: 2 - Desalojado por cola más prioritaria por el proceso 5 con prioridad 1
+[INFO] 15:34:25:673 KernelScheduler/(2635:2650): ## (4) - Desalojado por cola más prioritaria
+[INFO] 15:34:25:673 KernelScheduler/(2635:2650): ## (4) Pasa del estado EXEC al estado READY
+[INFO] 15:34:25:673 KernelScheduler/(2635:2650): proceso 4 agregado a cola CMN de prioridad 2
+[INFO] 15:34:25:673 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:25:673 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:26:521 KernelScheduler/(2635:2650): ## (5) - Desalojado por fin de quantum
+[INFO] 15:34:26:521 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 15:34:26:521 KernelScheduler/(2635:2650): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:26:521 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:26:521 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:27:369 KernelScheduler/(2635:2650): ## (5) - Desalojado por fin de quantum
+[INFO] 15:34:27:369 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 15:34:27:369 KernelScheduler/(2635:2650): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:27:369 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:27:369 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:28:217 KernelScheduler/(2635:2650): ## (5) - Desalojado por fin de quantum
+[INFO] 15:34:28:217 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 15:34:28:217 KernelScheduler/(2635:2650): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:28:217 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:28:217 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:29:065 KernelScheduler/(2635:2650): ## (5) - Desalojado por fin de quantum
+[INFO] 15:34:29:065 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 15:34:29:065 KernelScheduler/(2635:2650): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:29:065 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:29:065 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:29:913 KernelScheduler/(2635:2650): ## (5) - Desalojado por fin de quantum
+[INFO] 15:34:29:913 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 15:34:29:913 KernelScheduler/(2635:2650): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:29:913 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:29:913 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:30:469 KernelScheduler/(2635:2650): ## (5) - Solicitó syscall: SLEEP
+[INFO] 15:34:30:469 KernelScheduler/(2635:2639): ## (3) Pasa del estado READY al estado EXEC
+[INFO] 15:34:30:469 KernelScheduler/(2635:2639): proceso 3 agregado a lista EXEC
+[INFO] 15:34:30:469 KernelScheduler/(2635:2681): ## (5) Pasa del estado EXEC al estado BLOCK
+[INFO] 15:34:30:469 KernelScheduler/(2635:2681): Proceso 5 agregado a lista BLOCK
+[INFO] 15:34:30:569 KernelScheduler/(2635:2681): ## (5) finalizó IO y pasa a READY
+[INFO] 15:34:30:569 KernelScheduler/(2635:2681): ## (5) Pasa del estado BLOCK al estado READY
+[INFO] 15:34:30:569 KernelScheduler/(2635:2681): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:30:569 KernelScheduler/(2635:2681): ## (3) Prioridad: 2 - Desalojado por cola más prioritaria por el proceso 5 con prioridad 1
+[INFO] 15:34:31:025 KernelScheduler/(2635:2650): ## (3) - Desalojado por cola más prioritaria
+[INFO] 15:34:31:025 KernelScheduler/(2635:2650): ## (3) Pasa del estado EXEC al estado READY
+[INFO] 15:34:31:025 KernelScheduler/(2635:2650): proceso 3 agregado a cola CMN de prioridad 2
+[INFO] 15:34:31:025 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:31:025 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:31:874 KernelScheduler/(2635:2650): ## (5) - Desalojado por fin de quantum
+[INFO] 15:34:31:874 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 15:34:31:874 KernelScheduler/(2635:2650): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:31:874 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:31:874 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:32:721 KernelScheduler/(2635:2650): ## (5) - Desalojado por fin de quantum
+[INFO] 15:34:32:721 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 15:34:32:721 KernelScheduler/(2635:2650): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:32:721 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:32:721 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:33:569 KernelScheduler/(2635:2650): ## (5) - Desalojado por fin de quantum
+[INFO] 15:34:33:569 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 15:34:33:569 KernelScheduler/(2635:2650): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:33:569 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:33:569 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:34:417 KernelScheduler/(2635:2650): ## (5) - Desalojado por fin de quantum
+[INFO] 15:34:34:417 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 15:34:34:417 KernelScheduler/(2635:2650): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:34:417 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:34:417 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:35:265 KernelScheduler/(2635:2650): ## (5) - Desalojado por fin de quantum
+[INFO] 15:34:35:265 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 15:34:35:265 KernelScheduler/(2635:2650): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:35:265 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:35:265 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:35:821 KernelScheduler/(2635:2650): ## (5) - Solicitó syscall: SLEEP
+[INFO] 15:34:35:821 KernelScheduler/(2635:2639): ## (4) Pasa del estado READY al estado EXEC
+[INFO] 15:34:35:821 KernelScheduler/(2635:2639): proceso 4 agregado a lista EXEC
+[INFO] 15:34:35:821 KernelScheduler/(2635:2696): ## (5) Pasa del estado EXEC al estado BLOCK
+[INFO] 15:34:35:821 KernelScheduler/(2635:2696): Proceso 5 agregado a lista BLOCK
+[INFO] 15:34:35:921 KernelScheduler/(2635:2696): ## (5) finalizó IO y pasa a READY
+[INFO] 15:34:35:921 KernelScheduler/(2635:2696): ## (5) Pasa del estado BLOCK al estado READY
+[INFO] 15:34:35:921 KernelScheduler/(2635:2696): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:35:921 KernelScheduler/(2635:2696): ## (4) Prioridad: 2 - Desalojado por cola más prioritaria por el proceso 5 con prioridad 1
+[INFO] 15:34:36:377 KernelScheduler/(2635:2650): ## (4) - Desalojado por cola más prioritaria
+[INFO] 15:34:36:377 KernelScheduler/(2635:2650): ## (4) Pasa del estado EXEC al estado READY
+[INFO] 15:34:36:377 KernelScheduler/(2635:2650): proceso 4 agregado a cola CMN de prioridad 2
+[INFO] 15:34:36:377 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:36:377 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:37:225 KernelScheduler/(2635:2650): ## (5) - Desalojado por fin de quantum
+[INFO] 15:34:37:225 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 15:34:37:225 KernelScheduler/(2635:2650): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:37:225 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:37:225 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:38:073 KernelScheduler/(2635:2650): ## (5) - Desalojado por fin de quantum
+[INFO] 15:34:38:073 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 15:34:38:073 KernelScheduler/(2635:2650): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:38:073 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:38:073 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:38:921 KernelScheduler/(2635:2650): ## (5) - Desalojado por fin de quantum
+[INFO] 15:34:38:921 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 15:34:38:921 KernelScheduler/(2635:2650): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:38:921 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:38:921 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:39:769 KernelScheduler/(2635:2650): ## (5) - Desalojado por fin de quantum
+[INFO] 15:34:39:769 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 15:34:39:769 KernelScheduler/(2635:2650): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:39:769 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:39:769 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:40:617 KernelScheduler/(2635:2650): ## (5) - Desalojado por fin de quantum
+[INFO] 15:34:40:617 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 15:34:40:617 KernelScheduler/(2635:2650): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 15:34:40:617 KernelScheduler/(2635:2639): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 15:34:40:617 KernelScheduler/(2635:2639): proceso 5 agregado a lista EXEC
+[INFO] 15:34:41:173 KernelScheduler/(2635:2650): ## (5) Pasa del estado EXEC al estado EXIT
+[INFO] 15:34:41:173 KernelScheduler/(2635:2650): Se terminó la proceso 5 agregado a lista EXIT
+[INFO] 15:34:41:173 KernelScheduler/(2635:2650): ## (5) finalizó su ejecución con motivo de EXIT
+[INFO] 15:34:41:173 KernelScheduler/(2635:2639): ## (3) Pasa del estado READY al estado EXEC
+[INFO] 15:34:41:173 KernelScheduler/(2635:2639): proceso 3 agregado a lista EXEC
+[INFO] 15:35:25:197 KernelScheduler/(2635:2650): ## (3) Pasa del estado EXEC al estado EXIT
+[INFO] 15:35:25:197 KernelScheduler/(2635:2650): Se terminó la proceso 3 agregado a lista EXIT
+[INFO] 15:35:25:197 KernelScheduler/(2635:2650): ## (3) finalizó su ejecución con motivo de EXIT
+[INFO] 15:35:25:197 KernelScheduler/(2635:2639): ## (4) Pasa del estado READY al estado EXEC
+[INFO] 15:35:25:197 KernelScheduler/(2635:2639): proceso 4 agregado a lista EXEC
+[INFO] 15:36:09:265 KernelScheduler/(2635:2650): ## (4) Pasa del estado EXEC al estado EXIT
+[INFO] 15:36:09:265 KernelScheduler/(2635:2650): Se terminó la proceso 4 agregado a lista EXIT
+[INFO] 15:36:09:265 KernelScheduler/(2635:2650): ## (4) finalizó su ejecución con motivo de EXIT
+[INFO] 15:36:09:265 KernelScheduler/(2635:2639): ## (1) Pasa del estado READY al estado EXEC
+[INFO] 15:36:09:265 KernelScheduler/(2635:2639): proceso 1 agregado a lista EXEC
+[INFO] 15:36:10:113 KernelScheduler/(2635:2650): ## (1) - Desalojado por fin de quantum
+[INFO] 15:36:10:113 KernelScheduler/(2635:2650): ## (1) Pasa del estado EXEC al estado READY
+[INFO] 15:36:10:113 KernelScheduler/(2635:2650): proceso 1 agregado a cola CMN de prioridad 3
+[INFO] 15:36:10:113 KernelScheduler/(2635:2639): ## (2) Pasa del estado READY al estado EXEC
+[INFO] 15:36:10:113 KernelScheduler/(2635:2639): proceso 2 agregado a lista EXEC
+[INFO] 15:36:11:006 KernelScheduler/(2635:2650): ## (2) - Desalojado por fin de quantum
+[INFO] 15:36:11:006 KernelScheduler/(2635:2639): ## (1) Pasa del estado READY al estado EXEC
+[INFO] 15:36:11:006 KernelScheduler/(2635:2639): proceso 1 agregado a lista EXEC
+[INFO] 15:36:11:006 KernelScheduler/(2635:2650): ## (2) Pasa del estado EXEC al estado READY
+[INFO] 15:36:11:006 KernelScheduler/(2635:2650): proceso 2 agregado a cola CMN de prioridad 3
+[INFO] 15:36:11:561 KernelScheduler/(2635:2650): ## (1) - Solicitó syscall: SLEEP
+[INFO] 15:36:11:561 KernelScheduler/(2635:2639): ## (2) Pasa del estado READY al estado EXEC
+[INFO] 15:36:11:561 KernelScheduler/(2635:2639): proceso 2 agregado a lista EXEC
+[INFO] 15:36:11:561 KernelScheduler/(2635:2719): ## (1) Pasa del estado EXEC al estado BLOCK
+[INFO] 15:36:11:561 KernelScheduler/(2635:2719): Proceso 1 agregado a lista BLOCK
+[INFO] 15:36:12:117 KernelScheduler/(2635:2650): ## (2) - Solicitó syscall: SLEEP
+[INFO] 15:36:12:117 KernelScheduler/(2635:2723): ## (2) Pasa del estado EXEC al estado BLOCK
+[INFO] 15:36:12:117 KernelScheduler/(2635:2723): Proceso 2 agregado a lista BLOCK
+[INFO] 15:36:31:561 KernelScheduler/(2635:2719): ## (1) finalizó IO y pasa a READY
+[INFO] 15:36:31:562 KernelScheduler/(2635:2719): ## (1) Pasa del estado BLOCK al estado READY
+[INFO] 15:36:31:562 KernelScheduler/(2635:2719): proceso 1 agregado a cola CMN de prioridad 3
+[INFO] 15:36:31:562 KernelScheduler/(2635:2639): ## (1) Pasa del estado READY al estado EXEC
+[INFO] 15:36:31:562 KernelScheduler/(2635:2639): proceso 1 agregado a lista EXEC
+[INFO] 15:36:32:365 KernelScheduler/(2635:2650): ## (1) - Desalojado por fin de quantum
+[INFO] 15:36:32:365 KernelScheduler/(2635:2650): ## (1) Pasa del estado EXEC al estado READY
+[INFO] 15:36:32:365 KernelScheduler/(2635:2650): proceso 1 agregado a cola CMN de prioridad 3
+[INFO] 15:36:32:365 KernelScheduler/(2635:2639): ## (1) Pasa del estado READY al estado EXEC
+[INFO] 15:36:32:365 KernelScheduler/(2635:2639): proceso 1 agregado a lista EXEC
+[INFO] 15:36:32:965 KernelScheduler/(2635:2650): ## (1) - Solicitó syscall: SLEEP
+[INFO] 15:36:32:965 KernelScheduler/(2635:2729): ## (1) Pasa del estado EXEC al estado BLOCK
+[INFO] 15:36:32:965 KernelScheduler/(2635:2729): Proceso 1 agregado a lista BLOCK
+[INFO] 15:36:51:605 KernelScheduler/(2635:2723): ## (2) finalizó IO y pasa a READY
+[INFO] 15:36:51:605 KernelScheduler/(2635:2723): ## (2) Pasa del estado BLOCK al estado READY
+[INFO] 15:36:51:605 KernelScheduler/(2635:2723): proceso 2 agregado a cola CMN de prioridad 3
+[INFO] 15:36:51:605 KernelScheduler/(2635:2639): ## (2) Pasa del estado READY al estado EXEC
+[INFO] 15:36:51:605 KernelScheduler/(2635:2639): proceso 2 agregado a lista EXEC
+[INFO] 15:36:52:409 KernelScheduler/(2635:2650): ## (2) - Desalojado por fin de quantum
+[INFO] 15:36:52:409 KernelScheduler/(2635:2650): ## (2) Pasa del estado EXEC al estado READY
+[INFO] 15:36:52:409 KernelScheduler/(2635:2650): proceso 2 agregado a cola CMN de prioridad 3
+[INFO] 15:36:52:409 KernelScheduler/(2635:2639): ## (2) Pasa del estado READY al estado EXEC
+[INFO] 15:36:52:409 KernelScheduler/(2635:2639): proceso 2 agregado a lista EXEC
+[INFO] 15:36:53:009 KernelScheduler/(2635:2650): ## (2) - Solicitó syscall: SLEEP
+[INFO] 15:36:53:009 KernelScheduler/(2635:2735): ## (2) Pasa del estado EXEC al estado BLOCK
+[INFO] 15:36:53:009 KernelScheduler/(2635:2735): Proceso 2 agregado a lista BLOCK
+[INFO] 15:37:11:561 KernelScheduler/(2635:2721): ## (1) Pasa del estado BLOCK al estado SUSP_BLOCK
+[INFO] 15:37:11:561 KernelScheduler/(2635:2721): Proceso 1 agregado a lista SUSP BLOCK
+[INFO] 15:37:11:649 KernelScheduler/(2635:2729): ## (1) finalizó IO y pasa a SUSP. READY
+[INFO] 15:37:11:649 KernelScheduler/(2635:2729): ## (1) Pasa del estado SUSP_BLOCK al estado SUSP_READY
+[INFO] 15:37:11:649 KernelScheduler/(2635:2729): Proceso 1 agregado a lista SUSP READY
+[INFO] 15:37:12:117 KernelScheduler/(2635:2724): ## (2) Pasa del estado BLOCK al estado SUSP_BLOCK
+[INFO] 15:37:12:117 KernelScheduler/(2635:2724): Proceso 2 agregado a lista SUSP BLOCK
+[INFO] 15:37:31:693 KernelScheduler/(2635:2735): ## (2) finalizó IO y pasa a SUSP. READY
+[INFO] 15:37:31:693 KernelScheduler/(2635:2735): ## (2) Pasa del estado SUSP_BLOCK al estado SUSP_READY
+[INFO] 15:37:31:693 KernelScheduler/(2635:2735): Proceso 2 agregado a lista SUSP READY
+
+
 KM
-[INFO] 01:15:36:826 KernelMemory/(26440:26525): ## PID: 3 - Recibido PC: 2.
-[INFO] 01:15:36:827 KernelMemory/(26440:26525): Busqueda de instrucción concluida.
-[INFO] 01:15:36:827 KernelMemory/(26440:26525): ## PID: 3 - Obtener instrucción: 2 - Instrucción: SUB AX BX
-[INFO] 01:15:36:827 KernelMemory/(26440:26525): Esperando codigo de cpu...
-[INFO] 01:15:36:867 KernelMemory/(26440:26525): FETCH RECIBIDO.
-[INFO] 01:15:37:117 KernelMemory/(26440:26525): ## PID: 3 - Recibido PC: 3.
-[INFO] 01:15:37:117 KernelMemory/(26440:26525): Busqueda de instrucción concluida.
-[INFO] 01:15:37:117 KernelMemory/(26440:26525): ## PID: 3 - Obtener instrucción: 3 - Instrucción: JNZ AX 1
-[INFO] 01:15:37:117 KernelMemory/(26440:26525): Esperando codigo de cpu...
-[INFO] 01:15:37:159 KernelMemory/(26440:26525): FETCH RECIBIDO.
-[INFO] 01:15:37:410 KernelMemory/(26440:26525): ## PID: 3 - Recibido PC: 1.
-[INFO] 01:15:37:410 KernelMemory/(26440:26525): Busqueda de instrucción concluida.
-[INFO] 01:15:37:410 KernelMemory/(26440:26525): ## PID: 3 - Obtener instrucción: 1 - Instrucción: SET BX 1
-[INFO] 01:15:37:410 KernelMemory/(26440:26525): Esperando codigo de cpu...
-[INFO] 01:15:37:451 KernelMemory/(26440:26525): FETCH RECIBIDO.
-[INFO] 01:15:37:701 KernelMemory/(26440:26525): ## PID: 3 - Recibido PC: 2.
-[INFO] 01:15:37:701 KernelMemory/(26440:26525): Busqueda de instrucción concluida.
-[INFO] 01:15:37:701 KernelMemory/(26440:26525): ## PID: 3 - Obtener instrucción: 2 - Instrucción: SUB AX BX
-[INFO] 01:15:37:701 KernelMemory/(26440:26525): Esperando codigo de cpu...
-[INFO] 01:15:37:743 KernelMemory/(26440:26525): FETCH RECIBIDO.
-[INFO] 01:15:37:993 KernelMemory/(26440:26525): ## PID: 3 - Recibido PC: 3.
-[INFO] 01:15:37:994 KernelMemory/(26440:26525): Busqueda de instrucción concluida.
-[INFO] 01:15:37:994 KernelMemory/(26440:26525): ## PID: 3 - Obtener instrucción: 3 - Instrucción: JNZ AX 1
-[INFO] 01:15:37:994 KernelMemory/(26440:26525): Esperando codigo de cpu...
-[INFO] 01:15:38:035 KernelMemory/(26440:26525): FETCH RECIBIDO.
-[INFO] 01:15:38:286 KernelMemory/(26440:26525): ## PID: 3 - Recibido PC: 1.
-[INFO] 01:15:38:286 KernelMemory/(26440:26525): Busqueda de instrucción concluida.
-[INFO] 01:15:38:286 KernelMemory/(26440:26525): ## PID: 3 - Obtener instrucción: 1 - Instrucción: SET BX 1
-[INFO] 01:15:38:286 KernelMemory/(26440:26525): Esperando codigo de cpu...
-[INFO] 01:15:38:327 KernelMemory/(26440:26525): FETCH RECIBIDO.
-[INFO] 01:15:38:577 KernelMemory/(26440:26525): ## PID: 3 - Recibido PC: 2.
-[INFO] 01:15:38:577 KernelMemory/(26440:26525): Busqueda de instrucción concluida.
-[INFO] 01:15:38:577 KernelMemory/(26440:26525): ## PID: 3 - Obtener instrucción: 2 - Instrucción: SUB AX BX
-[INFO] 01:15:38:578 KernelMemory/(26440:26525): Esperando codigo de cpu...
-[INFO] 01:15:38:620 KernelMemory/(26440:26525): FETCH RECIBIDO.
-[INFO] 01:15:38:870 KernelMemory/(26440:26525): ## PID: 3 - Recibido PC: 3.
-[INFO] 01:15:38:870 KernelMemory/(26440:26525): Busqueda de instrucción concluida.
-[INFO] 01:15:38:871 KernelMemory/(26440:26525): ## PID: 3 - Obtener instrucción: 3 - Instrucción: JNZ AX 1
-[INFO] 01:15:38:871 KernelMemory/(26440:26525): Esperando codigo de cpu...
-[INFO] 01:15:38:915 KernelMemory/(26440:26525): FETCH RECIBIDO.
-[INFO] 01:15:39:165 KernelMemory/(26440:26525): ## PID: 3 - Recibido PC: 1.
-[INFO] 01:15:39:165 KernelMemory/(26440:26525): Busqueda de instrucción concluida.
-[INFO] 01:15:39:165 KernelMemory/(26440:26525): ## PID: 3 - Obtener instrucción: 1 - Instrucción: SET BX 1
-[INFO] 01:15:39:165 KernelMemory/(26440:26525): Esperando codigo de cpu...
-[INFO] 01:15:39:207 KernelMemory/(26440:26525): FETCH RECIBIDO.
-[INFO] 01:15:39:457 KernelMemory/(26440:26525): ## PID: 3 - Recibido PC: 2.
-[INFO] 01:15:39:457 KernelMemory/(26440:26525): Busqueda de instrucción concluida.
-[INFO] 01:15:39:457 KernelMemory/(26440:26525): ## PID: 3 - Obtener instrucción: 2 - Instrucción: SUB AX BX
-[INFO] 01:15:39:457 KernelMemory/(26440:26525): Esperando codigo de cpu...
-[INFO] 01:15:39:499 KernelMemory/(26440:26525): FETCH RECIBIDO.
-[INFO] 01:15:39:749 KernelMemory/(26440:26525): ## PID: 3 - Recibido PC: 3.
-[INFO] 01:15:39:749 KernelMemory/(26440:26525): Busqueda de instrucción concluida.
-[INFO] 01:15:39:749 KernelMemory/(26440:26525): ## PID: 3 - Obtener instrucción: 3 - Instrucción: JNZ AX 1
-[INFO] 01:15:39:749 KernelMemory/(26440:26525): Esperando codigo de cpu...
-[INFO] 01:15:39:791 KernelMemory/(26440:26525): FETCH RECIBIDO.
-[INFO] 01:15:40:041 KernelMemory/(26440:26525): ## PID: 3 - Recibido PC: 1.
-[INFO] 01:15:40:041 KernelMemory/(26440:26525): Busqueda de instrucción concluida.
-[INFO] 01:15:40:041 KernelMemory/(26440:26525): ## PID: 3 - Obtener instrucción: 1 - Instrucción: SET BX 1
-[INFO] 01:15:40:041 KernelMemory/(26440:26525): Esperando codigo de cpu...
-[INFO] 01:15:40:084 KernelMemory/(26440:26525): FETCH RECIBIDO.
-[INFO] 01:15:40:334 KernelMemory/(26440:26525): ## PID: 3 - Recibido PC: 2.
-[INFO] 01:15:40:334 KernelMemory/(26440:26525): Busqueda de instrucción concluida.
-[INFO] 01:15:40:334 KernelMemory/(26440:26525): ## PID: 3 - Obtener instrucción: 2 - Instrucción: SUB AX BX
-[INFO] 01:15:40:335 KernelMemory/(26440:26525): Esperando codigo de cpu...
-[INFO] 01:15:40:375 KernelMemory/(26440:26525): FETCH RECIBIDO.
-[INFO] 01:15:40:626 KernelMemory/(26440:26525): ## PID: 3 - Recibido PC: 3.
-[INFO] 01:15:40:626 KernelMemory/(26440:26525): Busqueda de instrucción concluida.
-[INFO] 01:15:40:626 KernelMemory/(26440:26525): ## PID: 3 - Obtener instrucción: 3 - Instrucción: JNZ AX 1
-[INFO] 01:15:40:626 KernelMemory/(26440:26525): Esperando codigo de cpu...
-[INFO] 01:15:40:667 KernelMemory/(26440:26525): FETCH RECIBIDO.
-[INFO] 01:15:40:918 KernelMemory/(26440:26525): ## PID: 3 - Recibido PC: 1.
-[INFO] 01:15:40:918 KernelMemory/(26440:26525): Busqueda de instrucción concluida.
-[INFO] 01:15:40:918 KernelMemory/(26440:26525): ## PID: 3 - Obtener instrucción: 1 - Instrucción: SET BX 1
-[INFO] 01:15:40:918 KernelMemory/(26440:26525): Esperando codigo de cpu...
-[INFO] 01:15:40:959 KernelMemory/(26440:26525): FETCH RECIBIDO.
-[INFO] 01:15:41:209 KernelMemory/(26440:26525): ## PID: 3 - Recibido PC: 2.
-[INFO] 01:15:41:209 KernelMemory/(26440:26525): Busqueda de instrucción concluida.
-[INFO] 01:15:41:210 KernelMemory/(26440:26525): ## PID: 3 - Obtener instrucción: 2 - Instrucción: SUB AX BX
-[INFO] 01:15:41:210 KernelMemory/(26440:26525): Esperando codigo de cpu...
-[INFO] 01:15:41:251 KernelMemory/(26440:26525): FETCH RECIBIDO.
-[INFO] 01:15:41:501 KernelMemory/(26440:26525): ## PID: 3 - Recibido PC: 3.
-[INFO] 01:15:41:501 KernelMemory/(26440:26525): Busqueda de instrucción concluida.
-[INFO] 01:15:41:501 KernelMemory/(26440:26525): ## PID: 3 - Obtener instrucción: 3 - Instrucción: JNZ AX 1
-[INFO] 01:15:41:501 KernelMemory/(26440:26525): Esperando codigo de cpu...
-[INFO] 01:15:41:543 KernelMemory/(26440:26525): FETCH RECIBIDO.
-[INFO] 01:15:41:793 KernelMemory/(26440:26525): ## PID: 3 - Recibido PC: 4.
-[INFO] 01:15:41:793 KernelMemory/(26440:26525): Busqueda de instrucción concluida.
-[INFO] 01:15:41:793 KernelMemory/(26440:26525): ## PID: 3 - Obtener instrucción: 4 - Instrucción: EXIT
-[INFO] 01:15:41:793 KernelMemory/(26440:26525): Esperando codigo de cpu...
-[INFO] 01:15:41:835 KernelMemory/(26440:26525): INTERRUPCION O EXIT RECIBIDO.
-[INFO] 01:15:41:835 KernelMemory/(26440:26525): ===== CONTEXTO DESERIALIZADO =====
-[INFO] 01:15:41:835 KernelMemory/(26440:26525): AX=0 BX=1 CX=0 DX=0
-[INFO] 01:15:41:835 KernelMemory/(26440:26525): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:15:41:835 KernelMemory/(26440:26525): SI=0 DI=0 PC=4
-[INFO] 01:15:41:835 KernelMemory/(26440:26525): Cantidad de segmentos: 0
-[INFO] 01:15:41:835 KernelMemory/(26440:26525): Proximo a detener: true
-[INFO] 01:15:41:835 KernelMemory/(26440:26525): Bytes deserializados: 37
-[INFO] 01:15:41:835 KernelMemory/(26440:26525): ===== FIN CONTEXTO =====
-[INFO] 01:15:41:835 KernelMemory/(26440:26525): Interrumpiendo proceso...
-[INFO] 01:15:41:835 KernelMemory/(26440:26525): Saliendo del ciclo de FETCH
-[INFO] 01:15:41:835 KernelMemory/(26440:26525): ## PID: 3 - El proceso ha concluido y será eliminado.
-[INFO] 01:15:41:835 KernelMemory/(26440:26525): ## PID: 1794639666 - Proceso eliminado.
-[INFO] 01:15:41:835 KernelMemory/(26440:26525): Liberando memoria...
-[INFO] 01:15:41:835 KernelMemory/(26440:26525): Reactivando recepción de procesos.
-[INFO] 01:15:41:835 KernelMemory/(26440:26462): Despertando rececpión de procesos...
-[INFO] 01:15:41:835 KernelMemory/(26440:26462): Kernel Memory está esperando nuevos procesos...
-[INFO] 01:15:41:924 KernelMemory/(26440:26462): Se ha recibido un nuevo pedido de iniciar proceso.
-[INFO] 01:15:41:924 KernelMemory/(26440:26462): Mapa enviado. Esperando PID
-[INFO] 01:15:42:011 KernelMemory/(26440:26462): PID recibido desde CPU: 1
-[INFO] 01:15:42:012 KernelMemory/(26440:26462): Proceso creado
-[INFO] 01:15:42:012 KernelMemory/(26440:26462): Se va a enviar contexto
-[INFO] 01:15:42:012 KernelMemory/(26440:26462): ===== CONTEXTO SERIALIZADO =====
-[INFO] 01:15:42:012 KernelMemory/(26440:26462): Registros:
-[INFO] 01:15:42:012 KernelMemory/(26440:26462): AX=0 BX=0 CX=0 DX=0
-[INFO] 01:15:42:012 KernelMemory/(26440:26462): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:15:42:012 KernelMemory/(26440:26462): SI=0 DI=0 PC=0
-[INFO] 01:15:42:012 KernelMemory/(26440:26462): Cantidad de segmentos: 0
-[INFO] 01:15:42:012 KernelMemory/(26440:26462): Proximo a detener: false
-[INFO] 01:15:42:012 KernelMemory/(26440:26462): Tamaño buffer serializado: 37 bytes
-[INFO] 01:15:42:012 KernelMemory/(26440:26462): ===== FIN CONTEXTO =====
-[INFO] 01:15:42:012 KernelMemory/(26440:26462): se envio contexto
-[INFO] 01:15:42:012 KernelMemory/(26440:26462): Bloqueando recepcion de mensajes...
-[INFO] 01:15:42:027 KernelMemory/(26440:26748): Comenzando manejo del proceso de PID 1.
-[INFO] 01:15:42:027 KernelMemory/(26440:26748): ## PID: 1 - Imprimiendo lista de instrucciones para el proceso...
-[INFO] 01:15:42:027 KernelMemory/(26440:26748): SET AX 1
+[INFO] 15:36:08:012 KernelMemory/(2634:2712): Busqueda de instrucción concluida.
+[INFO] 15:36:08:012 KernelMemory/(2634:2712): ## PID: 4 - Obtener instrucción: 3 - Instrucción: JNZ AX 1
+[INFO] 15:36:08:012 KernelMemory/(2634:2712): Esperando codigo de cpu...
+[INFO] 15:36:08:053 KernelMemory/(2634:2712): FETCH RECIBIDO.
+[INFO] 15:36:08:303 KernelMemory/(2634:2712): ## PID: 4 - Recibido PC: 1.
+[INFO] 15:36:08:304 KernelMemory/(2634:2712): Busqueda de instrucción concluida.
+[INFO] 15:36:08:304 KernelMemory/(2634:2712): ## PID: 4 - Obtener instrucción: 1 - Instrucción: SET BX 1
+[INFO] 15:36:08:304 KernelMemory/(2634:2712): Esperando codigo de cpu...
+[INFO] 15:36:08:345 KernelMemory/(2634:2712): FETCH RECIBIDO.
+[INFO] 15:36:08:595 KernelMemory/(2634:2712): ## PID: 4 - Recibido PC: 2.
+[INFO] 15:36:08:595 KernelMemory/(2634:2712): Busqueda de instrucción concluida.
+[INFO] 15:36:08:595 KernelMemory/(2634:2712): ## PID: 4 - Obtener instrucción: 2 - Instrucción: SUB AX BX
+[INFO] 15:36:08:595 KernelMemory/(2634:2712): Esperando codigo de cpu...
+[INFO] 15:36:08:637 KernelMemory/(2634:2712): FETCH RECIBIDO.
+[INFO] 15:36:08:888 KernelMemory/(2634:2712): ## PID: 4 - Recibido PC: 3.
+[INFO] 15:36:08:888 KernelMemory/(2634:2712): Busqueda de instrucción concluida.
+[INFO] 15:36:08:888 KernelMemory/(2634:2712): ## PID: 4 - Obtener instrucción: 3 - Instrucción: JNZ AX 1
+[INFO] 15:36:08:888 KernelMemory/(2634:2712): Esperando codigo de cpu...
+[INFO] 15:36:08:929 KernelMemory/(2634:2712): FETCH RECIBIDO.
+[INFO] 15:36:09:179 KernelMemory/(2634:2712): ## PID: 4 - Recibido PC: 4.
+[INFO] 15:36:09:179 KernelMemory/(2634:2712): Busqueda de instrucción concluida.
+[INFO] 15:36:09:179 KernelMemory/(2634:2712): ## PID: 4 - Obtener instrucción: 4 - Instrucción: EXIT
+[INFO] 15:36:09:180 KernelMemory/(2634:2712): Esperando codigo de cpu...
+[INFO] 15:36:09:221 KernelMemory/(2634:2712): INTERRUPCION O EXIT RECIBIDO.
+[INFO] 15:36:09:221 KernelMemory/(2634:2712): ===== CONTEXTO DESERIALIZADO =====
+[INFO] 15:36:09:221 KernelMemory/(2634:2712): AX=0 BX=1 CX=0 DX=0
+[INFO] 15:36:09:221 KernelMemory/(2634:2712): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:09:221 KernelMemory/(2634:2712): SI=0 DI=0 PC=4
+[INFO] 15:36:09:221 KernelMemory/(2634:2712): Cantidad de segmentos: 0
+[INFO] 15:36:09:221 KernelMemory/(2634:2712): Proximo a detener: true
+[INFO] 15:36:09:221 KernelMemory/(2634:2712): Bytes deserializados: 37
+[INFO] 15:36:09:221 KernelMemory/(2634:2712): ===== FIN CONTEXTO =====
+[INFO] 15:36:09:221 KernelMemory/(2634:2712): Interrumpiendo proceso...
+[INFO] 15:36:09:221 KernelMemory/(2634:2712): Saliendo del ciclo de FETCH
+[INFO] 15:36:09:221 KernelMemory/(2634:2712): ## PID: 4 - El proceso ha concluido y será eliminado.
+[INFO] 15:36:09:221 KernelMemory/(2634:2712): Liberando memoria...
+[INFO] 15:36:09:221 KernelMemory/(2634:2712): Reactivando recepción de procesos.
+[INFO] 15:36:09:221 KernelMemory/(2634:2649): Recepción de mensajes habilitada
+[INFO] 15:36:09:221 KernelMemory/(2634:2649): Kernel Memory está esperando nuevos procesos...
+[INFO] 15:36:09:265 KernelMemory/(2634:2636): PID: 4 - Liberando 0 segmentos
+[INFO] 15:36:09:265 KernelMemory/(2634:2636): PID: 4 - Proceso destruido correctamente
+[ERROR] 15:36:09:265 KernelMemory/(2634:2636): Respuesta enviar: 10
+[INFO] 15:36:09:309 KernelMemory/(2634:2649): Se recibió un pedido para iniciar un proceso
+[INFO] 15:36:09:309 KernelMemory/(2634:2649): Mapa enviado. Esperando PID
+[INFO] 15:36:09:397 KernelMemory/(2634:2649): PID recibido desde CPU: 1
+[INFO] 15:36:09:397 KernelMemory/(2634:2649): Proceso creado
+[INFO] 15:36:09:397 KernelMemory/(2634:2649): Se va a enviar contexto
+[INFO] 15:36:09:397 KernelMemory/(2634:2649): ===== CONTEXTO SERIALIZADO =====
+[INFO] 15:36:09:397 KernelMemory/(2634:2649): Registros:
+[INFO] 15:36:09:397 KernelMemory/(2634:2649): AX=0 BX=0 CX=0 DX=0
+[INFO] 15:36:09:397 KernelMemory/(2634:2649): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:09:397 KernelMemory/(2634:2649): SI=0 DI=0 PC=0
+[INFO] 15:36:09:397 KernelMemory/(2634:2649): Cantidad de segmentos: 0
+[INFO] 15:36:09:397 KernelMemory/(2634:2649): Proximo a detener: false
+[INFO] 15:36:09:397 KernelMemory/(2634:2649): Tamaño buffer serializado: 37 bytes
+[INFO] 15:36:09:397 KernelMemory/(2634:2649): ===== FIN CONTEXTO =====
+[INFO] 15:36:09:397 KernelMemory/(2634:2649): se envio contexto
+[INFO] 15:36:09:397 KernelMemory/(2634:2649): Bloqueando recepción de mensajes...
+[INFO] 15:36:09:398 KernelMemory/(2634:2714): Comenzando manejo del proceso de PID 1.
+[INFO] 15:36:09:398 KernelMemory/(2634:2714): ## PID: 1 - Imprimiendo lista de instrucciones para el proceso...
+[INFO] 15:36:09:398 KernelMemory/(2634:2714): SET AX 1
 SET BX 1
 SLEEP 20000
 SET AX 1
 SET BX 1
 SLEEP 20000
 EXIT
-[INFO] 01:15:42:027 KernelMemory/(26440:26748): Esperando codigo de cpu...
-[INFO] 01:15:42:099 KernelMemory/(26440:26748): FETCH RECIBIDO.
-[INFO] 01:15:42:350 KernelMemory/(26440:26748): ## PID: 1 - Recibido PC: 0.
-[INFO] 01:15:42:350 KernelMemory/(26440:26748): Busqueda de instrucción concluida.
-[INFO] 01:15:42:350 KernelMemory/(26440:26748): ## PID: 1 - Obtener instrucción: 0 - Instrucción: SET AX 1
-[INFO] 01:15:42:350 KernelMemory/(26440:26748): Esperando codigo de cpu...
-[INFO] 01:15:42:391 KernelMemory/(26440:26748): FETCH RECIBIDO.
-[INFO] 01:15:42:641 KernelMemory/(26440:26748): ## PID: 1 - Recibido PC: 1.
-[INFO] 01:15:42:642 KernelMemory/(26440:26748): Busqueda de instrucción concluida.
-[INFO] 01:15:42:642 KernelMemory/(26440:26748): ## PID: 1 - Obtener instrucción: 1 - Instrucción: SET BX 1
-[INFO] 01:15:42:642 KernelMemory/(26440:26748): Esperando codigo de cpu...
-[INFO] 01:15:42:683 KernelMemory/(26440:26748): INTERRUPCION O EXIT RECIBIDO.
-[INFO] 01:15:42:683 KernelMemory/(26440:26748): ===== CONTEXTO DESERIALIZADO =====
-[INFO] 01:15:42:683 KernelMemory/(26440:26748): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:15:42:683 KernelMemory/(26440:26748): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:15:42:683 KernelMemory/(26440:26748): SI=0 DI=0 PC=2
-[INFO] 01:15:42:683 KernelMemory/(26440:26748): Cantidad de segmentos: 0
-[INFO] 01:15:42:683 KernelMemory/(26440:26748): Proximo a detener: false
-[INFO] 01:15:42:683 KernelMemory/(26440:26748): Bytes deserializados: 37
-[INFO] 01:15:42:683 KernelMemory/(26440:26748): ===== FIN CONTEXTO =====
-[INFO] 01:15:42:683 KernelMemory/(26440:26748): Interrumpiendo proceso...
-[INFO] 01:15:42:683 KernelMemory/(26440:26748): Saliendo del ciclo de FETCH
-[INFO] 01:15:42:683 KernelMemory/(26440:26748): Liberando memoria...
-[INFO] 01:15:42:683 KernelMemory/(26440:26748): Reactivando recepción de procesos.
-[INFO] 01:15:42:683 KernelMemory/(26440:26462): Despertando rececpión de procesos...
-[INFO] 01:15:42:683 KernelMemory/(26440:26462): Kernel Memory está esperando nuevos procesos...
-[INFO] 01:15:42:775 KernelMemory/(26440:26462): Se ha recibido un nuevo pedido de iniciar proceso.
-[INFO] 01:15:42:775 KernelMemory/(26440:26462): Mapa enviado. Esperando PID
-[INFO] 01:15:42:863 KernelMemory/(26440:26462): PID recibido desde CPU: 2
-[INFO] 01:15:42:863 KernelMemory/(26440:26462): Proceso creado
-[INFO] 01:15:42:863 KernelMemory/(26440:26462): Se va a enviar contexto
-[INFO] 01:15:42:863 KernelMemory/(26440:26462): ===== CONTEXTO SERIALIZADO =====
-[INFO] 01:15:42:863 KernelMemory/(26440:26462): Registros:
-[INFO] 01:15:42:863 KernelMemory/(26440:26462): AX=0 BX=0 CX=0 DX=0
-[INFO] 01:15:42:863 KernelMemory/(26440:26462): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:15:42:863 KernelMemory/(26440:26462): SI=0 DI=0 PC=0
-[INFO] 01:15:42:863 KernelMemory/(26440:26462): Cantidad de segmentos: 0
-[INFO] 01:15:42:863 KernelMemory/(26440:26462): Proximo a detener: false
-[INFO] 01:15:42:863 KernelMemory/(26440:26462): Tamaño buffer serializado: 37 bytes
-[INFO] 01:15:42:863 KernelMemory/(26440:26462): ===== FIN CONTEXTO =====
-[INFO] 01:15:42:863 KernelMemory/(26440:26462): se envio contexto
-[INFO] 01:15:42:863 KernelMemory/(26440:26462): Bloqueando recepcion de mensajes...
-[INFO] 01:15:42:873 KernelMemory/(26440:26750): Comenzando manejo del proceso de PID 2.
-[INFO] 01:15:42:873 KernelMemory/(26440:26750): ## PID: 2 - Imprimiendo lista de instrucciones para el proceso...
-[INFO] 01:15:42:874 KernelMemory/(26440:26750): SET AX 1
+[INFO] 15:36:09:398 KernelMemory/(2634:2714): Esperando codigo de cpu...
+[INFO] 15:36:09:486 KernelMemory/(2634:2714): FETCH RECIBIDO.
+[INFO] 15:36:09:736 KernelMemory/(2634:2714): ## PID: 1 - Recibido PC: 0.
+[INFO] 15:36:09:736 KernelMemory/(2634:2714): Busqueda de instrucción concluida.
+[INFO] 15:36:09:736 KernelMemory/(2634:2714): ## PID: 1 - Obtener instrucción: 0 - Instrucción: SET AX 1
+[INFO] 15:36:09:736 KernelMemory/(2634:2714): Esperando codigo de cpu...
+[INFO] 15:36:09:777 KernelMemory/(2634:2714): FETCH RECIBIDO.
+[INFO] 15:36:10:028 KernelMemory/(2634:2714): ## PID: 1 - Recibido PC: 1.
+[INFO] 15:36:10:028 KernelMemory/(2634:2714): Busqueda de instrucción concluida.
+[INFO] 15:36:10:028 KernelMemory/(2634:2714): ## PID: 1 - Obtener instrucción: 1 - Instrucción: SET BX 1
+[INFO] 15:36:10:028 KernelMemory/(2634:2714): Esperando codigo de cpu...
+[INFO] 15:36:10:069 KernelMemory/(2634:2714): INTERRUPCION O EXIT RECIBIDO.
+[INFO] 15:36:10:070 KernelMemory/(2634:2714): ===== CONTEXTO DESERIALIZADO =====
+[INFO] 15:36:10:070 KernelMemory/(2634:2714): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:10:070 KernelMemory/(2634:2714): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:10:070 KernelMemory/(2634:2714): SI=0 DI=0 PC=2
+[INFO] 15:36:10:070 KernelMemory/(2634:2714): Cantidad de segmentos: 0
+[INFO] 15:36:10:070 KernelMemory/(2634:2714): Proximo a detener: false
+[INFO] 15:36:10:070 KernelMemory/(2634:2714): Bytes deserializados: 37
+[INFO] 15:36:10:070 KernelMemory/(2634:2714): ===== FIN CONTEXTO =====
+[INFO] 15:36:10:070 KernelMemory/(2634:2714): Interrumpiendo proceso...
+[INFO] 15:36:10:070 KernelMemory/(2634:2714): Saliendo del ciclo de FETCH
+[INFO] 15:36:10:070 KernelMemory/(2634:2714): Liberando memoria...
+[INFO] 15:36:10:070 KernelMemory/(2634:2714): Reactivando recepción de procesos.
+[INFO] 15:36:10:070 KernelMemory/(2634:2649): Recepción de mensajes habilitada
+[INFO] 15:36:10:070 KernelMemory/(2634:2649): Kernel Memory está esperando nuevos procesos...
+[INFO] 15:36:10:158 KernelMemory/(2634:2649): Se recibió un pedido para iniciar un proceso
+[INFO] 15:36:10:158 KernelMemory/(2634:2649): Mapa enviado. Esperando PID
+[INFO] 15:36:10:245 KernelMemory/(2634:2649): PID recibido desde CPU: 2
+[INFO] 15:36:10:245 KernelMemory/(2634:2649): Proceso creado
+[INFO] 15:36:10:245 KernelMemory/(2634:2649): Se va a enviar contexto
+[INFO] 15:36:10:245 KernelMemory/(2634:2649): ===== CONTEXTO SERIALIZADO =====
+[INFO] 15:36:10:245 KernelMemory/(2634:2649): Registros:
+[INFO] 15:36:10:245 KernelMemory/(2634:2649): AX=0 BX=0 CX=0 DX=0
+[INFO] 15:36:10:245 KernelMemory/(2634:2649): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:10:245 KernelMemory/(2634:2649): SI=0 DI=0 PC=0
+[INFO] 15:36:10:245 KernelMemory/(2634:2649): Cantidad de segmentos: 0
+[INFO] 15:36:10:245 KernelMemory/(2634:2649): Proximo a detener: false
+[INFO] 15:36:10:245 KernelMemory/(2634:2649): Tamaño buffer serializado: 37 bytes
+[INFO] 15:36:10:245 KernelMemory/(2634:2649): ===== FIN CONTEXTO =====
+[INFO] 15:36:10:245 KernelMemory/(2634:2649): se envio contexto
+[INFO] 15:36:10:245 KernelMemory/(2634:2649): Bloqueando recepción de mensajes...
+[INFO] 15:36:10:245 KernelMemory/(2634:2716): Comenzando manejo del proceso de PID 2.
+[INFO] 15:36:10:245 KernelMemory/(2634:2716): ## PID: 2 - Imprimiendo lista de instrucciones para el proceso...
+[INFO] 15:36:10:245 KernelMemory/(2634:2716): SET AX 1
 SET BX 1
 SLEEP 20000
 SET AX 1
 SET BX 1
 SLEEP 20000
 EXIT
-[INFO] 01:15:42:874 KernelMemory/(26440:26750): Esperando codigo de cpu...
-[INFO] 01:15:42:950 KernelMemory/(26440:26750): FETCH RECIBIDO.
-[INFO] 01:15:43:201 KernelMemory/(26440:26750): ## PID: 2 - Recibido PC: 0.
-[INFO] 01:15:43:201 KernelMemory/(26440:26750): Busqueda de instrucción concluida.
-[INFO] 01:15:43:201 KernelMemory/(26440:26750): ## PID: 2 - Obtener instrucción: 0 - Instrucción: SET AX 1
-[INFO] 01:15:43:201 KernelMemory/(26440:26750): Esperando codigo de cpu...
-[INFO] 01:15:43:243 KernelMemory/(26440:26750): FETCH RECIBIDO.
-[INFO] 01:15:43:493 KernelMemory/(26440:26750): ## PID: 2 - Recibido PC: 1.
-[INFO] 01:15:43:493 KernelMemory/(26440:26750): Busqueda de instrucción concluida.
-[INFO] 01:15:43:493 KernelMemory/(26440:26750): ## PID: 2 - Obtener instrucción: 1 - Instrucción: SET BX 1
-[INFO] 01:15:43:494 KernelMemory/(26440:26750): Esperando codigo de cpu...
-[INFO] 01:15:43:535 KernelMemory/(26440:26750): INTERRUPCION O EXIT RECIBIDO.
-[INFO] 01:15:43:536 KernelMemory/(26440:26750): ===== CONTEXTO DESERIALIZADO =====
-[INFO] 01:15:43:536 KernelMemory/(26440:26750): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:15:43:536 KernelMemory/(26440:26750): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:15:43:536 KernelMemory/(26440:26750): SI=0 DI=0 PC=2
-[INFO] 01:15:43:536 KernelMemory/(26440:26750): Cantidad de segmentos: 0
-[INFO] 01:15:43:536 KernelMemory/(26440:26750): Proximo a detener: false
-[INFO] 01:15:43:536 KernelMemory/(26440:26750): Bytes deserializados: 37
-[INFO] 01:15:43:536 KernelMemory/(26440:26750): ===== FIN CONTEXTO =====
-[INFO] 01:15:43:536 KernelMemory/(26440:26750): Interrumpiendo proceso...
-[INFO] 01:15:43:536 KernelMemory/(26440:26750): Saliendo del ciclo de FETCH
-[INFO] 01:15:43:536 KernelMemory/(26440:26750): Liberando memoria...
-[INFO] 01:15:43:536 KernelMemory/(26440:26750): Reactivando recepción de procesos.
-[INFO] 01:15:43:536 KernelMemory/(26440:26462): Despertando rececpión de procesos...
-[INFO] 01:15:43:536 KernelMemory/(26440:26462): Kernel Memory está esperando nuevos procesos...
-[INFO] 01:15:43:666 KernelMemory/(26440:26462): Se ha recibido un nuevo pedido de iniciar proceso.
-[INFO] 01:15:43:666 KernelMemory/(26440:26462): Mapa enviado. Esperando PID
-[INFO] 01:15:43:710 KernelMemory/(26440:26462): PID recibido desde CPU: 1
-[INFO] 01:15:43:711 KernelMemory/(26440:26462): Proceso creado
-[INFO] 01:15:43:711 KernelMemory/(26440:26462): Se va a enviar contexto
-[INFO] 01:15:43:711 KernelMemory/(26440:26462): ===== CONTEXTO SERIALIZADO =====
-[INFO] 01:15:43:711 KernelMemory/(26440:26462): Registros:
-[INFO] 01:15:43:711 KernelMemory/(26440:26462): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:15:43:711 KernelMemory/(26440:26462): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:15:43:711 KernelMemory/(26440:26462): SI=0 DI=0 PC=2
-[INFO] 01:15:43:711 KernelMemory/(26440:26462): Cantidad de segmentos: 0
-[INFO] 01:15:43:711 KernelMemory/(26440:26462): Proximo a detener: false
-[INFO] 01:15:43:711 KernelMemory/(26440:26462): Tamaño buffer serializado: 37 bytes
-[INFO] 01:15:43:711 KernelMemory/(26440:26462): ===== FIN CONTEXTO =====
-[INFO] 01:15:43:711 KernelMemory/(26440:26462): se envio contexto
-[INFO] 01:15:43:711 KernelMemory/(26440:26462): Bloqueando recepcion de mensajes...
-[INFO] 01:15:43:711 KernelMemory/(26440:26752): Comenzando manejo del proceso de PID 1.
-[INFO] 01:15:43:711 KernelMemory/(26440:26752): ## PID: 1 - Imprimiendo lista de instrucciones para el proceso...
-[INFO] 01:15:43:711 KernelMemory/(26440:26752): SET AX 1
+[INFO] 15:36:10:245 KernelMemory/(2634:2716): Esperando codigo de cpu...
+[INFO] 15:36:10:333 KernelMemory/(2634:2716): FETCH RECIBIDO.
+[INFO] 15:36:10:583 KernelMemory/(2634:2716): ## PID: 2 - Recibido PC: 0.
+[INFO] 15:36:10:583 KernelMemory/(2634:2716): Busqueda de instrucción concluida.
+[INFO] 15:36:10:583 KernelMemory/(2634:2716): ## PID: 2 - Obtener instrucción: 0 - Instrucción: SET AX 1
+[INFO] 15:36:10:583 KernelMemory/(2634:2716): Esperando codigo de cpu...
+[INFO] 15:36:10:625 KernelMemory/(2634:2716): FETCH RECIBIDO.
+[INFO] 15:36:10:875 KernelMemory/(2634:2716): ## PID: 2 - Recibido PC: 1.
+[INFO] 15:36:10:875 KernelMemory/(2634:2716): Busqueda de instrucción concluida.
+[INFO] 15:36:10:875 KernelMemory/(2634:2716): ## PID: 2 - Obtener instrucción: 1 - Instrucción: SET BX 1
+[INFO] 15:36:10:875 KernelMemory/(2634:2716): Esperando codigo de cpu...
+[INFO] 15:36:10:917 KernelMemory/(2634:2716): INTERRUPCION O EXIT RECIBIDO.
+[INFO] 15:36:10:917 KernelMemory/(2634:2716): ===== CONTEXTO DESERIALIZADO =====
+[INFO] 15:36:10:917 KernelMemory/(2634:2716): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:10:917 KernelMemory/(2634:2716): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:10:917 KernelMemory/(2634:2716): SI=0 DI=0 PC=2
+[INFO] 15:36:10:917 KernelMemory/(2634:2716): Cantidad de segmentos: 0
+[INFO] 15:36:10:917 KernelMemory/(2634:2716): Proximo a detener: false
+[INFO] 15:36:10:917 KernelMemory/(2634:2716): Bytes deserializados: 37
+[INFO] 15:36:10:917 KernelMemory/(2634:2716): ===== FIN CONTEXTO =====
+[INFO] 15:36:10:917 KernelMemory/(2634:2716): Interrumpiendo proceso...
+[INFO] 15:36:10:917 KernelMemory/(2634:2716): Saliendo del ciclo de FETCH
+[INFO] 15:36:10:917 KernelMemory/(2634:2716): Liberando memoria...
+[INFO] 15:36:10:917 KernelMemory/(2634:2716): Reactivando recepción de procesos.
+[INFO] 15:36:10:917 KernelMemory/(2634:2649): Recepción de mensajes habilitada
+[INFO] 15:36:10:917 KernelMemory/(2634:2649): Kernel Memory está esperando nuevos procesos...
+[INFO] 15:36:11:049 KernelMemory/(2634:2649): Se recibió un pedido para iniciar un proceso
+[INFO] 15:36:11:049 KernelMemory/(2634:2649): Mapa enviado. Esperando PID
+[INFO] 15:36:11:093 KernelMemory/(2634:2649): PID recibido desde CPU: 1
+[INFO] 15:36:11:094 KernelMemory/(2634:2649): Proceso creado
+[INFO] 15:36:11:094 KernelMemory/(2634:2649): Se va a enviar contexto
+[INFO] 15:36:11:094 KernelMemory/(2634:2649): ===== CONTEXTO SERIALIZADO =====
+[INFO] 15:36:11:094 KernelMemory/(2634:2649): Registros:
+[INFO] 15:36:11:094 KernelMemory/(2634:2649): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:11:094 KernelMemory/(2634:2649): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:11:094 KernelMemory/(2634:2649): SI=0 DI=0 PC=2
+[INFO] 15:36:11:094 KernelMemory/(2634:2649): Cantidad de segmentos: 0
+[INFO] 15:36:11:094 KernelMemory/(2634:2649): Proximo a detener: false
+[INFO] 15:36:11:094 KernelMemory/(2634:2649): Tamaño buffer serializado: 37 bytes
+[INFO] 15:36:11:094 KernelMemory/(2634:2649): ===== FIN CONTEXTO =====
+[INFO] 15:36:11:094 KernelMemory/(2634:2649): se envio contexto
+[INFO] 15:36:11:094 KernelMemory/(2634:2649): Bloqueando recepción de mensajes...
+[INFO] 15:36:11:094 KernelMemory/(2634:2718): Comenzando manejo del proceso de PID 1.
+[INFO] 15:36:11:094 KernelMemory/(2634:2718): ## PID: 1 - Imprimiendo lista de instrucciones para el proceso...
+[INFO] 15:36:11:094 KernelMemory/(2634:2718): SET AX 1
 SET BX 1
 SLEEP 20000
 SET AX 1
 SET BX 1
 SLEEP 20000
 EXIT
-[INFO] 01:15:43:711 KernelMemory/(26440:26752): Esperando codigo de cpu...
-[INFO] 01:15:43:798 KernelMemory/(26440:26752): FETCH RECIBIDO.
-[INFO] 01:15:44:049 KernelMemory/(26440:26752): ## PID: 1 - Recibido PC: 2.
-[INFO] 01:15:44:049 KernelMemory/(26440:26752): Busqueda de instrucción concluida.
-[INFO] 01:15:44:049 KernelMemory/(26440:26752): ## PID: 1 - Obtener instrucción: 2 - Instrucción: SLEEP 20000
-[INFO] 01:15:44:049 KernelMemory/(26440:26752): Esperando codigo de cpu...
-[INFO] 01:15:44:091 KernelMemory/(26440:26752): INTERRUPCION O EXIT RECIBIDO.
-[INFO] 01:15:44:091 KernelMemory/(26440:26752): ===== CONTEXTO DESERIALIZADO =====
-[INFO] 01:15:44:091 KernelMemory/(26440:26752): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:15:44:092 KernelMemory/(26440:26752): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:15:44:092 KernelMemory/(26440:26752): SI=0 DI=0 PC=3
-[INFO] 01:15:44:092 KernelMemory/(26440:26752): Cantidad de segmentos: 0
-[INFO] 01:15:44:092 KernelMemory/(26440:26752): Proximo a detener: false
-[INFO] 01:15:44:092 KernelMemory/(26440:26752): Bytes deserializados: 37
-[INFO] 01:15:44:092 KernelMemory/(26440:26752): ===== FIN CONTEXTO =====
-[INFO] 01:15:44:092 KernelMemory/(26440:26752): Interrumpiendo proceso...
-[INFO] 01:15:44:092 KernelMemory/(26440:26752): Saliendo del ciclo de FETCH
-[INFO] 01:15:44:092 KernelMemory/(26440:26752): Liberando memoria...
-[INFO] 01:15:44:092 KernelMemory/(26440:26752): Reactivando recepción de procesos.
-[INFO] 01:15:44:092 KernelMemory/(26440:26462): Despertando rececpión de procesos...
-[INFO] 01:15:44:092 KernelMemory/(26440:26462): Kernel Memory está esperando nuevos procesos...
-[INFO] 01:15:44:223 KernelMemory/(26440:26462): Se ha recibido un nuevo pedido de iniciar proceso.
-[INFO] 01:15:44:223 KernelMemory/(26440:26462): Mapa enviado. Esperando PID
-[INFO] 01:15:44:267 KernelMemory/(26440:26462): PID recibido desde CPU: 2
-[INFO] 01:15:44:267 KernelMemory/(26440:26462): Proceso creado
-[INFO] 01:15:44:267 KernelMemory/(26440:26462): Se va a enviar contexto
-[INFO] 01:15:44:267 KernelMemory/(26440:26462): ===== CONTEXTO SERIALIZADO =====
-[INFO] 01:15:44:267 KernelMemory/(26440:26462): Registros:
-[INFO] 01:15:44:267 KernelMemory/(26440:26462): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:15:44:267 KernelMemory/(26440:26462): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:15:44:267 KernelMemory/(26440:26462): SI=0 DI=0 PC=2
-[INFO] 01:15:44:267 KernelMemory/(26440:26462): Cantidad de segmentos: 0
-[INFO] 01:15:44:267 KernelMemory/(26440:26462): Proximo a detener: false
-[INFO] 01:15:44:267 KernelMemory/(26440:26462): Tamaño buffer serializado: 37 bytes
-[INFO] 01:15:44:267 KernelMemory/(26440:26462): ===== FIN CONTEXTO =====
-[INFO] 01:15:44:267 KernelMemory/(26440:26462): se envio contexto
-[INFO] 01:15:44:267 KernelMemory/(26440:26462): Bloqueando recepcion de mensajes...
-[INFO] 01:15:44:267 KernelMemory/(26440:26756): Comenzando manejo del proceso de PID 2.
-[INFO] 01:15:44:267 KernelMemory/(26440:26756): ## PID: 2 - Imprimiendo lista de instrucciones para el proceso...
-[INFO] 01:15:44:267 KernelMemory/(26440:26756): SET AX 1
+[INFO] 15:36:11:094 KernelMemory/(2634:2718): Esperando codigo de cpu...
+[INFO] 15:36:11:181 KernelMemory/(2634:2718): FETCH RECIBIDO.
+[INFO] 15:36:11:431 KernelMemory/(2634:2718): ## PID: 1 - Recibido PC: 2.
+[INFO] 15:36:11:431 KernelMemory/(2634:2718): Busqueda de instrucción concluida.
+[INFO] 15:36:11:431 KernelMemory/(2634:2718): ## PID: 1 - Obtener instrucción: 2 - Instrucción: SLEEP 20000
+[INFO] 15:36:11:431 KernelMemory/(2634:2718): Esperando codigo de cpu...
+[INFO] 15:36:11:473 KernelMemory/(2634:2718): INTERRUPCION O EXIT RECIBIDO.
+[INFO] 15:36:11:473 KernelMemory/(2634:2718): ===== CONTEXTO DESERIALIZADO =====
+[INFO] 15:36:11:473 KernelMemory/(2634:2718): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:11:473 KernelMemory/(2634:2718): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:11:473 KernelMemory/(2634:2718): SI=0 DI=0 PC=3
+[INFO] 15:36:11:473 KernelMemory/(2634:2718): Cantidad de segmentos: 0
+[INFO] 15:36:11:473 KernelMemory/(2634:2718): Proximo a detener: false
+[INFO] 15:36:11:473 KernelMemory/(2634:2718): Bytes deserializados: 37
+[INFO] 15:36:11:473 KernelMemory/(2634:2718): ===== FIN CONTEXTO =====
+[INFO] 15:36:11:473 KernelMemory/(2634:2718): Interrumpiendo proceso...
+[INFO] 15:36:11:473 KernelMemory/(2634:2718): Saliendo del ciclo de FETCH
+[INFO] 15:36:11:473 KernelMemory/(2634:2718): Liberando memoria...
+[INFO] 15:36:11:473 KernelMemory/(2634:2718): Reactivando recepción de procesos.
+[INFO] 15:36:11:473 KernelMemory/(2634:2649): Recepción de mensajes habilitada
+[INFO] 15:36:11:473 KernelMemory/(2634:2649): Kernel Memory está esperando nuevos procesos...
+[INFO] 15:36:11:605 KernelMemory/(2634:2649): Se recibió un pedido para iniciar un proceso
+[INFO] 15:36:11:605 KernelMemory/(2634:2649): Mapa enviado. Esperando PID
+[INFO] 15:36:11:649 KernelMemory/(2634:2649): PID recibido desde CPU: 2
+[INFO] 15:36:11:649 KernelMemory/(2634:2649): Proceso creado
+[INFO] 15:36:11:649 KernelMemory/(2634:2649): Se va a enviar contexto
+[INFO] 15:36:11:649 KernelMemory/(2634:2649): ===== CONTEXTO SERIALIZADO =====
+[INFO] 15:36:11:649 KernelMemory/(2634:2649): Registros:
+[INFO] 15:36:11:649 KernelMemory/(2634:2649): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:11:649 KernelMemory/(2634:2649): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:11:649 KernelMemory/(2634:2649): SI=0 DI=0 PC=2
+[INFO] 15:36:11:649 KernelMemory/(2634:2649): Cantidad de segmentos: 0
+[INFO] 15:36:11:649 KernelMemory/(2634:2649): Proximo a detener: false
+[INFO] 15:36:11:649 KernelMemory/(2634:2649): Tamaño buffer serializado: 37 bytes
+[INFO] 15:36:11:649 KernelMemory/(2634:2649): ===== FIN CONTEXTO =====
+[INFO] 15:36:11:649 KernelMemory/(2634:2649): se envio contexto
+[INFO] 15:36:11:649 KernelMemory/(2634:2649): Bloqueando recepción de mensajes...
+[INFO] 15:36:11:649 KernelMemory/(2634:2722): Comenzando manejo del proceso de PID 2.
+[INFO] 15:36:11:649 KernelMemory/(2634:2722): ## PID: 2 - Imprimiendo lista de instrucciones para el proceso...
+[INFO] 15:36:11:649 KernelMemory/(2634:2722): SET AX 1
 SET BX 1
 SLEEP 20000
 SET AX 1
 SET BX 1
 SLEEP 20000
 EXIT
-[INFO] 01:15:44:267 KernelMemory/(26440:26756): Esperando codigo de cpu...
-[INFO] 01:15:44:355 KernelMemory/(26440:26756): FETCH RECIBIDO.
-[INFO] 01:15:44:605 KernelMemory/(26440:26756): ## PID: 2 - Recibido PC: 2.
-[INFO] 01:15:44:606 KernelMemory/(26440:26756): Busqueda de instrucción concluida.
-[INFO] 01:15:44:606 KernelMemory/(26440:26756): ## PID: 2 - Obtener instrucción: 2 - Instrucción: SLEEP 20000
-[INFO] 01:15:44:606 KernelMemory/(26440:26756): Esperando codigo de cpu...
-[INFO] 01:15:44:647 KernelMemory/(26440:26756): INTERRUPCION O EXIT RECIBIDO.
-[INFO] 01:15:44:647 KernelMemory/(26440:26756): ===== CONTEXTO DESERIALIZADO =====
-[INFO] 01:15:44:647 KernelMemory/(26440:26756): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:15:44:647 KernelMemory/(26440:26756): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:15:44:647 KernelMemory/(26440:26756): SI=0 DI=0 PC=3
-[INFO] 01:15:44:647 KernelMemory/(26440:26756): Cantidad de segmentos: 0
-[INFO] 01:15:44:647 KernelMemory/(26440:26756): Proximo a detener: false
-[INFO] 01:15:44:647 KernelMemory/(26440:26756): Bytes deserializados: 37
-[INFO] 01:15:44:648 KernelMemory/(26440:26756): ===== FIN CONTEXTO =====
-[INFO] 01:15:44:648 KernelMemory/(26440:26756): Interrumpiendo proceso...
-[INFO] 01:15:44:648 KernelMemory/(26440:26756): Saliendo del ciclo de FETCH
-[INFO] 01:15:44:648 KernelMemory/(26440:26756): Liberando memoria...
-[INFO] 01:15:44:648 KernelMemory/(26440:26756): Reactivando recepción de procesos.
-[INFO] 01:15:44:648 KernelMemory/(26440:26462): Despertando rececpión de procesos...
-[INFO] 01:15:44:648 KernelMemory/(26440:26462): Kernel Memory está esperando nuevos procesos...
-[INFO] 01:16:04:222 KernelMemory/(26440:26462): Se ha recibido un nuevo pedido de iniciar proceso.
-[INFO] 01:16:04:222 KernelMemory/(26440:26462): Mapa enviado. Esperando PID
-[INFO] 01:16:04:267 KernelMemory/(26440:26462): PID recibido desde CPU: 1
-[INFO] 01:16:04:267 KernelMemory/(26440:26462): Proceso creado
-[INFO] 01:16:04:267 KernelMemory/(26440:26462): Se va a enviar contexto
-[INFO] 01:16:04:267 KernelMemory/(26440:26462): ===== CONTEXTO SERIALIZADO =====
-[INFO] 01:16:04:267 KernelMemory/(26440:26462): Registros:
-[INFO] 01:16:04:267 KernelMemory/(26440:26462): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:16:04:267 KernelMemory/(26440:26462): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:16:04:267 KernelMemory/(26440:26462): SI=0 DI=0 PC=3
-[INFO] 01:16:04:267 KernelMemory/(26440:26462): Cantidad de segmentos: 0
-[INFO] 01:16:04:267 KernelMemory/(26440:26462): Proximo a detener: false
-[INFO] 01:16:04:267 KernelMemory/(26440:26462): Tamaño buffer serializado: 37 bytes
-[INFO] 01:16:04:267 KernelMemory/(26440:26462): ===== FIN CONTEXTO =====
-[INFO] 01:16:04:267 KernelMemory/(26440:26462): se envio contexto
-[INFO] 01:16:04:267 KernelMemory/(26440:26462): Bloqueando recepcion de mensajes...
-[INFO] 01:16:04:267 KernelMemory/(26440:26760): Comenzando manejo del proceso de PID 1.
-[INFO] 01:16:04:267 KernelMemory/(26440:26760): ## PID: 1 - Imprimiendo lista de instrucciones para el proceso...
-[INFO] 01:16:04:267 KernelMemory/(26440:26760): SET AX 1
+[INFO] 15:36:11:649 KernelMemory/(2634:2722): Esperando codigo de cpu...
+[INFO] 15:36:11:737 KernelMemory/(2634:2722): FETCH RECIBIDO.
+[INFO] 15:36:11:987 KernelMemory/(2634:2722): ## PID: 2 - Recibido PC: 2.
+[INFO] 15:36:11:988 KernelMemory/(2634:2722): Busqueda de instrucción concluida.
+[INFO] 15:36:11:988 KernelMemory/(2634:2722): ## PID: 2 - Obtener instrucción: 2 - Instrucción: SLEEP 20000
+[INFO] 15:36:11:988 KernelMemory/(2634:2722): Esperando codigo de cpu...
+[INFO] 15:36:12:029 KernelMemory/(2634:2722): INTERRUPCION O EXIT RECIBIDO.
+[INFO] 15:36:12:029 KernelMemory/(2634:2722): ===== CONTEXTO DESERIALIZADO =====
+[INFO] 15:36:12:029 KernelMemory/(2634:2722): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:12:029 KernelMemory/(2634:2722): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:12:029 KernelMemory/(2634:2722): SI=0 DI=0 PC=3
+[INFO] 15:36:12:029 KernelMemory/(2634:2722): Cantidad de segmentos: 0
+[INFO] 15:36:12:029 KernelMemory/(2634:2722): Proximo a detener: false
+[INFO] 15:36:12:029 KernelMemory/(2634:2722): Bytes deserializados: 37
+[INFO] 15:36:12:029 KernelMemory/(2634:2722): ===== FIN CONTEXTO =====
+[INFO] 15:36:12:029 KernelMemory/(2634:2722): Interrumpiendo proceso...
+[INFO] 15:36:12:029 KernelMemory/(2634:2722): Saliendo del ciclo de FETCH
+[INFO] 15:36:12:029 KernelMemory/(2634:2722): Liberando memoria...
+[INFO] 15:36:12:029 KernelMemory/(2634:2722): Reactivando recepción de procesos.
+[INFO] 15:36:12:029 KernelMemory/(2634:2649): Recepción de mensajes habilitada
+[INFO] 15:36:12:029 KernelMemory/(2634:2649): Kernel Memory está esperando nuevos procesos...
+[INFO] 15:36:31:605 KernelMemory/(2634:2649): Se recibió un pedido para iniciar un proceso
+[INFO] 15:36:31:605 KernelMemory/(2634:2649): Mapa enviado. Esperando PID
+[INFO] 15:36:31:649 KernelMemory/(2634:2649): PID recibido desde CPU: 1
+[INFO] 15:36:31:649 KernelMemory/(2634:2649): Proceso creado
+[INFO] 15:36:31:649 KernelMemory/(2634:2649): Se va a enviar contexto
+[INFO] 15:36:31:649 KernelMemory/(2634:2649): ===== CONTEXTO SERIALIZADO =====
+[INFO] 15:36:31:649 KernelMemory/(2634:2649): Registros:
+[INFO] 15:36:31:649 KernelMemory/(2634:2649): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:31:649 KernelMemory/(2634:2649): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:31:649 KernelMemory/(2634:2649): SI=0 DI=0 PC=3
+[INFO] 15:36:31:649 KernelMemory/(2634:2649): Cantidad de segmentos: 0
+[INFO] 15:36:31:649 KernelMemory/(2634:2649): Proximo a detener: false
+[INFO] 15:36:31:649 KernelMemory/(2634:2649): Tamaño buffer serializado: 37 bytes
+[INFO] 15:36:31:649 KernelMemory/(2634:2649): ===== FIN CONTEXTO =====
+[INFO] 15:36:31:649 KernelMemory/(2634:2649): se envio contexto
+[INFO] 15:36:31:649 KernelMemory/(2634:2649): Bloqueando recepción de mensajes...
+[INFO] 15:36:31:649 KernelMemory/(2634:2726): Comenzando manejo del proceso de PID 1.
+[INFO] 15:36:31:649 KernelMemory/(2634:2726): ## PID: 1 - Imprimiendo lista de instrucciones para el proceso...
+[INFO] 15:36:31:649 KernelMemory/(2634:2726): SET AX 1
 SET BX 1
 SLEEP 20000
 SET AX 1
 SET BX 1
 SLEEP 20000
 EXIT
-[INFO] 01:16:04:267 KernelMemory/(26440:26760): Esperando codigo de cpu...
-[INFO] 01:16:04:354 KernelMemory/(26440:26760): FETCH RECIBIDO.
-[INFO] 01:16:04:605 KernelMemory/(26440:26760): ## PID: 1 - Recibido PC: 3.
-[INFO] 01:16:04:605 KernelMemory/(26440:26760): Busqueda de instrucción concluida.
-[INFO] 01:16:04:605 KernelMemory/(26440:26760): ## PID: 1 - Obtener instrucción: 3 - Instrucción: SET AX 1
-[INFO] 01:16:04:605 KernelMemory/(26440:26760): Esperando codigo de cpu...
-[INFO] 01:16:04:647 KernelMemory/(26440:26760): FETCH RECIBIDO.
-[INFO] 01:16:04:897 KernelMemory/(26440:26760): ## PID: 1 - Recibido PC: 4.
-[INFO] 01:16:04:897 KernelMemory/(26440:26760): Busqueda de instrucción concluida.
-[INFO] 01:16:04:897 KernelMemory/(26440:26760): ## PID: 1 - Obtener instrucción: 4 - Instrucción: SET BX 1
-[INFO] 01:16:04:898 KernelMemory/(26440:26760): Esperando codigo de cpu...
-[INFO] 01:16:04:939 KernelMemory/(26440:26760): INTERRUPCION O EXIT RECIBIDO.
-[INFO] 01:16:04:939 KernelMemory/(26440:26760): ===== CONTEXTO DESERIALIZADO =====
-[INFO] 01:16:04:939 KernelMemory/(26440:26760): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:16:04:939 KernelMemory/(26440:26760): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:16:04:939 KernelMemory/(26440:26760): SI=0 DI=0 PC=5
-[INFO] 01:16:04:939 KernelMemory/(26440:26760): Cantidad de segmentos: 0
-[INFO] 01:16:04:939 KernelMemory/(26440:26760): Proximo a detener: false
-[INFO] 01:16:04:940 KernelMemory/(26440:26760): Bytes deserializados: 37
-[INFO] 01:16:04:940 KernelMemory/(26440:26760): ===== FIN CONTEXTO =====
-[INFO] 01:16:04:940 KernelMemory/(26440:26760): Interrumpiendo proceso...
-[INFO] 01:16:04:940 KernelMemory/(26440:26760): Saliendo del ciclo de FETCH
-[INFO] 01:16:04:940 KernelMemory/(26440:26760): Liberando memoria...
-[INFO] 01:16:04:940 KernelMemory/(26440:26760): Reactivando recepción de procesos.
-[INFO] 01:16:04:940 KernelMemory/(26440:26462): Despertando rececpión de procesos...
-[INFO] 01:16:04:940 KernelMemory/(26440:26462): Kernel Memory está esperando nuevos procesos...
-[INFO] 01:16:05:026 KernelMemory/(26440:26462): Se ha recibido un nuevo pedido de iniciar proceso.
-[INFO] 01:16:05:027 KernelMemory/(26440:26462): Mapa enviado. Esperando PID
-[INFO] 01:16:05:115 KernelMemory/(26440:26462): PID recibido desde CPU: 1
-[INFO] 01:16:05:115 KernelMemory/(26440:26462): Proceso creado
-[INFO] 01:16:05:115 KernelMemory/(26440:26462): Se va a enviar contexto
-[INFO] 01:16:05:115 KernelMemory/(26440:26462): ===== CONTEXTO SERIALIZADO =====
-[INFO] 01:16:05:115 KernelMemory/(26440:26462): Registros:
-[INFO] 01:16:05:115 KernelMemory/(26440:26462): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:16:05:115 KernelMemory/(26440:26462): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:16:05:115 KernelMemory/(26440:26462): SI=0 DI=0 PC=5
-[INFO] 01:16:05:115 KernelMemory/(26440:26462): Cantidad de segmentos: 0
-[INFO] 01:16:05:115 KernelMemory/(26440:26462): Proximo a detener: false
-[INFO] 01:16:05:115 KernelMemory/(26440:26462): Tamaño buffer serializado: 37 bytes
-[INFO] 01:16:05:115 KernelMemory/(26440:26462): ===== FIN CONTEXTO =====
-[INFO] 01:16:05:115 KernelMemory/(26440:26462): se envio contexto
-[INFO] 01:16:05:115 KernelMemory/(26440:26462): Bloqueando recepcion de mensajes...
-[INFO] 01:16:05:115 KernelMemory/(26440:26762): Comenzando manejo del proceso de PID 1.
-[INFO] 01:16:05:115 KernelMemory/(26440:26762): ## PID: 1 - Imprimiendo lista de instrucciones para el proceso...
-[INFO] 01:16:05:115 KernelMemory/(26440:26762): SET AX 1
+[INFO] 15:36:31:649 KernelMemory/(2634:2726): Esperando codigo de cpu...
+[INFO] 15:36:31:737 KernelMemory/(2634:2726): FETCH RECIBIDO.
+[INFO] 15:36:31:987 KernelMemory/(2634:2726): ## PID: 1 - Recibido PC: 3.
+[INFO] 15:36:31:987 KernelMemory/(2634:2726): Busqueda de instrucción concluida.
+[INFO] 15:36:31:987 KernelMemory/(2634:2726): ## PID: 1 - Obtener instrucción: 3 - Instrucción: SET AX 1
+[INFO] 15:36:31:987 KernelMemory/(2634:2726): Esperando codigo de cpu...
+[INFO] 15:36:32:029 KernelMemory/(2634:2726): FETCH RECIBIDO.
+[INFO] 15:36:32:279 KernelMemory/(2634:2726): ## PID: 1 - Recibido PC: 4.
+[INFO] 15:36:32:279 KernelMemory/(2634:2726): Busqueda de instrucción concluida.
+[INFO] 15:36:32:279 KernelMemory/(2634:2726): ## PID: 1 - Obtener instrucción: 4 - Instrucción: SET BX 1
+[INFO] 15:36:32:280 KernelMemory/(2634:2726): Esperando codigo de cpu...
+[INFO] 15:36:32:321 KernelMemory/(2634:2726): INTERRUPCION O EXIT RECIBIDO.
+[INFO] 15:36:32:321 KernelMemory/(2634:2726): ===== CONTEXTO DESERIALIZADO =====
+[INFO] 15:36:32:321 KernelMemory/(2634:2726): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:32:321 KernelMemory/(2634:2726): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:32:321 KernelMemory/(2634:2726): SI=0 DI=0 PC=5
+[INFO] 15:36:32:321 KernelMemory/(2634:2726): Cantidad de segmentos: 0
+[INFO] 15:36:32:321 KernelMemory/(2634:2726): Proximo a detener: false
+[INFO] 15:36:32:321 KernelMemory/(2634:2726): Bytes deserializados: 37
+[INFO] 15:36:32:321 KernelMemory/(2634:2726): ===== FIN CONTEXTO =====
+[INFO] 15:36:32:321 KernelMemory/(2634:2726): Interrumpiendo proceso...
+[INFO] 15:36:32:321 KernelMemory/(2634:2726): Saliendo del ciclo de FETCH
+[INFO] 15:36:32:321 KernelMemory/(2634:2726): Liberando memoria...
+[INFO] 15:36:32:321 KernelMemory/(2634:2726): Reactivando recepción de procesos.
+[INFO] 15:36:32:321 KernelMemory/(2634:2649): Recepción de mensajes habilitada
+[INFO] 15:36:32:321 KernelMemory/(2634:2649): Kernel Memory está esperando nuevos procesos...
+[INFO] 15:36:32:409 KernelMemory/(2634:2649): Se recibió un pedido para iniciar un proceso
+[INFO] 15:36:32:409 KernelMemory/(2634:2649): Mapa enviado. Esperando PID
+[INFO] 15:36:32:497 KernelMemory/(2634:2649): PID recibido desde CPU: 1
+[INFO] 15:36:32:497 KernelMemory/(2634:2649): Proceso creado
+[INFO] 15:36:32:497 KernelMemory/(2634:2649): Se va a enviar contexto
+[INFO] 15:36:32:497 KernelMemory/(2634:2649): ===== CONTEXTO SERIALIZADO =====
+[INFO] 15:36:32:497 KernelMemory/(2634:2649): Registros:
+[INFO] 15:36:32:497 KernelMemory/(2634:2649): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:32:497 KernelMemory/(2634:2649): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:32:497 KernelMemory/(2634:2649): SI=0 DI=0 PC=5
+[INFO] 15:36:32:497 KernelMemory/(2634:2649): Cantidad de segmentos: 0
+[INFO] 15:36:32:497 KernelMemory/(2634:2649): Proximo a detener: false
+[INFO] 15:36:32:497 KernelMemory/(2634:2649): Tamaño buffer serializado: 37 bytes
+[INFO] 15:36:32:497 KernelMemory/(2634:2649): ===== FIN CONTEXTO =====
+[INFO] 15:36:32:497 KernelMemory/(2634:2649): se envio contexto
+[INFO] 15:36:32:497 KernelMemory/(2634:2649): Bloqueando recepción de mensajes...
+[INFO] 15:36:32:497 KernelMemory/(2634:2728): Comenzando manejo del proceso de PID 1.
+[INFO] 15:36:32:497 KernelMemory/(2634:2728): ## PID: 1 - Imprimiendo lista de instrucciones para el proceso...
+[INFO] 15:36:32:497 KernelMemory/(2634:2728): SET AX 1
 SET BX 1
 SLEEP 20000
 SET AX 1
 SET BX 1
 SLEEP 20000
 EXIT
-[INFO] 01:16:05:115 KernelMemory/(26440:26762): Esperando codigo de cpu...
-[INFO] 01:16:05:203 KernelMemory/(26440:26762): FETCH RECIBIDO.
-[INFO] 01:16:05:454 KernelMemory/(26440:26762): ## PID: 1 - Recibido PC: 5.
-[INFO] 01:16:05:454 KernelMemory/(26440:26762): Busqueda de instrucción concluida.
-[INFO] 01:16:05:454 KernelMemory/(26440:26762): ## PID: 1 - Obtener instrucción: 5 - Instrucción: SLEEP 20000
-[INFO] 01:16:05:454 KernelMemory/(26440:26762): Esperando codigo de cpu...
-[INFO] 01:16:05:495 KernelMemory/(26440:26762): INTERRUPCION O EXIT RECIBIDO.
-[INFO] 01:16:05:495 KernelMemory/(26440:26762): ===== CONTEXTO DESERIALIZADO =====
-[INFO] 01:16:05:495 KernelMemory/(26440:26762): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:16:05:495 KernelMemory/(26440:26762): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:16:05:495 KernelMemory/(26440:26762): SI=0 DI=0 PC=6
-[INFO] 01:16:05:495 KernelMemory/(26440:26762): Cantidad de segmentos: 0
-[INFO] 01:16:05:495 KernelMemory/(26440:26762): Proximo a detener: false
-[INFO] 01:16:05:495 KernelMemory/(26440:26762): Bytes deserializados: 37
-[INFO] 01:16:05:495 KernelMemory/(26440:26762): ===== FIN CONTEXTO =====
-[INFO] 01:16:05:495 KernelMemory/(26440:26762): Interrumpiendo proceso...
-[INFO] 01:16:05:495 KernelMemory/(26440:26762): Saliendo del ciclo de FETCH
-[INFO] 01:16:05:495 KernelMemory/(26440:26762): Liberando memoria...
-[INFO] 01:16:05:495 KernelMemory/(26440:26762): Reactivando recepción de procesos.
-[INFO] 01:16:05:496 KernelMemory/(26440:26462): Despertando rececpión de procesos...
-[INFO] 01:16:05:496 KernelMemory/(26440:26462): Kernel Memory está esperando nuevos procesos...
-[INFO] 01:16:24:266 KernelMemory/(26440:26462): Se ha recibido un nuevo pedido de iniciar proceso.
-[INFO] 01:16:24:266 KernelMemory/(26440:26462): Mapa enviado. Esperando PID
-[INFO] 01:16:24:311 KernelMemory/(26440:26462): PID recibido desde CPU: 2
-[INFO] 01:16:24:311 KernelMemory/(26440:26462): Proceso creado
-[INFO] 01:16:24:311 KernelMemory/(26440:26462): Se va a enviar contexto
-[INFO] 01:16:24:311 KernelMemory/(26440:26462): ===== CONTEXTO SERIALIZADO =====
-[INFO] 01:16:24:311 KernelMemory/(26440:26462): Registros:
-[INFO] 01:16:24:311 KernelMemory/(26440:26462): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:16:24:311 KernelMemory/(26440:26462): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:16:24:311 KernelMemory/(26440:26462): SI=0 DI=0 PC=3
-[INFO] 01:16:24:311 KernelMemory/(26440:26462): Cantidad de segmentos: 0
-[INFO] 01:16:24:311 KernelMemory/(26440:26462): Proximo a detener: false
-[INFO] 01:16:24:311 KernelMemory/(26440:26462): Tamaño buffer serializado: 37 bytes
-[INFO] 01:16:24:311 KernelMemory/(26440:26462): ===== FIN CONTEXTO =====
-[INFO] 01:16:24:311 KernelMemory/(26440:26462): se envio contexto
-[INFO] 01:16:24:311 KernelMemory/(26440:26462): Bloqueando recepcion de mensajes...
-[INFO] 01:16:24:311 KernelMemory/(26440:26766): Comenzando manejo del proceso de PID 2.
-[INFO] 01:16:24:311 KernelMemory/(26440:26766): ## PID: 2 - Imprimiendo lista de instrucciones para el proceso...
-[INFO] 01:16:24:311 KernelMemory/(26440:26766): SET AX 1
+[INFO] 15:36:32:497 KernelMemory/(2634:2728): Esperando codigo de cpu...
+[INFO] 15:36:32:585 KernelMemory/(2634:2728): FETCH RECIBIDO.
+[INFO] 15:36:32:835 KernelMemory/(2634:2728): ## PID: 1 - Recibido PC: 5.
+[INFO] 15:36:32:835 KernelMemory/(2634:2728): Busqueda de instrucción concluida.
+[INFO] 15:36:32:835 KernelMemory/(2634:2728): ## PID: 1 - Obtener instrucción: 5 - Instrucción: SLEEP 20000
+[INFO] 15:36:32:835 KernelMemory/(2634:2728): Esperando codigo de cpu...
+[INFO] 15:36:32:877 KernelMemory/(2634:2728): INTERRUPCION O EXIT RECIBIDO.
+[INFO] 15:36:32:877 KernelMemory/(2634:2728): ===== CONTEXTO DESERIALIZADO =====
+[INFO] 15:36:32:877 KernelMemory/(2634:2728): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:32:877 KernelMemory/(2634:2728): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:32:877 KernelMemory/(2634:2728): SI=0 DI=0 PC=6
+[INFO] 15:36:32:877 KernelMemory/(2634:2728): Cantidad de segmentos: 0
+[INFO] 15:36:32:877 KernelMemory/(2634:2728): Proximo a detener: false
+[INFO] 15:36:32:877 KernelMemory/(2634:2728): Bytes deserializados: 37
+[INFO] 15:36:32:877 KernelMemory/(2634:2728): ===== FIN CONTEXTO =====
+[INFO] 15:36:32:877 KernelMemory/(2634:2728): Interrumpiendo proceso...
+[INFO] 15:36:32:877 KernelMemory/(2634:2728): Saliendo del ciclo de FETCH
+[INFO] 15:36:32:877 KernelMemory/(2634:2728): Liberando memoria...
+[INFO] 15:36:32:877 KernelMemory/(2634:2728): Reactivando recepción de procesos.
+[INFO] 15:36:32:877 KernelMemory/(2634:2649): Recepción de mensajes habilitada
+[INFO] 15:36:32:877 KernelMemory/(2634:2649): Kernel Memory está esperando nuevos procesos...
+[INFO] 15:36:51:649 KernelMemory/(2634:2649): Se recibió un pedido para iniciar un proceso
+[INFO] 15:36:51:649 KernelMemory/(2634:2649): Mapa enviado. Esperando PID
+[INFO] 15:36:51:693 KernelMemory/(2634:2649): PID recibido desde CPU: 2
+[INFO] 15:36:51:693 KernelMemory/(2634:2649): Proceso creado
+[INFO] 15:36:51:693 KernelMemory/(2634:2649): Se va a enviar contexto
+[INFO] 15:36:51:693 KernelMemory/(2634:2649): ===== CONTEXTO SERIALIZADO =====
+[INFO] 15:36:51:693 KernelMemory/(2634:2649): Registros:
+[INFO] 15:36:51:693 KernelMemory/(2634:2649): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:51:693 KernelMemory/(2634:2649): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:51:693 KernelMemory/(2634:2649): SI=0 DI=0 PC=3
+[INFO] 15:36:51:693 KernelMemory/(2634:2649): Cantidad de segmentos: 0
+[INFO] 15:36:51:693 KernelMemory/(2634:2649): Proximo a detener: false
+[INFO] 15:36:51:693 KernelMemory/(2634:2649): Tamaño buffer serializado: 37 bytes
+[INFO] 15:36:51:693 KernelMemory/(2634:2649): ===== FIN CONTEXTO =====
+[INFO] 15:36:51:693 KernelMemory/(2634:2649): se envio contexto
+[INFO] 15:36:51:693 KernelMemory/(2634:2649): Bloqueando recepción de mensajes...
+[INFO] 15:36:51:693 KernelMemory/(2634:2732): Comenzando manejo del proceso de PID 2.
+[INFO] 15:36:51:693 KernelMemory/(2634:2732): ## PID: 2 - Imprimiendo lista de instrucciones para el proceso...
+[INFO] 15:36:51:693 KernelMemory/(2634:2732): SET AX 1
 SET BX 1
 SLEEP 20000
 SET AX 1
 SET BX 1
 SLEEP 20000
 EXIT
-[INFO] 01:16:24:311 KernelMemory/(26440:26766): Esperando codigo de cpu...
-[INFO] 01:16:24:399 KernelMemory/(26440:26766): FETCH RECIBIDO.
-[INFO] 01:16:24:650 KernelMemory/(26440:26766): ## PID: 2 - Recibido PC: 3.
-[INFO] 01:16:24:651 KernelMemory/(26440:26766): Busqueda de instrucción concluida.
-[INFO] 01:16:24:651 KernelMemory/(26440:26766): ## PID: 2 - Obtener instrucción: 3 - Instrucción: SET AX 1
-[INFO] 01:16:24:651 KernelMemory/(26440:26766): Esperando codigo de cpu...
-[INFO] 01:16:24:691 KernelMemory/(26440:26766): FETCH RECIBIDO.
-[INFO] 01:16:24:941 KernelMemory/(26440:26766): ## PID: 2 - Recibido PC: 4.
-[INFO] 01:16:24:942 KernelMemory/(26440:26766): Busqueda de instrucción concluida.
-[INFO] 01:16:24:942 KernelMemory/(26440:26766): ## PID: 2 - Obtener instrucción: 4 - Instrucción: SET BX 1
-[INFO] 01:16:24:942 KernelMemory/(26440:26766): Esperando codigo de cpu...
-[INFO] 01:16:24:983 KernelMemory/(26440:26766): INTERRUPCION O EXIT RECIBIDO.
-[INFO] 01:16:24:983 KernelMemory/(26440:26766): ===== CONTEXTO DESERIALIZADO =====
-[INFO] 01:16:24:983 KernelMemory/(26440:26766): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:16:24:983 KernelMemory/(26440:26766): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:16:24:983 KernelMemory/(26440:26766): SI=0 DI=0 PC=5
-[INFO] 01:16:24:983 KernelMemory/(26440:26766): Cantidad de segmentos: 0
-[INFO] 01:16:24:983 KernelMemory/(26440:26766): Proximo a detener: false
-[INFO] 01:16:24:983 KernelMemory/(26440:26766): Bytes deserializados: 37
-[INFO] 01:16:24:983 KernelMemory/(26440:26766): ===== FIN CONTEXTO =====
-[INFO] 01:16:24:983 KernelMemory/(26440:26766): Interrumpiendo proceso...
-[INFO] 01:16:24:983 KernelMemory/(26440:26766): Saliendo del ciclo de FETCH
-[INFO] 01:16:24:983 KernelMemory/(26440:26766): Liberando memoria...
-[INFO] 01:16:24:983 KernelMemory/(26440:26766): Reactivando recepción de procesos.
-[INFO] 01:16:24:983 KernelMemory/(26440:26462): Despertando rececpión de procesos...
-[INFO] 01:16:24:983 KernelMemory/(26440:26462): Kernel Memory está esperando nuevos procesos...
-[INFO] 01:16:25:071 KernelMemory/(26440:26462): Se ha recibido un nuevo pedido de iniciar proceso.
-[INFO] 01:16:25:071 KernelMemory/(26440:26462): Mapa enviado. Esperando PID
-[INFO] 01:16:25:159 KernelMemory/(26440:26462): PID recibido desde CPU: 2
-[INFO] 01:16:25:159 KernelMemory/(26440:26462): Proceso creado
-[INFO] 01:16:25:159 KernelMemory/(26440:26462): Se va a enviar contexto
-[INFO] 01:16:25:159 KernelMemory/(26440:26462): ===== CONTEXTO SERIALIZADO =====
-[INFO] 01:16:25:159 KernelMemory/(26440:26462): Registros:
-[INFO] 01:16:25:159 KernelMemory/(26440:26462): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:16:25:159 KernelMemory/(26440:26462): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:16:25:159 KernelMemory/(26440:26462): SI=0 DI=0 PC=5
-[INFO] 01:16:25:159 KernelMemory/(26440:26462): Cantidad de segmentos: 0
-[INFO] 01:16:25:159 KernelMemory/(26440:26462): Proximo a detener: false
-[INFO] 01:16:25:159 KernelMemory/(26440:26462): Tamaño buffer serializado: 37 bytes
-[INFO] 01:16:25:159 KernelMemory/(26440:26462): ===== FIN CONTEXTO =====
-[INFO] 01:16:25:159 KernelMemory/(26440:26462): se envio contexto
-[INFO] 01:16:25:159 KernelMemory/(26440:26462): Bloqueando recepcion de mensajes...
-[INFO] 01:16:25:159 KernelMemory/(26440:26768): Comenzando manejo del proceso de PID 2.
-[INFO] 01:16:25:159 KernelMemory/(26440:26768): ## PID: 2 - Imprimiendo lista de instrucciones para el proceso...
-[INFO] 01:16:25:159 KernelMemory/(26440:26768): SET AX 1
+[INFO] 15:36:51:694 KernelMemory/(2634:2732): Esperando codigo de cpu...
+[INFO] 15:36:51:781 KernelMemory/(2634:2732): FETCH RECIBIDO.
+[INFO] 15:36:52:031 KernelMemory/(2634:2732): ## PID: 2 - Recibido PC: 3.
+[INFO] 15:36:52:031 KernelMemory/(2634:2732): Busqueda de instrucción concluida.
+[INFO] 15:36:52:031 KernelMemory/(2634:2732): ## PID: 2 - Obtener instrucción: 3 - Instrucción: SET AX 1
+[INFO] 15:36:52:031 KernelMemory/(2634:2732): Esperando codigo de cpu...
+[INFO] 15:36:52:074 KernelMemory/(2634:2732): FETCH RECIBIDO.
+[INFO] 15:36:52:324 KernelMemory/(2634:2732): ## PID: 2 - Recibido PC: 4.
+[INFO] 15:36:52:324 KernelMemory/(2634:2732): Busqueda de instrucción concluida.
+[INFO] 15:36:52:324 KernelMemory/(2634:2732): ## PID: 2 - Obtener instrucción: 4 - Instrucción: SET BX 1
+[INFO] 15:36:52:324 KernelMemory/(2634:2732): Esperando codigo de cpu...
+[INFO] 15:36:52:365 KernelMemory/(2634:2732): INTERRUPCION O EXIT RECIBIDO.
+[INFO] 15:36:52:365 KernelMemory/(2634:2732): ===== CONTEXTO DESERIALIZADO =====
+[INFO] 15:36:52:365 KernelMemory/(2634:2732): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:52:365 KernelMemory/(2634:2732): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:52:365 KernelMemory/(2634:2732): SI=0 DI=0 PC=5
+[INFO] 15:36:52:365 KernelMemory/(2634:2732): Cantidad de segmentos: 0
+[INFO] 15:36:52:365 KernelMemory/(2634:2732): Proximo a detener: false
+[INFO] 15:36:52:365 KernelMemory/(2634:2732): Bytes deserializados: 37
+[INFO] 15:36:52:365 KernelMemory/(2634:2732): ===== FIN CONTEXTO =====
+[INFO] 15:36:52:365 KernelMemory/(2634:2732): Interrumpiendo proceso...
+[INFO] 15:36:52:365 KernelMemory/(2634:2732): Saliendo del ciclo de FETCH
+[INFO] 15:36:52:365 KernelMemory/(2634:2732): Liberando memoria...
+[INFO] 15:36:52:365 KernelMemory/(2634:2732): Reactivando recepción de procesos.
+[INFO] 15:36:52:365 KernelMemory/(2634:2649): Recepción de mensajes habilitada
+[INFO] 15:36:52:365 KernelMemory/(2634:2649): Kernel Memory está esperando nuevos procesos...
+[INFO] 15:36:52:453 KernelMemory/(2634:2649): Se recibió un pedido para iniciar un proceso
+[INFO] 15:36:52:453 KernelMemory/(2634:2649): Mapa enviado. Esperando PID
+[INFO] 15:36:52:541 KernelMemory/(2634:2649): PID recibido desde CPU: 2
+[INFO] 15:36:52:542 KernelMemory/(2634:2649): Proceso creado
+[INFO] 15:36:52:542 KernelMemory/(2634:2649): Se va a enviar contexto
+[INFO] 15:36:52:542 KernelMemory/(2634:2649): ===== CONTEXTO SERIALIZADO =====
+[INFO] 15:36:52:542 KernelMemory/(2634:2649): Registros:
+[INFO] 15:36:52:542 KernelMemory/(2634:2649): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:52:542 KernelMemory/(2634:2649): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:52:542 KernelMemory/(2634:2649): SI=0 DI=0 PC=5
+[INFO] 15:36:52:542 KernelMemory/(2634:2649): Cantidad de segmentos: 0
+[INFO] 15:36:52:542 KernelMemory/(2634:2649): Proximo a detener: false
+[INFO] 15:36:52:542 KernelMemory/(2634:2649): Tamaño buffer serializado: 37 bytes
+[INFO] 15:36:52:542 KernelMemory/(2634:2649): ===== FIN CONTEXTO =====
+[INFO] 15:36:52:542 KernelMemory/(2634:2649): se envio contexto
+[INFO] 15:36:52:542 KernelMemory/(2634:2649): Bloqueando recepción de mensajes...
+[INFO] 15:36:52:542 KernelMemory/(2634:2734): Comenzando manejo del proceso de PID 2.
+[INFO] 15:36:52:542 KernelMemory/(2634:2734): ## PID: 2 - Imprimiendo lista de instrucciones para el proceso...
+[INFO] 15:36:52:542 KernelMemory/(2634:2734): SET AX 1
 SET BX 1
 SLEEP 20000
 SET AX 1
 SET BX 1
 SLEEP 20000
 EXIT
-[INFO] 01:16:25:159 KernelMemory/(26440:26768): Esperando codigo de cpu...
-[INFO] 01:16:25:247 KernelMemory/(26440:26768): FETCH RECIBIDO.
-[INFO] 01:16:25:498 KernelMemory/(26440:26768): ## PID: 2 - Recibido PC: 5.
-[INFO] 01:16:25:498 KernelMemory/(26440:26768): Busqueda de instrucción concluida.
-[INFO] 01:16:25:498 KernelMemory/(26440:26768): ## PID: 2 - Obtener instrucción: 5 - Instrucción: SLEEP 20000
-[INFO] 01:16:25:498 KernelMemory/(26440:26768): Esperando codigo de cpu...
-[INFO] 01:16:25:543 KernelMemory/(26440:26768): INTERRUPCION O EXIT RECIBIDO.
-[INFO] 01:16:25:543 KernelMemory/(26440:26768): ===== CONTEXTO DESERIALIZADO =====
-[INFO] 01:16:25:544 KernelMemory/(26440:26768): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:16:25:544 KernelMemory/(26440:26768): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:16:25:544 KernelMemory/(26440:26768): SI=0 DI=0 PC=6
-[INFO] 01:16:25:544 KernelMemory/(26440:26768): Cantidad de segmentos: 0
-[INFO] 01:16:25:544 KernelMemory/(26440:26768): Proximo a detener: false
-[INFO] 01:16:25:544 KernelMemory/(26440:26768): Bytes deserializados: 37
-[INFO] 01:16:25:544 KernelMemory/(26440:26768): ===== FIN CONTEXTO =====
-[INFO] 01:16:25:544 KernelMemory/(26440:26768): Interrumpiendo proceso...
-[INFO] 01:16:25:545 KernelMemory/(26440:26768): Saliendo del ciclo de FETCH
-[INFO] 01:16:25:545 KernelMemory/(26440:26768): Liberando memoria...
-[INFO] 01:16:25:545 KernelMemory/(26440:26768): Reactivando recepción de procesos.
-[INFO] 01:16:25:545 KernelMemory/(26440:26462): Despertando rececpión de procesos...
-[INFO] 01:16:25:545 KernelMemory/(26440:26462): Kernel Memory está esperando nuevos procesos...
-[INFO] 01:16:25:671 KernelMemory/(26440:26462): Se ha recibido un nuevo pedido de iniciar proceso.
-[INFO] 01:16:25:671 KernelMemory/(26440:26462): Mapa enviado. Esperando PID
-[INFO] 01:16:25:715 KernelMemory/(26440:26462): PID recibido desde CPU: 16
-[ERROR] 01:16:25:715 KernelMemory/(26440:26462): No se encontró el proceso con PID 16
-[INFO] 01:16:25:715 KernelMemory/(26440:26462): Bloqueando recepcion de mensajes...
+[INFO] 15:36:52:542 KernelMemory/(2634:2734): Esperando codigo de cpu...
+[INFO] 15:36:52:629 KernelMemory/(2634:2734): FETCH RECIBIDO.
+[INFO] 15:36:52:880 KernelMemory/(2634:2734): ## PID: 2 - Recibido PC: 5.
+[INFO] 15:36:52:880 KernelMemory/(2634:2734): Busqueda de instrucción concluida.
+[INFO] 15:36:52:880 KernelMemory/(2634:2734): ## PID: 2 - Obtener instrucción: 5 - Instrucción: SLEEP 20000
+[INFO] 15:36:52:880 KernelMemory/(2634:2734): Esperando codigo de cpu...
+[INFO] 15:36:52:921 KernelMemory/(2634:2734): INTERRUPCION O EXIT RECIBIDO.
+[INFO] 15:36:52:921 KernelMemory/(2634:2734): ===== CONTEXTO DESERIALIZADO =====
+[INFO] 15:36:52:921 KernelMemory/(2634:2734): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:52:921 KernelMemory/(2634:2734): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:52:921 KernelMemory/(2634:2734): SI=0 DI=0 PC=6
+[INFO] 15:36:52:921 KernelMemory/(2634:2734): Cantidad de segmentos: 0
+[INFO] 15:36:52:921 KernelMemory/(2634:2734): Proximo a detener: false
+[INFO] 15:36:52:921 KernelMemory/(2634:2734): Bytes deserializados: 37
+[INFO] 15:36:52:921 KernelMemory/(2634:2734): ===== FIN CONTEXTO =====
+[INFO] 15:36:52:921 KernelMemory/(2634:2734): Interrumpiendo proceso...
+[INFO] 15:36:52:921 KernelMemory/(2634:2734): Saliendo del ciclo de FETCH
+[INFO] 15:36:52:922 KernelMemory/(2634:2734): Liberando memoria...
+[INFO] 15:36:52:922 KernelMemory/(2634:2734): Reactivando recepción de procesos.
+[INFO] 15:36:52:922 KernelMemory/(2634:2649): Recepción de mensajes habilitada
+[INFO] 15:36:52:922 KernelMemory/(2634:2649): Kernel Memory está esperando nuevos procesos...
+
 CPU
-[INFO] 01:15:31:863 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 1
-[INFO] 01:15:31:863 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:31:863 CPU LOGGER/(26461:26461): FETCH: enviando PC=1
-[INFO] 01:15:32:155 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SET - BX 1
-[INFO] 01:15:32:155 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:32:155 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:32:155 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 2
-[INFO] 01:15:32:155 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:32:155 CPU LOGGER/(26461:26461): FETCH: enviando PC=2
-[INFO] 01:15:32:447 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SUB - AX BX
-[INFO] 01:15:32:447 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:32:447 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:32:447 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 3
-[INFO] 01:15:32:447 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:32:447 CPU LOGGER/(26461:26461): FETCH: enviando PC=3
-[INFO] 01:15:32:739 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: JNZ - AX 1
-[INFO] 01:15:32:739 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:32:739 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:32:739 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 1
-[INFO] 01:15:32:739 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:32:739 CPU LOGGER/(26461:26461): FETCH: enviando PC=1
-[INFO] 01:15:33:059 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SET - BX 1
-[INFO] 01:15:33:059 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:33:061 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:33:061 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 2
-[INFO] 01:15:33:061 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:33:061 CPU LOGGER/(26461:26461): FETCH: enviando PC=2
-[INFO] 01:15:33:355 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SUB - AX BX
-[INFO] 01:15:33:355 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:33:355 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:33:355 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 3
-[INFO] 01:15:33:355 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:33:355 CPU LOGGER/(26461:26461): FETCH: enviando PC=3
-[INFO] 01:15:33:647 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: JNZ - AX 1
-[INFO] 01:15:33:647 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:33:648 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:33:648 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 1
-[INFO] 01:15:33:648 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:33:648 CPU LOGGER/(26461:26461): FETCH: enviando PC=1
-[INFO] 01:15:33:942 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SET - BX 1
-[INFO] 01:15:33:943 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:33:943 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:33:943 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 2
-[INFO] 01:15:33:943 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:33:943 CPU LOGGER/(26461:26461): FETCH: enviando PC=2
-[INFO] 01:15:34:235 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SUB - AX BX
-[INFO] 01:15:34:235 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:34:235 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:34:235 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 3
-[INFO] 01:15:34:235 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:34:235 CPU LOGGER/(26461:26461): FETCH: enviando PC=3
-[INFO] 01:15:34:531 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: JNZ - AX 1
-[INFO] 01:15:34:531 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:34:531 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:34:531 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 1
-[INFO] 01:15:34:531 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:34:531 CPU LOGGER/(26461:26461): FETCH: enviando PC=1
-[INFO] 01:15:34:823 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SET - BX 1
-[INFO] 01:15:34:823 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:34:823 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:34:823 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 2
-[INFO] 01:15:34:823 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:34:823 CPU LOGGER/(26461:26461): FETCH: enviando PC=2
-[INFO] 01:15:35:115 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SUB - AX BX
-[INFO] 01:15:35:115 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:35:115 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:35:115 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 3
-[INFO] 01:15:35:115 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:35:115 CPU LOGGER/(26461:26461): FETCH: enviando PC=3
-[INFO] 01:15:35:407 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: JNZ - AX 1
-[INFO] 01:15:35:407 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:35:407 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:35:407 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 1
-[INFO] 01:15:35:407 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:35:407 CPU LOGGER/(26461:26461): FETCH: enviando PC=1
-[INFO] 01:15:35:699 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SET - BX 1
-[INFO] 01:15:35:699 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:35:699 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:35:699 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 2
-[INFO] 01:15:35:700 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:35:700 CPU LOGGER/(26461:26461): FETCH: enviando PC=2
-[INFO] 01:15:35:991 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SUB - AX BX
-[INFO] 01:15:35:991 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:35:991 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:35:991 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 3
-[INFO] 01:15:35:991 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:35:991 CPU LOGGER/(26461:26461): FETCH: enviando PC=3
-[INFO] 01:15:36:282 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: JNZ - AX 1
-[INFO] 01:15:36:283 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:36:283 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:36:283 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 1
-[INFO] 01:15:36:283 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:36:283 CPU LOGGER/(26461:26461): FETCH: enviando PC=1
-[INFO] 01:15:36:575 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SET - BX 1
-[INFO] 01:15:36:575 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:36:575 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:36:575 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 2
-[INFO] 01:15:36:575 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:36:576 CPU LOGGER/(26461:26461): FETCH: enviando PC=2
-[INFO] 01:15:36:866 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SUB - AX BX
-[INFO] 01:15:36:867 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:36:867 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:36:867 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 3
-[INFO] 01:15:36:867 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:36:867 CPU LOGGER/(26461:26461): FETCH: enviando PC=3
-[INFO] 01:15:37:158 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: JNZ - AX 1
-[INFO] 01:15:37:159 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:37:159 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:37:159 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 1
-[INFO] 01:15:37:159 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:37:159 CPU LOGGER/(26461:26461): FETCH: enviando PC=1
-[INFO] 01:15:37:451 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SET - BX 1
-[INFO] 01:15:37:451 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:37:451 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:37:451 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 2
-[INFO] 01:15:37:451 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:37:451 CPU LOGGER/(26461:26461): FETCH: enviando PC=2
-[INFO] 01:15:37:743 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SUB - AX BX
-[INFO] 01:15:37:743 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:37:743 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:37:743 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 3
-[INFO] 01:15:37:743 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:37:743 CPU LOGGER/(26461:26461): FETCH: enviando PC=3
-[INFO] 01:15:38:035 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: JNZ - AX 1
-[INFO] 01:15:38:035 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:38:035 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:38:035 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 1
-[INFO] 01:15:38:035 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:38:035 CPU LOGGER/(26461:26461): FETCH: enviando PC=1
-[INFO] 01:15:38:327 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SET - BX 1
-[INFO] 01:15:38:327 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:38:327 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:38:327 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 2
-[INFO] 01:15:38:327 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:38:327 CPU LOGGER/(26461:26461): FETCH: enviando PC=2
-[INFO] 01:15:38:619 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SUB - AX BX
-[INFO] 01:15:38:620 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:38:620 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:38:620 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 3
-[INFO] 01:15:38:620 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:38:620 CPU LOGGER/(26461:26461): FETCH: enviando PC=3
-[INFO] 01:15:38:915 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: JNZ - AX 1
-[INFO] 01:15:38:915 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:38:915 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:38:915 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 1
-[INFO] 01:15:38:915 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:38:915 CPU LOGGER/(26461:26461): FETCH: enviando PC=1
-[INFO] 01:15:39:206 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SET - BX 1
-[INFO] 01:15:39:207 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:39:207 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:39:207 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 2
-[INFO] 01:15:39:207 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:39:207 CPU LOGGER/(26461:26461): FETCH: enviando PC=2
-[INFO] 01:15:39:498 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SUB - AX BX
-[INFO] 01:15:39:499 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:39:499 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:39:499 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 3
-[INFO] 01:15:39:499 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:39:499 CPU LOGGER/(26461:26461): FETCH: enviando PC=3
-[INFO] 01:15:39:791 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: JNZ - AX 1
-[INFO] 01:15:39:791 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:39:791 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:39:791 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 1
-[INFO] 01:15:39:791 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:39:791 CPU LOGGER/(26461:26461): FETCH: enviando PC=1
-[INFO] 01:15:40:084 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SET - BX 1
-[INFO] 01:15:40:084 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:40:084 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:40:084 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 2
-[INFO] 01:15:40:084 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:40:084 CPU LOGGER/(26461:26461): FETCH: enviando PC=2
-[INFO] 01:15:40:375 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SUB - AX BX
-[INFO] 01:15:40:375 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:40:375 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:40:375 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 3
-[INFO] 01:15:40:375 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:40:375 CPU LOGGER/(26461:26461): FETCH: enviando PC=3
-[INFO] 01:15:40:667 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: JNZ - AX 1
-[INFO] 01:15:40:667 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:40:667 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:40:667 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 1
-[INFO] 01:15:40:667 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:40:667 CPU LOGGER/(26461:26461): FETCH: enviando PC=1
-[INFO] 01:15:40:959 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SET - BX 1
-[INFO] 01:15:40:959 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:40:959 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:40:959 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 2
-[INFO] 01:15:40:959 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:40:959 CPU LOGGER/(26461:26461): FETCH: enviando PC=2
-[INFO] 01:15:41:250 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: SUB - AX BX
-[INFO] 01:15:41:250 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:41:250 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:41:250 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 3
-[INFO] 01:15:41:251 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:41:251 CPU LOGGER/(26461:26461): FETCH: enviando PC=3
-[INFO] 01:15:41:543 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: JNZ - AX 1
-[INFO] 01:15:41:543 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:41:543 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:41:543 CPU LOGGER/(26461:26461): ## PID: 3 - FETCH - Program Counter: 4
-[INFO] 01:15:41:543 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:41:543 CPU LOGGER/(26461:26461): FETCH: enviando PC=4
-[INFO] 01:15:41:834 CPU LOGGER/(26461:26461): ## PID: 3 - Ejecutando: EXIT - AX 1
-[INFO] 01:15:41:834 CPU LOGGER/(26461:26461): Se envio MSG_EXIT_CPU
-[INFO] 01:15:41:835 CPU LOGGER/(26461:26461): Se envio PID
-[INFO] 01:15:41:835 CPU LOGGER/(26461:26461): ===== CONTEXTO SERIALIZADO =====
-[INFO] 01:15:41:835 CPU LOGGER/(26461:26461): Registros:
-[INFO] 01:15:41:835 CPU LOGGER/(26461:26461): AX=0 BX=1 CX=0 DX=0
-[INFO] 01:15:41:835 CPU LOGGER/(26461:26461): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:15:41:835 CPU LOGGER/(26461:26461): SI=0 DI=0 PC=4
-[INFO] 01:15:41:835 CPU LOGGER/(26461:26461): Cantidad de segmentos: 0
-[INFO] 01:15:41:835 CPU LOGGER/(26461:26461): Proximo a detener: true
-[INFO] 01:15:41:835 CPU LOGGER/(26461:26461): Tamaño buffer serializado: 37 bytes
-[INFO] 01:15:41:835 CPU LOGGER/(26461:26461): ===== FIN CONTEXTO =====
-[INFO] 01:15:41:879 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:41:879 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:41:879 CPU LOGGER/(26461:26461): Concluyo proceso 3 con EXIT
-[INFO] 01:15:41:879 CPU LOGGER/(26461:26461): CPU esperando PID del Kernel Scheduler...
-[INFO] 01:15:41:880 CPU LOGGER/(26461:26461): PID recibido: 1
-[INFO] 01:15:41:880 CPU LOGGER/(26461:26461): Recibido PID: 1
-[INFO] 01:15:41:967 CPU LOGGER/(26461:26461): Cantidad de Memory Sticks recibida: 1
-[INFO] 01:15:41:967 CPU LOGGER/(26461:26461): MS 0 recibido: IP=127.0.0.1 Puerto=9003 Base=0 Tamaño=256
-[INFO] 01:15:41:967 CPU LOGGER/(26461:26461): Se envio PID: 1
-[INFO] 01:15:42:055 CPU LOGGER/(26461:26461): ===== CONTEXTO DESERIALIZADO =====
-[INFO] 01:15:42:055 CPU LOGGER/(26461:26461): AX=0 BX=0 CX=0 DX=0
-[INFO] 01:15:42:055 CPU LOGGER/(26461:26461): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:15:42:055 CPU LOGGER/(26461:26461): SI=0 DI=0 PC=0
-[INFO] 01:15:42:055 CPU LOGGER/(26461:26461): Cantidad de segmentos: 0
-[INFO] 01:15:42:056 CPU LOGGER/(26461:26461): Proximo a detener: false
-[INFO] 01:15:42:056 CPU LOGGER/(26461:26461): Bytes deserializados: 37
-[INFO] 01:15:42:056 CPU LOGGER/(26461:26461): ===== FIN CONTEXTO =====
-[INFO] 01:15:42:056 CPU LOGGER/(26461:26461): Inicia ejecucion de proceso: 1
-[INFO] 01:15:42:056 CPU LOGGER/(26461:26461): ## PID: 1 - FETCH - Program Counter: 0
-[INFO] 01:15:42:056 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:42:056 CPU LOGGER/(26461:26461): FETCH: enviando PC=0
-[INFO] 01:15:42:390 CPU LOGGER/(26461:26461): ## PID: 1 - Ejecutando: SET - AX 1
-[INFO] 01:15:42:391 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:42:391 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:42:391 CPU LOGGER/(26461:26461): ## PID: 1 - FETCH - Program Counter: 1
-[INFO] 01:15:42:391 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:42:391 CPU LOGGER/(26461:26461): FETCH: enviando PC=1
-[INFO] 01:15:42:683 CPU LOGGER/(26461:26461): ## PID: 1 - Ejecutando: SET - BX 1
-[INFO] 01:15:42:683 CPU LOGGER/(26461:26461): ===== CONTEXTO SERIALIZADO =====
-[INFO] 01:15:42:683 CPU LOGGER/(26461:26461): Registros:
-[INFO] 01:15:42:683 CPU LOGGER/(26461:26461): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:15:42:683 CPU LOGGER/(26461:26461): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:15:42:683 CPU LOGGER/(26461:26461): SI=0 DI=0 PC=2
-[INFO] 01:15:42:683 CPU LOGGER/(26461:26461): Cantidad de segmentos: 0
-[INFO] 01:15:42:683 CPU LOGGER/(26461:26461): Proximo a detener: false
-[INFO] 01:15:42:683 CPU LOGGER/(26461:26461): Tamaño buffer serializado: 37 bytes
-[INFO] 01:15:42:683 CPU LOGGER/(26461:26461): ===== FIN CONTEXTO =====
-[INFO] 01:15:42:683 CPU LOGGER/(26461:26461): Se envio el contexto a KM por interrupcion: 1
-[INFO] 01:15:42:727 CPU LOGGER/(26461:26461): ## Interrupcion recibida
-[INFO] 01:15:42:728 CPU LOGGER/(26461:26461): CPU esperando PID del Kernel Scheduler...
-[INFO] 01:15:42:728 CPU LOGGER/(26461:26461): PID recibido: 2
-[INFO] 01:15:42:728 CPU LOGGER/(26461:26461): Recibido PID: 2
-[INFO] 01:15:42:819 CPU LOGGER/(26461:26461): Cantidad de Memory Sticks recibida: 1
-[INFO] 01:15:42:819 CPU LOGGER/(26461:26461): MS 0 recibido: IP=127.0.0.1 Puerto=9003 Base=0 Tamaño=256
-[INFO] 01:15:42:819 CPU LOGGER/(26461:26461): Se envio PID: 2
-[INFO] 01:15:42:907 CPU LOGGER/(26461:26461): ===== CONTEXTO DESERIALIZADO =====
-[INFO] 01:15:42:907 CPU LOGGER/(26461:26461): AX=0 BX=0 CX=0 DX=0
-[INFO] 01:15:42:907 CPU LOGGER/(26461:26461): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:15:42:907 CPU LOGGER/(26461:26461): SI=0 DI=0 PC=0
-[INFO] 01:15:42:907 CPU LOGGER/(26461:26461): Cantidad de segmentos: 0
-[INFO] 01:15:42:907 CPU LOGGER/(26461:26461): Proximo a detener: false
-[INFO] 01:15:42:907 CPU LOGGER/(26461:26461): Bytes deserializados: 37
-[INFO] 01:15:42:907 CPU LOGGER/(26461:26461): ===== FIN CONTEXTO =====
-[INFO] 01:15:42:907 CPU LOGGER/(26461:26461): Inicia ejecucion de proceso: 2
-[INFO] 01:15:42:907 CPU LOGGER/(26461:26461): ## PID: 2 - FETCH - Program Counter: 0
-[INFO] 01:15:42:907 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:42:907 CPU LOGGER/(26461:26461): FETCH: enviando PC=0
-[INFO] 01:15:43:243 CPU LOGGER/(26461:26461): ## PID: 2 - Ejecutando: SET - AX 1
-[INFO] 01:15:43:243 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:15:43:243 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:15:43:243 CPU LOGGER/(26461:26461): ## PID: 2 - FETCH - Program Counter: 1
-[INFO] 01:15:43:243 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:43:243 CPU LOGGER/(26461:26461): FETCH: enviando PC=1
-[INFO] 01:15:43:535 CPU LOGGER/(26461:26461): ## PID: 2 - Ejecutando: SET - BX 1
-[INFO] 01:15:43:535 CPU LOGGER/(26461:26461): ===== CONTEXTO SERIALIZADO =====
-[INFO] 01:15:43:535 CPU LOGGER/(26461:26461): Registros:
-[INFO] 01:15:43:536 CPU LOGGER/(26461:26461): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:15:43:536 CPU LOGGER/(26461:26461): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:15:43:536 CPU LOGGER/(26461:26461): SI=0 DI=0 PC=2
-[INFO] 01:15:43:536 CPU LOGGER/(26461:26461): Cantidad de segmentos: 0
-[INFO] 01:15:43:536 CPU LOGGER/(26461:26461): Proximo a detener: false
-[INFO] 01:15:43:536 CPU LOGGER/(26461:26461): Tamaño buffer serializado: 37 bytes
-[INFO] 01:15:43:536 CPU LOGGER/(26461:26461): ===== FIN CONTEXTO =====
-[INFO] 01:15:43:536 CPU LOGGER/(26461:26461): Se envio el contexto a KM por interrupcion: 2
-[INFO] 01:15:43:580 CPU LOGGER/(26461:26461): ## Interrupcion recibida
-[INFO] 01:15:43:580 CPU LOGGER/(26461:26461): CPU esperando PID del Kernel Scheduler...
-[INFO] 01:15:43:624 CPU LOGGER/(26461:26461): PID recibido: 1
-[INFO] 01:15:43:624 CPU LOGGER/(26461:26461): Recibido PID: 1
-[INFO] 01:15:43:667 CPU LOGGER/(26461:26461): Cantidad de Memory Sticks recibida: 1
-[INFO] 01:15:43:667 CPU LOGGER/(26461:26461): MS 0 recibido: IP=127.0.0.1 Puerto=9003 Base=0 Tamaño=256
-[INFO] 01:15:43:667 CPU LOGGER/(26461:26461): Se envio PID: 1
-[INFO] 01:15:43:755 CPU LOGGER/(26461:26461): ===== CONTEXTO DESERIALIZADO =====
-[INFO] 01:15:43:755 CPU LOGGER/(26461:26461): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:15:43:755 CPU LOGGER/(26461:26461): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:15:43:755 CPU LOGGER/(26461:26461): SI=0 DI=0 PC=2
-[INFO] 01:15:43:755 CPU LOGGER/(26461:26461): Cantidad de segmentos: 0
-[INFO] 01:15:43:755 CPU LOGGER/(26461:26461): Proximo a detener: false
-[INFO] 01:15:43:755 CPU LOGGER/(26461:26461): Bytes deserializados: 37
-[INFO] 01:15:43:755 CPU LOGGER/(26461:26461): ===== FIN CONTEXTO =====
-[INFO] 01:15:43:755 CPU LOGGER/(26461:26461): Inicia ejecucion de proceso: 1
-[INFO] 01:15:43:756 CPU LOGGER/(26461:26461): ## PID: 1 - FETCH - Program Counter: 2
-[INFO] 01:15:43:756 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:43:756 CPU LOGGER/(26461:26461): FETCH: enviando PC=2
-[INFO] 01:15:44:091 CPU LOGGER/(26461:26461): ## PID: 1 - Ejecutando: SLEEP - 20000 1
-[INFO] 01:15:44:091 CPU LOGGER/(26461:26461): ===== CONTEXTO SERIALIZADO =====
-[INFO] 01:15:44:091 CPU LOGGER/(26461:26461): Registros:
-[INFO] 01:15:44:091 CPU LOGGER/(26461:26461): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:15:44:091 CPU LOGGER/(26461:26461): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:15:44:091 CPU LOGGER/(26461:26461): SI=0 DI=0 PC=3
-[INFO] 01:15:44:091 CPU LOGGER/(26461:26461): Cantidad de segmentos: 0
-[INFO] 01:15:44:091 CPU LOGGER/(26461:26461): Proximo a detener: false
-[INFO] 01:15:44:091 CPU LOGGER/(26461:26461): Tamaño buffer serializado: 37 bytes
-[INFO] 01:15:44:091 CPU LOGGER/(26461:26461): ===== FIN CONTEXTO =====
-[INFO] 01:15:44:135 CPU LOGGER/(26461:26461): ## PID: 1 - Bloqueado por IO, se libera la CPU
-[INFO] 01:15:44:135 CPU LOGGER/(26461:26461): CPU esperando PID del Kernel Scheduler...
-[INFO] 01:15:44:179 CPU LOGGER/(26461:26461): PID recibido: 2
-[INFO] 01:15:44:179 CPU LOGGER/(26461:26461): Recibido PID: 2
-[INFO] 01:15:44:223 CPU LOGGER/(26461:26461): Cantidad de Memory Sticks recibida: 1
-[INFO] 01:15:44:223 CPU LOGGER/(26461:26461): MS 0 recibido: IP=127.0.0.1 Puerto=9003 Base=0 Tamaño=256
-[INFO] 01:15:44:223 CPU LOGGER/(26461:26461): Se envio PID: 2
-[INFO] 01:15:44:311 CPU LOGGER/(26461:26461): ===== CONTEXTO DESERIALIZADO =====
-[INFO] 01:15:44:311 CPU LOGGER/(26461:26461): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:15:44:311 CPU LOGGER/(26461:26461): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:15:44:311 CPU LOGGER/(26461:26461): SI=0 DI=0 PC=2
-[INFO] 01:15:44:311 CPU LOGGER/(26461:26461): Cantidad de segmentos: 0
-[INFO] 01:15:44:311 CPU LOGGER/(26461:26461): Proximo a detener: false
-[INFO] 01:15:44:311 CPU LOGGER/(26461:26461): Bytes deserializados: 37
-[INFO] 01:15:44:311 CPU LOGGER/(26461:26461): ===== FIN CONTEXTO =====
-[INFO] 01:15:44:311 CPU LOGGER/(26461:26461): Inicia ejecucion de proceso: 2
-[INFO] 01:15:44:311 CPU LOGGER/(26461:26461): ## PID: 2 - FETCH - Program Counter: 2
-[INFO] 01:15:44:311 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:15:44:311 CPU LOGGER/(26461:26461): FETCH: enviando PC=2
-[INFO] 01:15:44:647 CPU LOGGER/(26461:26461): ## PID: 2 - Ejecutando: SLEEP - 20000 1
-[INFO] 01:15:44:647 CPU LOGGER/(26461:26461): ===== CONTEXTO SERIALIZADO =====
-[INFO] 01:15:44:647 CPU LOGGER/(26461:26461): Registros:
-[INFO] 01:15:44:647 CPU LOGGER/(26461:26461): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:15:44:647 CPU LOGGER/(26461:26461): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:15:44:647 CPU LOGGER/(26461:26461): SI=0 DI=0 PC=3
-[INFO] 01:15:44:647 CPU LOGGER/(26461:26461): Cantidad de segmentos: 0
-[INFO] 01:15:44:647 CPU LOGGER/(26461:26461): Proximo a detener: false
-[INFO] 01:15:44:647 CPU LOGGER/(26461:26461): Tamaño buffer serializado: 37 bytes
-[INFO] 01:15:44:647 CPU LOGGER/(26461:26461): ===== FIN CONTEXTO =====
-[INFO] 01:15:44:691 CPU LOGGER/(26461:26461): ## PID: 2 - Bloqueado por IO, se libera la CPU
-[INFO] 01:15:44:691 CPU LOGGER/(26461:26461): CPU esperando PID del Kernel Scheduler...
-[INFO] 01:16:04:181 CPU LOGGER/(26461:26461): PID recibido: 1
-[INFO] 01:16:04:181 CPU LOGGER/(26461:26461): Recibido PID: 1
-[INFO] 01:16:04:223 CPU LOGGER/(26461:26461): Cantidad de Memory Sticks recibida: 1
-[INFO] 01:16:04:223 CPU LOGGER/(26461:26461): MS 0 recibido: IP=127.0.0.1 Puerto=9003 Base=0 Tamaño=256
-[INFO] 01:16:04:223 CPU LOGGER/(26461:26461): Se envio PID: 1
-[INFO] 01:16:04:311 CPU LOGGER/(26461:26461): ===== CONTEXTO DESERIALIZADO =====
-[INFO] 01:16:04:312 CPU LOGGER/(26461:26461): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:16:04:312 CPU LOGGER/(26461:26461): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:16:04:312 CPU LOGGER/(26461:26461): SI=0 DI=0 PC=3
-[INFO] 01:16:04:312 CPU LOGGER/(26461:26461): Cantidad de segmentos: 0
-[INFO] 01:16:04:312 CPU LOGGER/(26461:26461): Proximo a detener: false
-[INFO] 01:16:04:312 CPU LOGGER/(26461:26461): Bytes deserializados: 37
-[INFO] 01:16:04:312 CPU LOGGER/(26461:26461): ===== FIN CONTEXTO =====
-[INFO] 01:16:04:312 CPU LOGGER/(26461:26461): Inicia ejecucion de proceso: 1
-[INFO] 01:16:04:312 CPU LOGGER/(26461:26461): ## PID: 1 - FETCH - Program Counter: 3
-[INFO] 01:16:04:312 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:16:04:312 CPU LOGGER/(26461:26461): FETCH: enviando PC=3
-[INFO] 01:16:04:647 CPU LOGGER/(26461:26461): ## PID: 1 - Ejecutando: SET - AX 1
-[INFO] 01:16:04:647 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:16:04:647 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:16:04:647 CPU LOGGER/(26461:26461): ## PID: 1 - FETCH - Program Counter: 4
-[INFO] 01:16:04:647 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:16:04:647 CPU LOGGER/(26461:26461): FETCH: enviando PC=4
-[INFO] 01:16:04:939 CPU LOGGER/(26461:26461): ## PID: 1 - Ejecutando: SET - BX 1
-[INFO] 01:16:04:939 CPU LOGGER/(26461:26461): ===== CONTEXTO SERIALIZADO =====
-[INFO] 01:16:04:939 CPU LOGGER/(26461:26461): Registros:
-[INFO] 01:16:04:939 CPU LOGGER/(26461:26461): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:16:04:939 CPU LOGGER/(26461:26461): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:16:04:939 CPU LOGGER/(26461:26461): SI=0 DI=0 PC=5
-[INFO] 01:16:04:939 CPU LOGGER/(26461:26461): Cantidad de segmentos: 0
-[INFO] 01:16:04:939 CPU LOGGER/(26461:26461): Proximo a detener: false
-[INFO] 01:16:04:939 CPU LOGGER/(26461:26461): Tamaño buffer serializado: 37 bytes
-[INFO] 01:16:04:939 CPU LOGGER/(26461:26461): ===== FIN CONTEXTO =====
-[INFO] 01:16:04:939 CPU LOGGER/(26461:26461): Se envio el contexto a KM por interrupcion: 1
-[INFO] 01:16:04:983 CPU LOGGER/(26461:26461): ## Interrupcion recibida
-[INFO] 01:16:04:983 CPU LOGGER/(26461:26461): CPU esperando PID del Kernel Scheduler...
-[INFO] 01:16:04:983 CPU LOGGER/(26461:26461): PID recibido: 1
-[INFO] 01:16:04:983 CPU LOGGER/(26461:26461): Recibido PID: 1
-[INFO] 01:16:05:070 CPU LOGGER/(26461:26461): Cantidad de Memory Sticks recibida: 1
-[INFO] 01:16:05:071 CPU LOGGER/(26461:26461): MS 0 recibido: IP=127.0.0.1 Puerto=9003 Base=0 Tamaño=256
-[INFO] 01:16:05:071 CPU LOGGER/(26461:26461): Se envio PID: 1
-[INFO] 01:16:05:159 CPU LOGGER/(26461:26461): ===== CONTEXTO DESERIALIZADO =====
-[INFO] 01:16:05:159 CPU LOGGER/(26461:26461): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:16:05:159 CPU LOGGER/(26461:26461): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:16:05:159 CPU LOGGER/(26461:26461): SI=0 DI=0 PC=5
-[INFO] 01:16:05:159 CPU LOGGER/(26461:26461): Cantidad de segmentos: 0
-[INFO] 01:16:05:159 CPU LOGGER/(26461:26461): Proximo a detener: false
-[INFO] 01:16:05:159 CPU LOGGER/(26461:26461): Bytes deserializados: 37
-[INFO] 01:16:05:159 CPU LOGGER/(26461:26461): ===== FIN CONTEXTO =====
-[INFO] 01:16:05:159 CPU LOGGER/(26461:26461): Inicia ejecucion de proceso: 1
-[INFO] 01:16:05:159 CPU LOGGER/(26461:26461): ## PID: 1 - FETCH - Program Counter: 5
-[INFO] 01:16:05:159 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:16:05:159 CPU LOGGER/(26461:26461): FETCH: enviando PC=5
-[INFO] 01:16:05:495 CPU LOGGER/(26461:26461): ## PID: 1 - Ejecutando: SLEEP - 20000 1
-[INFO] 01:16:05:495 CPU LOGGER/(26461:26461): ===== CONTEXTO SERIALIZADO =====
-[INFO] 01:16:05:495 CPU LOGGER/(26461:26461): Registros:
-[INFO] 01:16:05:495 CPU LOGGER/(26461:26461): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:16:05:495 CPU LOGGER/(26461:26461): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:16:05:495 CPU LOGGER/(26461:26461): SI=0 DI=0 PC=6
-[INFO] 01:16:05:495 CPU LOGGER/(26461:26461): Cantidad de segmentos: 0
-[INFO] 01:16:05:495 CPU LOGGER/(26461:26461): Proximo a detener: false
-[INFO] 01:16:05:495 CPU LOGGER/(26461:26461): Tamaño buffer serializado: 37 bytes
-[INFO] 01:16:05:495 CPU LOGGER/(26461:26461): ===== FIN CONTEXTO =====
-[INFO] 01:16:05:538 CPU LOGGER/(26461:26461): ## PID: 1 - Bloqueado por IO, se libera la CPU
-[INFO] 01:16:05:538 CPU LOGGER/(26461:26461): CPU esperando PID del Kernel Scheduler...
-[INFO] 01:16:24:224 CPU LOGGER/(26461:26461): PID recibido: 2
-[INFO] 01:16:24:224 CPU LOGGER/(26461:26461): Recibido PID: 2
-[INFO] 01:16:24:267 CPU LOGGER/(26461:26461): Cantidad de Memory Sticks recibida: 1
-[INFO] 01:16:24:267 CPU LOGGER/(26461:26461): MS 0 recibido: IP=127.0.0.1 Puerto=9003 Base=0 Tamaño=256
-[INFO] 01:16:24:267 CPU LOGGER/(26461:26461): Se envio PID: 2
-[INFO] 01:16:24:354 CPU LOGGER/(26461:26461): ===== CONTEXTO DESERIALIZADO =====
-[INFO] 01:16:24:354 CPU LOGGER/(26461:26461): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:16:24:354 CPU LOGGER/(26461:26461): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:16:24:354 CPU LOGGER/(26461:26461): SI=0 DI=0 PC=3
-[INFO] 01:16:24:354 CPU LOGGER/(26461:26461): Cantidad de segmentos: 0
-[INFO] 01:16:24:354 CPU LOGGER/(26461:26461): Proximo a detener: false
-[INFO] 01:16:24:354 CPU LOGGER/(26461:26461): Bytes deserializados: 37
-[INFO] 01:16:24:354 CPU LOGGER/(26461:26461): ===== FIN CONTEXTO =====
-[INFO] 01:16:24:355 CPU LOGGER/(26461:26461): Inicia ejecucion de proceso: 2
-[INFO] 01:16:24:355 CPU LOGGER/(26461:26461): ## PID: 2 - FETCH - Program Counter: 3
-[INFO] 01:16:24:355 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:16:24:355 CPU LOGGER/(26461:26461): FETCH: enviando PC=3
-[INFO] 01:16:24:691 CPU LOGGER/(26461:26461): ## PID: 2 - Ejecutando: SET - AX 1
-[INFO] 01:16:24:691 CPU LOGGER/(26461:26461): No llego interrupcion
-[INFO] 01:16:24:691 CPU LOGGER/(26461:26461): evalua EXIT
-[INFO] 01:16:24:691 CPU LOGGER/(26461:26461): ## PID: 2 - FETCH - Program Counter: 4
-[INFO] 01:16:24:691 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:16:24:691 CPU LOGGER/(26461:26461): FETCH: enviando PC=4
-[INFO] 01:16:24:982 CPU LOGGER/(26461:26461): ## PID: 2 - Ejecutando: SET - BX 1
-[INFO] 01:16:24:983 CPU LOGGER/(26461:26461): ===== CONTEXTO SERIALIZADO =====
-[INFO] 01:16:24:983 CPU LOGGER/(26461:26461): Registros:
-[INFO] 01:16:24:983 CPU LOGGER/(26461:26461): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:16:24:983 CPU LOGGER/(26461:26461): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:16:24:983 CPU LOGGER/(26461:26461): SI=0 DI=0 PC=5
-[INFO] 01:16:24:983 CPU LOGGER/(26461:26461): Cantidad de segmentos: 0
-[INFO] 01:16:24:983 CPU LOGGER/(26461:26461): Proximo a detener: false
-[INFO] 01:16:24:983 CPU LOGGER/(26461:26461): Tamaño buffer serializado: 37 bytes
-[INFO] 01:16:24:983 CPU LOGGER/(26461:26461): ===== FIN CONTEXTO =====
-[INFO] 01:16:24:983 CPU LOGGER/(26461:26461): Se envio el contexto a KM por interrupcion: 2
-[INFO] 01:16:25:026 CPU LOGGER/(26461:26461): ## Interrupcion recibida
-[INFO] 01:16:25:026 CPU LOGGER/(26461:26461): CPU esperando PID del Kernel Scheduler...
-[INFO] 01:16:25:027 CPU LOGGER/(26461:26461): PID recibido: 2
-[INFO] 01:16:25:027 CPU LOGGER/(26461:26461): Recibido PID: 2
-[INFO] 01:16:25:115 CPU LOGGER/(26461:26461): Cantidad de Memory Sticks recibida: 1
-[INFO] 01:16:25:115 CPU LOGGER/(26461:26461): MS 0 recibido: IP=127.0.0.1 Puerto=9003 Base=0 Tamaño=256
-[INFO] 01:16:25:115 CPU LOGGER/(26461:26461): Se envio PID: 2
-[INFO] 01:16:25:202 CPU LOGGER/(26461:26461): ===== CONTEXTO DESERIALIZADO =====
-[INFO] 01:16:25:202 CPU LOGGER/(26461:26461): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:16:25:202 CPU LOGGER/(26461:26461): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:16:25:202 CPU LOGGER/(26461:26461): SI=0 DI=0 PC=5
-[INFO] 01:16:25:202 CPU LOGGER/(26461:26461): Cantidad de segmentos: 0
-[INFO] 01:16:25:202 CPU LOGGER/(26461:26461): Proximo a detener: false
-[INFO] 01:16:25:202 CPU LOGGER/(26461:26461): Bytes deserializados: 37
-[INFO] 01:16:25:202 CPU LOGGER/(26461:26461): ===== FIN CONTEXTO =====
-[INFO] 01:16:25:202 CPU LOGGER/(26461:26461): Inicia ejecucion de proceso: 2
-[INFO] 01:16:25:202 CPU LOGGER/(26461:26461): ## PID: 2 - FETCH - Program Counter: 5
-[INFO] 01:16:25:203 CPU LOGGER/(26461:26461): FETCH: enviando MSG_FETCH_CPU=12
-[INFO] 01:16:25:203 CPU LOGGER/(26461:26461): FETCH: enviando PC=5
-[INFO] 01:16:25:542 CPU LOGGER/(26461:26461): ## PID: 2 - Ejecutando: SLEEP - 20000 1
-[INFO] 01:16:25:543 CPU LOGGER/(26461:26461): ===== CONTEXTO SERIALIZADO =====
-[INFO] 01:16:25:543 CPU LOGGER/(26461:26461): Registros:
-[INFO] 01:16:25:543 CPU LOGGER/(26461:26461): AX=1 BX=1 CX=0 DX=0
-[INFO] 01:16:25:543 CPU LOGGER/(26461:26461): EAX=0 EBX=0 ECX=0 EDX=0
-[INFO] 01:16:25:543 CPU LOGGER/(26461:26461): SI=0 DI=0 PC=6
-[INFO] 01:16:25:543 CPU LOGGER/(26461:26461): Cantidad de segmentos: 0
-[INFO] 01:16:25:543 CPU LOGGER/(26461:26461): Proximo a detener: false
-[INFO] 01:16:25:543 CPU LOGGER/(26461:26461): Tamaño buffer serializado: 37 bytes
-[INFO] 01:16:25:543 CPU LOGGER/(26461:26461): ===== FIN CONTEXTO =====
-[INFO] 01:16:25:586 CPU LOGGER/(26461:26461): ## PID: 2 - Bloqueado por IO, se libera la CPU
-[INFO] 01:16:25:587 CPU LOGGER/(26461:26461): CPU esperando PID del Kernel Scheduler...
-[INFO] 01:16:25:628 CPU LOGGER/(26461:26461): PID recibido: 16
-[INFO] 01:16:25:628 CPU LOGGER/(26461:26461): Recibido PID: 16
-[INFO] 01:16:25:671 CPU LOGGER/(26461:26461): Cantidad de Memory Sticks recibida: 1
-[INFO] 01:16:25:671 CPU LOGGER/(26461:26461): MS 0 recibido: IP=127.0.0.1 Puerto=9003 Base=0 Tamaño=256
-[INFO] 01:16:25:671 CPU LOGGER/(26461:26461): Se envio PID: 16
+[INFO] 15:36:05:425 CPU LOGGER/(2648:2648): ## PID: 4 - Ejecutando: JNZ - AX 1
+[INFO] 15:36:05:425 CPU LOGGER/(2648:2648): No llego interrupcion
+[INFO] 15:36:05:425 CPU LOGGER/(2648:2648): evalua EXIT
+[INFO] 15:36:05:425 CPU LOGGER/(2648:2648): ## PID: 4 - FETCH - Program Counter: 1
+[INFO] 15:36:05:425 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:05:425 CPU LOGGER/(2648:2648): FETCH: enviando PC=1
+[INFO] 15:36:05:717 CPU LOGGER/(2648:2648): ## PID: 4 - Ejecutando: SET - BX 1
+[INFO] 15:36:05:717 CPU LOGGER/(2648:2648): No llego interrupcion
+[INFO] 15:36:05:717 CPU LOGGER/(2648:2648): evalua EXIT
+[INFO] 15:36:05:717 CPU LOGGER/(2648:2648): ## PID: 4 - FETCH - Program Counter: 2
+[INFO] 15:36:05:717 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:05:717 CPU LOGGER/(2648:2648): FETCH: enviando PC=2
+[INFO] 15:36:06:009 CPU LOGGER/(2648:2648): ## PID: 4 - Ejecutando: SUB - AX BX
+[INFO] 15:36:06:009 CPU LOGGER/(2648:2648): No llego interrupcion
+[INFO] 15:36:06:009 CPU LOGGER/(2648:2648): evalua EXIT
+[INFO] 15:36:06:009 CPU LOGGER/(2648:2648): ## PID: 4 - FETCH - Program Counter: 3
+[INFO] 15:36:06:009 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:06:009 CPU LOGGER/(2648:2648): FETCH: enviando PC=3
+[INFO] 15:36:06:301 CPU LOGGER/(2648:2648): ## PID: 4 - Ejecutando: JNZ - AX 1
+[INFO] 15:36:06:301 CPU LOGGER/(2648:2648): No llego interrupcion
+[INFO] 15:36:06:301 CPU LOGGER/(2648:2648): evalua EXIT
+[INFO] 15:36:06:301 CPU LOGGER/(2648:2648): ## PID: 4 - FETCH - Program Counter: 1
+[INFO] 15:36:06:301 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:06:301 CPU LOGGER/(2648:2648): FETCH: enviando PC=1
+[INFO] 15:36:06:593 CPU LOGGER/(2648:2648): ## PID: 4 - Ejecutando: SET - BX 1
+[INFO] 15:36:06:593 CPU LOGGER/(2648:2648): No llego interrupcion
+[INFO] 15:36:06:593 CPU LOGGER/(2648:2648): evalua EXIT
+[INFO] 15:36:06:593 CPU LOGGER/(2648:2648): ## PID: 4 - FETCH - Program Counter: 2
+[INFO] 15:36:06:593 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:06:593 CPU LOGGER/(2648:2648): FETCH: enviando PC=2
+[INFO] 15:36:06:885 CPU LOGGER/(2648:2648): ## PID: 4 - Ejecutando: SUB - AX BX
+[INFO] 15:36:06:885 CPU LOGGER/(2648:2648): No llego interrupcion
+[INFO] 15:36:06:885 CPU LOGGER/(2648:2648): evalua EXIT
+[INFO] 15:36:06:885 CPU LOGGER/(2648:2648): ## PID: 4 - FETCH - Program Counter: 3
+[INFO] 15:36:06:885 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:06:885 CPU LOGGER/(2648:2648): FETCH: enviando PC=3
+[INFO] 15:36:07:177 CPU LOGGER/(2648:2648): ## PID: 4 - Ejecutando: JNZ - AX 1
+[INFO] 15:36:07:177 CPU LOGGER/(2648:2648): No llego interrupcion
+[INFO] 15:36:07:177 CPU LOGGER/(2648:2648): evalua EXIT
+[INFO] 15:36:07:177 CPU LOGGER/(2648:2648): ## PID: 4 - FETCH - Program Counter: 1
+[INFO] 15:36:07:177 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:07:177 CPU LOGGER/(2648:2648): FETCH: enviando PC=1
+[INFO] 15:36:07:469 CPU LOGGER/(2648:2648): ## PID: 4 - Ejecutando: SET - BX 1
+[INFO] 15:36:07:469 CPU LOGGER/(2648:2648): No llego interrupcion
+[INFO] 15:36:07:469 CPU LOGGER/(2648:2648): evalua EXIT
+[INFO] 15:36:07:469 CPU LOGGER/(2648:2648): ## PID: 4 - FETCH - Program Counter: 2
+[INFO] 15:36:07:469 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:07:469 CPU LOGGER/(2648:2648): FETCH: enviando PC=2
+[INFO] 15:36:07:761 CPU LOGGER/(2648:2648): ## PID: 4 - Ejecutando: SUB - AX BX
+[INFO] 15:36:07:761 CPU LOGGER/(2648:2648): No llego interrupcion
+[INFO] 15:36:07:761 CPU LOGGER/(2648:2648): evalua EXIT
+[INFO] 15:36:07:761 CPU LOGGER/(2648:2648): ## PID: 4 - FETCH - Program Counter: 3
+[INFO] 15:36:07:761 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:07:761 CPU LOGGER/(2648:2648): FETCH: enviando PC=3
+[INFO] 15:36:08:053 CPU LOGGER/(2648:2648): ## PID: 4 - Ejecutando: JNZ - AX 1
+[INFO] 15:36:08:053 CPU LOGGER/(2648:2648): No llego interrupcion
+[INFO] 15:36:08:053 CPU LOGGER/(2648:2648): evalua EXIT
+[INFO] 15:36:08:053 CPU LOGGER/(2648:2648): ## PID: 4 - FETCH - Program Counter: 1
+[INFO] 15:36:08:053 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:08:053 CPU LOGGER/(2648:2648): FETCH: enviando PC=1
+[INFO] 15:36:08:345 CPU LOGGER/(2648:2648): ## PID: 4 - Ejecutando: SET - BX 1
+[INFO] 15:36:08:345 CPU LOGGER/(2648:2648): No llego interrupcion
+[INFO] 15:36:08:345 CPU LOGGER/(2648:2648): evalua EXIT
+[INFO] 15:36:08:345 CPU LOGGER/(2648:2648): ## PID: 4 - FETCH - Program Counter: 2
+[INFO] 15:36:08:345 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:08:345 CPU LOGGER/(2648:2648): FETCH: enviando PC=2
+[INFO] 15:36:08:637 CPU LOGGER/(2648:2648): ## PID: 4 - Ejecutando: SUB - AX BX
+[INFO] 15:36:08:637 CPU LOGGER/(2648:2648): No llego interrupcion
+[INFO] 15:36:08:637 CPU LOGGER/(2648:2648): evalua EXIT
+[INFO] 15:36:08:637 CPU LOGGER/(2648:2648): ## PID: 4 - FETCH - Program Counter: 3
+[INFO] 15:36:08:637 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:08:637 CPU LOGGER/(2648:2648): FETCH: enviando PC=3
+[INFO] 15:36:08:929 CPU LOGGER/(2648:2648): ## PID: 4 - Ejecutando: JNZ - AX 1
+[INFO] 15:36:08:929 CPU LOGGER/(2648:2648): No llego interrupcion
+[INFO] 15:36:08:929 CPU LOGGER/(2648:2648): evalua EXIT
+[INFO] 15:36:08:929 CPU LOGGER/(2648:2648): ## PID: 4 - FETCH - Program Counter: 4
+[INFO] 15:36:08:929 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:08:929 CPU LOGGER/(2648:2648): FETCH: enviando PC=4
+[INFO] 15:36:09:221 CPU LOGGER/(2648:2648): ## PID: 4 - Ejecutando: EXIT - AX 1
+[INFO] 15:36:09:221 CPU LOGGER/(2648:2648): Se envio MSG_EXIT_CPU
+[INFO] 15:36:09:221 CPU LOGGER/(2648:2648): Se envio PID
+[INFO] 15:36:09:221 CPU LOGGER/(2648:2648): ===== CONTEXTO SERIALIZADO =====
+[INFO] 15:36:09:221 CPU LOGGER/(2648:2648): Registros:
+[INFO] 15:36:09:221 CPU LOGGER/(2648:2648): AX=0 BX=1 CX=0 DX=0
+[INFO] 15:36:09:221 CPU LOGGER/(2648:2648): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:09:221 CPU LOGGER/(2648:2648): SI=0 DI=0 PC=4
+[INFO] 15:36:09:221 CPU LOGGER/(2648:2648): Cantidad de segmentos: 0
+[INFO] 15:36:09:221 CPU LOGGER/(2648:2648): Proximo a detener: true
+[INFO] 15:36:09:221 CPU LOGGER/(2648:2648): Tamaño buffer serializado: 37 bytes
+[INFO] 15:36:09:221 CPU LOGGER/(2648:2648): ===== FIN CONTEXTO =====
+[INFO] 15:36:09:265 CPU LOGGER/(2648:2648): No llego interrupcion
+[INFO] 15:36:09:265 CPU LOGGER/(2648:2648): evalua EXIT
+[INFO] 15:36:09:265 CPU LOGGER/(2648:2648): Concluyo proceso 4 con EXIT
+[INFO] 15:36:09:265 CPU LOGGER/(2648:2648): CPU esperando PID del Kernel Scheduler...
+[INFO] 15:36:09:265 CPU LOGGER/(2648:2648): PID recibido: 1
+[INFO] 15:36:09:265 CPU LOGGER/(2648:2648): Recibido PID: 1
+[INFO] 15:36:09:353 CPU LOGGER/(2648:2648): Cantidad de Memory Sticks recibida: 1
+[INFO] 15:36:09:353 CPU LOGGER/(2648:2648): MS 0 recibido: IP=127.0.0.1 Puerto=9003 Base=0 Tamaño=256
+[INFO] 15:36:09:353 CPU LOGGER/(2648:2648): Se envio PID: 1
+[INFO] 15:36:09:441 CPU LOGGER/(2648:2648): ===== CONTEXTO DESERIALIZADO =====
+[INFO] 15:36:09:442 CPU LOGGER/(2648:2648): AX=0 BX=0 CX=0 DX=0
+[INFO] 15:36:09:442 CPU LOGGER/(2648:2648): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:09:442 CPU LOGGER/(2648:2648): SI=0 DI=0 PC=0
+[INFO] 15:36:09:442 CPU LOGGER/(2648:2648): Cantidad de segmentos: 0
+[INFO] 15:36:09:442 CPU LOGGER/(2648:2648): Proximo a detener: false
+[INFO] 15:36:09:442 CPU LOGGER/(2648:2648): Bytes deserializados: 37
+[INFO] 15:36:09:442 CPU LOGGER/(2648:2648): ===== FIN CONTEXTO =====
+[INFO] 15:36:09:442 CPU LOGGER/(2648:2648): Inicia ejecucion de proceso: 1
+[INFO] 15:36:09:442 CPU LOGGER/(2648:2648): ## PID: 1 - FETCH - Program Counter: 0
+[INFO] 15:36:09:442 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:09:442 CPU LOGGER/(2648:2648): FETCH: enviando PC=0
+[INFO] 15:36:09:777 CPU LOGGER/(2648:2648): ## PID: 1 - Ejecutando: SET - AX 1
+[INFO] 15:36:09:777 CPU LOGGER/(2648:2648): No llego interrupcion
+[INFO] 15:36:09:777 CPU LOGGER/(2648:2648): evalua EXIT
+[INFO] 15:36:09:777 CPU LOGGER/(2648:2648): ## PID: 1 - FETCH - Program Counter: 1
+[INFO] 15:36:09:777 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:09:777 CPU LOGGER/(2648:2648): FETCH: enviando PC=1
+[INFO] 15:36:10:069 CPU LOGGER/(2648:2648): ## PID: 1 - Ejecutando: SET - BX 1
+[INFO] 15:36:10:069 CPU LOGGER/(2648:2648): ===== CONTEXTO SERIALIZADO =====
+[INFO] 15:36:10:069 CPU LOGGER/(2648:2648): Registros:
+[INFO] 15:36:10:069 CPU LOGGER/(2648:2648): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:10:069 CPU LOGGER/(2648:2648): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:10:069 CPU LOGGER/(2648:2648): SI=0 DI=0 PC=2
+[INFO] 15:36:10:069 CPU LOGGER/(2648:2648): Cantidad de segmentos: 0
+[INFO] 15:36:10:069 CPU LOGGER/(2648:2648): Proximo a detener: false
+[INFO] 15:36:10:069 CPU LOGGER/(2648:2648): Tamaño buffer serializado: 37 bytes
+[INFO] 15:36:10:069 CPU LOGGER/(2648:2648): ===== FIN CONTEXTO =====
+[INFO] 15:36:10:070 CPU LOGGER/(2648:2648): Se envio el contexto a KM por interrupcion: 1
+[INFO] 15:36:10:113 CPU LOGGER/(2648:2648): ## Interrupcion recibida
+[INFO] 15:36:10:113 CPU LOGGER/(2648:2648): CPU esperando PID del Kernel Scheduler...
+[INFO] 15:36:10:113 CPU LOGGER/(2648:2648): PID recibido: 2
+[INFO] 15:36:10:113 CPU LOGGER/(2648:2648): Recibido PID: 2
+[INFO] 15:36:10:201 CPU LOGGER/(2648:2648): Cantidad de Memory Sticks recibida: 1
+[INFO] 15:36:10:201 CPU LOGGER/(2648:2648): MS 0 recibido: IP=127.0.0.1 Puerto=9003 Base=0 Tamaño=256
+[INFO] 15:36:10:201 CPU LOGGER/(2648:2648): Se envio PID: 2
+[INFO] 15:36:10:289 CPU LOGGER/(2648:2648): ===== CONTEXTO DESERIALIZADO =====
+[INFO] 15:36:10:289 CPU LOGGER/(2648:2648): AX=0 BX=0 CX=0 DX=0
+[INFO] 15:36:10:289 CPU LOGGER/(2648:2648): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:10:289 CPU LOGGER/(2648:2648): SI=0 DI=0 PC=0
+[INFO] 15:36:10:289 CPU LOGGER/(2648:2648): Cantidad de segmentos: 0
+[INFO] 15:36:10:289 CPU LOGGER/(2648:2648): Proximo a detener: false
+[INFO] 15:36:10:289 CPU LOGGER/(2648:2648): Bytes deserializados: 37
+[INFO] 15:36:10:289 CPU LOGGER/(2648:2648): ===== FIN CONTEXTO =====
+[INFO] 15:36:10:289 CPU LOGGER/(2648:2648): Inicia ejecucion de proceso: 2
+[INFO] 15:36:10:289 CPU LOGGER/(2648:2648): ## PID: 2 - FETCH - Program Counter: 0
+[INFO] 15:36:10:289 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:10:289 CPU LOGGER/(2648:2648): FETCH: enviando PC=0
+[INFO] 15:36:10:625 CPU LOGGER/(2648:2648): ## PID: 2 - Ejecutando: SET - AX 1
+[INFO] 15:36:10:625 CPU LOGGER/(2648:2648): No llego interrupcion
+[INFO] 15:36:10:625 CPU LOGGER/(2648:2648): evalua EXIT
+[INFO] 15:36:10:625 CPU LOGGER/(2648:2648): ## PID: 2 - FETCH - Program Counter: 1
+[INFO] 15:36:10:625 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:10:625 CPU LOGGER/(2648:2648): FETCH: enviando PC=1
+[INFO] 15:36:10:917 CPU LOGGER/(2648:2648): ## PID: 2 - Ejecutando: SET - BX 1
+[INFO] 15:36:10:917 CPU LOGGER/(2648:2648): ===== CONTEXTO SERIALIZADO =====
+[INFO] 15:36:10:917 CPU LOGGER/(2648:2648): Registros:
+[INFO] 15:36:10:917 CPU LOGGER/(2648:2648): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:10:917 CPU LOGGER/(2648:2648): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:10:917 CPU LOGGER/(2648:2648): SI=0 DI=0 PC=2
+[INFO] 15:36:10:917 CPU LOGGER/(2648:2648): Cantidad de segmentos: 0
+[INFO] 15:36:10:917 CPU LOGGER/(2648:2648): Proximo a detener: false
+[INFO] 15:36:10:917 CPU LOGGER/(2648:2648): Tamaño buffer serializado: 37 bytes
+[INFO] 15:36:10:917 CPU LOGGER/(2648:2648): ===== FIN CONTEXTO =====
+[INFO] 15:36:10:917 CPU LOGGER/(2648:2648): Se envio el contexto a KM por interrupcion: 2
+[INFO] 15:36:10:961 CPU LOGGER/(2648:2648): ## Interrupcion recibida
+[INFO] 15:36:10:961 CPU LOGGER/(2648:2648): CPU esperando PID del Kernel Scheduler...
+[INFO] 15:36:11:006 CPU LOGGER/(2648:2648): PID recibido: 1
+[INFO] 15:36:11:006 CPU LOGGER/(2648:2648): Recibido PID: 1
+[INFO] 15:36:11:049 CPU LOGGER/(2648:2648): Cantidad de Memory Sticks recibida: 1
+[INFO] 15:36:11:049 CPU LOGGER/(2648:2648): MS 0 recibido: IP=127.0.0.1 Puerto=9003 Base=0 Tamaño=256
+[INFO] 15:36:11:049 CPU LOGGER/(2648:2648): Se envio PID: 1
+[INFO] 15:36:11:137 CPU LOGGER/(2648:2648): ===== CONTEXTO DESERIALIZADO =====
+[INFO] 15:36:11:137 CPU LOGGER/(2648:2648): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:11:137 CPU LOGGER/(2648:2648): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:11:137 CPU LOGGER/(2648:2648): SI=0 DI=0 PC=2
+[INFO] 15:36:11:137 CPU LOGGER/(2648:2648): Cantidad de segmentos: 0
+[INFO] 15:36:11:137 CPU LOGGER/(2648:2648): Proximo a detener: false
+[INFO] 15:36:11:137 CPU LOGGER/(2648:2648): Bytes deserializados: 37
+[INFO] 15:36:11:137 CPU LOGGER/(2648:2648): ===== FIN CONTEXTO =====
+[INFO] 15:36:11:137 CPU LOGGER/(2648:2648): Inicia ejecucion de proceso: 1
+[INFO] 15:36:11:137 CPU LOGGER/(2648:2648): ## PID: 1 - FETCH - Program Counter: 2
+[INFO] 15:36:11:137 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:11:137 CPU LOGGER/(2648:2648): FETCH: enviando PC=2
+[INFO] 15:36:11:473 CPU LOGGER/(2648:2648): ## PID: 1 - Ejecutando: SLEEP - 20000 1
+[INFO] 15:36:11:473 CPU LOGGER/(2648:2648): ===== CONTEXTO SERIALIZADO =====
+[INFO] 15:36:11:473 CPU LOGGER/(2648:2648): Registros:
+[INFO] 15:36:11:473 CPU LOGGER/(2648:2648): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:11:473 CPU LOGGER/(2648:2648): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:11:473 CPU LOGGER/(2648:2648): SI=0 DI=0 PC=3
+[INFO] 15:36:11:473 CPU LOGGER/(2648:2648): Cantidad de segmentos: 0
+[INFO] 15:36:11:473 CPU LOGGER/(2648:2648): Proximo a detener: false
+[INFO] 15:36:11:473 CPU LOGGER/(2648:2648): Tamaño buffer serializado: 37 bytes
+[INFO] 15:36:11:473 CPU LOGGER/(2648:2648): ===== FIN CONTEXTO =====
+[INFO] 15:36:11:517 CPU LOGGER/(2648:2648): ## PID: 1 - Bloqueado por IO, se libera la CPU
+[INFO] 15:36:11:517 CPU LOGGER/(2648:2648): CPU esperando PID del Kernel Scheduler...
+[INFO] 15:36:11:561 CPU LOGGER/(2648:2648): PID recibido: 2
+[INFO] 15:36:11:561 CPU LOGGER/(2648:2648): Recibido PID: 2
+[INFO] 15:36:11:605 CPU LOGGER/(2648:2648): Cantidad de Memory Sticks recibida: 1
+[INFO] 15:36:11:605 CPU LOGGER/(2648:2648): MS 0 recibido: IP=127.0.0.1 Puerto=9003 Base=0 Tamaño=256
+[INFO] 15:36:11:605 CPU LOGGER/(2648:2648): Se envio PID: 2
+[INFO] 15:36:11:693 CPU LOGGER/(2648:2648): ===== CONTEXTO DESERIALIZADO =====
+[INFO] 15:36:11:693 CPU LOGGER/(2648:2648): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:11:693 CPU LOGGER/(2648:2648): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:11:693 CPU LOGGER/(2648:2648): SI=0 DI=0 PC=2
+[INFO] 15:36:11:693 CPU LOGGER/(2648:2648): Cantidad de segmentos: 0
+[INFO] 15:36:11:693 CPU LOGGER/(2648:2648): Proximo a detener: false
+[INFO] 15:36:11:693 CPU LOGGER/(2648:2648): Bytes deserializados: 37
+[INFO] 15:36:11:693 CPU LOGGER/(2648:2648): ===== FIN CONTEXTO =====
+[INFO] 15:36:11:693 CPU LOGGER/(2648:2648): Inicia ejecucion de proceso: 2
+[INFO] 15:36:11:693 CPU LOGGER/(2648:2648): ## PID: 2 - FETCH - Program Counter: 2
+[INFO] 15:36:11:693 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:11:693 CPU LOGGER/(2648:2648): FETCH: enviando PC=2
+[INFO] 15:36:12:029 CPU LOGGER/(2648:2648): ## PID: 2 - Ejecutando: SLEEP - 20000 1
+[INFO] 15:36:12:029 CPU LOGGER/(2648:2648): ===== CONTEXTO SERIALIZADO =====
+[INFO] 15:36:12:029 CPU LOGGER/(2648:2648): Registros:
+[INFO] 15:36:12:029 CPU LOGGER/(2648:2648): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:12:029 CPU LOGGER/(2648:2648): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:12:029 CPU LOGGER/(2648:2648): SI=0 DI=0 PC=3
+[INFO] 15:36:12:029 CPU LOGGER/(2648:2648): Cantidad de segmentos: 0
+[INFO] 15:36:12:029 CPU LOGGER/(2648:2648): Proximo a detener: false
+[INFO] 15:36:12:029 CPU LOGGER/(2648:2648): Tamaño buffer serializado: 37 bytes
+[INFO] 15:36:12:029 CPU LOGGER/(2648:2648): ===== FIN CONTEXTO =====
+[INFO] 15:36:12:073 CPU LOGGER/(2648:2648): ## PID: 2 - Bloqueado por IO, se libera la CPU
+[INFO] 15:36:12:073 CPU LOGGER/(2648:2648): CPU esperando PID del Kernel Scheduler...
+[INFO] 15:36:31:562 CPU LOGGER/(2648:2648): PID recibido: 1
+[INFO] 15:36:31:562 CPU LOGGER/(2648:2648): Recibido PID: 1
+[INFO] 15:36:31:605 CPU LOGGER/(2648:2648): Cantidad de Memory Sticks recibida: 1
+[INFO] 15:36:31:605 CPU LOGGER/(2648:2648): MS 0 recibido: IP=127.0.0.1 Puerto=9003 Base=0 Tamaño=256
+[INFO] 15:36:31:605 CPU LOGGER/(2648:2648): Se envio PID: 1
+[INFO] 15:36:31:693 CPU LOGGER/(2648:2648): ===== CONTEXTO DESERIALIZADO =====
+[INFO] 15:36:31:693 CPU LOGGER/(2648:2648): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:31:693 CPU LOGGER/(2648:2648): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:31:693 CPU LOGGER/(2648:2648): SI=0 DI=0 PC=3
+[INFO] 15:36:31:693 CPU LOGGER/(2648:2648): Cantidad de segmentos: 0
+[INFO] 15:36:31:693 CPU LOGGER/(2648:2648): Proximo a detener: false
+[INFO] 15:36:31:693 CPU LOGGER/(2648:2648): Bytes deserializados: 37
+[INFO] 15:36:31:693 CPU LOGGER/(2648:2648): ===== FIN CONTEXTO =====
+[INFO] 15:36:31:693 CPU LOGGER/(2648:2648): Inicia ejecucion de proceso: 1
+[INFO] 15:36:31:693 CPU LOGGER/(2648:2648): ## PID: 1 - FETCH - Program Counter: 3
+[INFO] 15:36:31:693 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:31:693 CPU LOGGER/(2648:2648): FETCH: enviando PC=3
+[INFO] 15:36:32:029 CPU LOGGER/(2648:2648): ## PID: 1 - Ejecutando: SET - AX 1
+[INFO] 15:36:32:029 CPU LOGGER/(2648:2648): No llego interrupcion
+[INFO] 15:36:32:029 CPU LOGGER/(2648:2648): evalua EXIT
+[INFO] 15:36:32:029 CPU LOGGER/(2648:2648): ## PID: 1 - FETCH - Program Counter: 4
+[INFO] 15:36:32:029 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:32:029 CPU LOGGER/(2648:2648): FETCH: enviando PC=4
+[INFO] 15:36:32:321 CPU LOGGER/(2648:2648): ## PID: 1 - Ejecutando: SET - BX 1
+[INFO] 15:36:32:321 CPU LOGGER/(2648:2648): ===== CONTEXTO SERIALIZADO =====
+[INFO] 15:36:32:321 CPU LOGGER/(2648:2648): Registros:
+[INFO] 15:36:32:321 CPU LOGGER/(2648:2648): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:32:321 CPU LOGGER/(2648:2648): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:32:321 CPU LOGGER/(2648:2648): SI=0 DI=0 PC=5
+[INFO] 15:36:32:321 CPU LOGGER/(2648:2648): Cantidad de segmentos: 0
+[INFO] 15:36:32:321 CPU LOGGER/(2648:2648): Proximo a detener: false
+[INFO] 15:36:32:321 CPU LOGGER/(2648:2648): Tamaño buffer serializado: 37 bytes
+[INFO] 15:36:32:321 CPU LOGGER/(2648:2648): ===== FIN CONTEXTO =====
+[INFO] 15:36:32:321 CPU LOGGER/(2648:2648): Se envio el contexto a KM por interrupcion: 1
+[INFO] 15:36:32:365 CPU LOGGER/(2648:2648): ## Interrupcion recibida
+[INFO] 15:36:32:365 CPU LOGGER/(2648:2648): CPU esperando PID del Kernel Scheduler...
+[INFO] 15:36:32:365 CPU LOGGER/(2648:2648): PID recibido: 1
+[INFO] 15:36:32:365 CPU LOGGER/(2648:2648): Recibido PID: 1
+[INFO] 15:36:32:453 CPU LOGGER/(2648:2648): Cantidad de Memory Sticks recibida: 1
+[INFO] 15:36:32:453 CPU LOGGER/(2648:2648): MS 0 recibido: IP=127.0.0.1 Puerto=9003 Base=0 Tamaño=256
+[INFO] 15:36:32:453 CPU LOGGER/(2648:2648): Se envio PID: 1
+[INFO] 15:36:32:541 CPU LOGGER/(2648:2648): ===== CONTEXTO DESERIALIZADO =====
+[INFO] 15:36:32:541 CPU LOGGER/(2648:2648): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:32:541 CPU LOGGER/(2648:2648): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:32:541 CPU LOGGER/(2648:2648): SI=0 DI=0 PC=5
+[INFO] 15:36:32:541 CPU LOGGER/(2648:2648): Cantidad de segmentos: 0
+[INFO] 15:36:32:541 CPU LOGGER/(2648:2648): Proximo a detener: false
+[INFO] 15:36:32:541 CPU LOGGER/(2648:2648): Bytes deserializados: 37
+[INFO] 15:36:32:541 CPU LOGGER/(2648:2648): ===== FIN CONTEXTO =====
+[INFO] 15:36:32:541 CPU LOGGER/(2648:2648): Inicia ejecucion de proceso: 1
+[INFO] 15:36:32:541 CPU LOGGER/(2648:2648): ## PID: 1 - FETCH - Program Counter: 5
+[INFO] 15:36:32:541 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:32:541 CPU LOGGER/(2648:2648): FETCH: enviando PC=5
+[INFO] 15:36:32:877 CPU LOGGER/(2648:2648): ## PID: 1 - Ejecutando: SLEEP - 20000 1
+[INFO] 15:36:32:877 CPU LOGGER/(2648:2648): ===== CONTEXTO SERIALIZADO =====
+[INFO] 15:36:32:877 CPU LOGGER/(2648:2648): Registros:
+[INFO] 15:36:32:877 CPU LOGGER/(2648:2648): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:32:877 CPU LOGGER/(2648:2648): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:32:877 CPU LOGGER/(2648:2648): SI=0 DI=0 PC=6
+[INFO] 15:36:32:877 CPU LOGGER/(2648:2648): Cantidad de segmentos: 0
+[INFO] 15:36:32:877 CPU LOGGER/(2648:2648): Proximo a detener: false
+[INFO] 15:36:32:877 CPU LOGGER/(2648:2648): Tamaño buffer serializado: 37 bytes
+[INFO] 15:36:32:877 CPU LOGGER/(2648:2648): ===== FIN CONTEXTO =====
+[INFO] 15:36:32:921 CPU LOGGER/(2648:2648): ## PID: 1 - Bloqueado por IO, se libera la CPU
+[INFO] 15:36:32:921 CPU LOGGER/(2648:2648): CPU esperando PID del Kernel Scheduler...
+[INFO] 15:36:51:605 CPU LOGGER/(2648:2648): PID recibido: 2
+[INFO] 15:36:51:605 CPU LOGGER/(2648:2648): Recibido PID: 2
+[INFO] 15:36:51:649 CPU LOGGER/(2648:2648): Cantidad de Memory Sticks recibida: 1
+[INFO] 15:36:51:649 CPU LOGGER/(2648:2648): MS 0 recibido: IP=127.0.0.1 Puerto=9003 Base=0 Tamaño=256
+[INFO] 15:36:51:649 CPU LOGGER/(2648:2648): Se envio PID: 2
+[INFO] 15:36:51:737 CPU LOGGER/(2648:2648): ===== CONTEXTO DESERIALIZADO =====
+[INFO] 15:36:51:737 CPU LOGGER/(2648:2648): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:51:737 CPU LOGGER/(2648:2648): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:51:737 CPU LOGGER/(2648:2648): SI=0 DI=0 PC=3
+[INFO] 15:36:51:737 CPU LOGGER/(2648:2648): Cantidad de segmentos: 0
+[INFO] 15:36:51:737 CPU LOGGER/(2648:2648): Proximo a detener: false
+[INFO] 15:36:51:737 CPU LOGGER/(2648:2648): Bytes deserializados: 37
+[INFO] 15:36:51:737 CPU LOGGER/(2648:2648): ===== FIN CONTEXTO =====
+[INFO] 15:36:51:737 CPU LOGGER/(2648:2648): Inicia ejecucion de proceso: 2
+[INFO] 15:36:51:737 CPU LOGGER/(2648:2648): ## PID: 2 - FETCH - Program Counter: 3
+[INFO] 15:36:51:737 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:51:737 CPU LOGGER/(2648:2648): FETCH: enviando PC=3
+[INFO] 15:36:52:074 CPU LOGGER/(2648:2648): ## PID: 2 - Ejecutando: SET - AX 1
+[INFO] 15:36:52:074 CPU LOGGER/(2648:2648): No llego interrupcion
+[INFO] 15:36:52:074 CPU LOGGER/(2648:2648): evalua EXIT
+[INFO] 15:36:52:074 CPU LOGGER/(2648:2648): ## PID: 2 - FETCH - Program Counter: 4
+[INFO] 15:36:52:074 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:52:074 CPU LOGGER/(2648:2648): FETCH: enviando PC=4
+[INFO] 15:36:52:365 CPU LOGGER/(2648:2648): ## PID: 2 - Ejecutando: SET - BX 1
+[INFO] 15:36:52:365 CPU LOGGER/(2648:2648): ===== CONTEXTO SERIALIZADO =====
+[INFO] 15:36:52:365 CPU LOGGER/(2648:2648): Registros:
+[INFO] 15:36:52:365 CPU LOGGER/(2648:2648): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:52:365 CPU LOGGER/(2648:2648): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:52:365 CPU LOGGER/(2648:2648): SI=0 DI=0 PC=5
+[INFO] 15:36:52:365 CPU LOGGER/(2648:2648): Cantidad de segmentos: 0
+[INFO] 15:36:52:365 CPU LOGGER/(2648:2648): Proximo a detener: false
+[INFO] 15:36:52:365 CPU LOGGER/(2648:2648): Tamaño buffer serializado: 37 bytes
+[INFO] 15:36:52:365 CPU LOGGER/(2648:2648): ===== FIN CONTEXTO =====
+[INFO] 15:36:52:365 CPU LOGGER/(2648:2648): Se envio el contexto a KM por interrupcion: 2
+[INFO] 15:36:52:409 CPU LOGGER/(2648:2648): ## Interrupcion recibida
+[INFO] 15:36:52:409 CPU LOGGER/(2648:2648): CPU esperando PID del Kernel Scheduler...
+[INFO] 15:36:52:409 CPU LOGGER/(2648:2648): PID recibido: 2
+[INFO] 15:36:52:409 CPU LOGGER/(2648:2648): Recibido PID: 2
+[INFO] 15:36:52:497 CPU LOGGER/(2648:2648): Cantidad de Memory Sticks recibida: 1
+[INFO] 15:36:52:497 CPU LOGGER/(2648:2648): MS 0 recibido: IP=127.0.0.1 Puerto=9003 Base=0 Tamaño=256
+[INFO] 15:36:52:497 CPU LOGGER/(2648:2648): Se envio PID: 2
+[INFO] 15:36:52:586 CPU LOGGER/(2648:2648): ===== CONTEXTO DESERIALIZADO =====
+[INFO] 15:36:52:586 CPU LOGGER/(2648:2648): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:52:586 CPU LOGGER/(2648:2648): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:52:586 CPU LOGGER/(2648:2648): SI=0 DI=0 PC=5
+[INFO] 15:36:52:586 CPU LOGGER/(2648:2648): Cantidad de segmentos: 0
+[INFO] 15:36:52:586 CPU LOGGER/(2648:2648): Proximo a detener: false
+[INFO] 15:36:52:586 CPU LOGGER/(2648:2648): Bytes deserializados: 37
+[INFO] 15:36:52:586 CPU LOGGER/(2648:2648): ===== FIN CONTEXTO =====
+[INFO] 15:36:52:586 CPU LOGGER/(2648:2648): Inicia ejecucion de proceso: 2
+[INFO] 15:36:52:586 CPU LOGGER/(2648:2648): ## PID: 2 - FETCH - Program Counter: 5
+[INFO] 15:36:52:586 CPU LOGGER/(2648:2648): FETCH: enviando MSG_FETCH_CPU=12
+[INFO] 15:36:52:586 CPU LOGGER/(2648:2648): FETCH: enviando PC=5
+[INFO] 15:36:52:921 CPU LOGGER/(2648:2648): ## PID: 2 - Ejecutando: SLEEP - 20000 1
+[INFO] 15:36:52:921 CPU LOGGER/(2648:2648): ===== CONTEXTO SERIALIZADO =====
+[INFO] 15:36:52:921 CPU LOGGER/(2648:2648): Registros:
+[INFO] 15:36:52:921 CPU LOGGER/(2648:2648): AX=1 BX=1 CX=0 DX=0
+[INFO] 15:36:52:921 CPU LOGGER/(2648:2648): EAX=0 EBX=0 ECX=0 EDX=0
+[INFO] 15:36:52:921 CPU LOGGER/(2648:2648): SI=0 DI=0 PC=6
+[INFO] 15:36:52:921 CPU LOGGER/(2648:2648): Cantidad de segmentos: 0
+[INFO] 15:36:52:921 CPU LOGGER/(2648:2648): Proximo a detener: false
+[INFO] 15:36:52:921 CPU LOGGER/(2648:2648): Tamaño buffer serializado: 37 bytes
+[INFO] 15:36:52:921 CPU LOGGER/(2648:2648): ===== FIN CONTEXTO =====
+[INFO] 15:36:52:965 CPU LOGGER/(2648:2648): ## PID: 2 - Bloqueado por IO, se libera la CPU
+[INFO] 15:36:52:965 CPU LOGGER/(2648:2648): CPU esperando PID del Kernel Scheduler...
+
 
 MS
 utnso@utnso:~/Desktop/tp-2026-1c-Grupo3113/memory_stick$ ./bin/memory_stick ../config/pruebaBase/MemoryStick_1.config 256
-[INFO] 01:12:57:453 MSINFO/(26448:26448): ## Conectado a Kernel Memory
-[INFO] 01:12:57:453 MSINFO/(26448:26448): ## Esperando conexion de CPU...
-[INFO] 01:13:50:348 MSINFO/(26448:26448): ## Esperando conexion de CPU...
-[INFO] 01:13:50:349 MSINFO/(26448:26464): ## CPU 1 CONECTADA
+[INFO] 15:34:14:107 MSINFO/(2645:2645): ## Conectado a Kernel Memory
+[INFO] 15:34:14:107 MSINFO/(2645:2645): ## Esperando conexion de CPU...
+[INFO] 15:34:17:659 MSINFO/(2645:2645): ## Esperando conexion de CPU...
+[INFO] 15:34:17:659 MSINFO/(2645:2651): ## CPU 1 CONECTADA
+
 
 IO
 utnso@utnso:~/Desktop/tp-2026-1c-Grupo3113/io$ ./bin/io io.config SLEEP
-[INFO] 01:13:04:128 IO/(26451:26451): ## Conectado a Kernel Scheduler
-[INFO] 01:13:57:303 IO/(26451:26451): ## PID: 5 - Inicio de IO
-[INFO] 01:13:57:303 IO/(26451:26451): ## PID: 5 - Haciendo sleep por 100 milisegundos.
-[INFO] 01:13:57:403 IO/(26451:26451): ## PID: 5 - Fin de IO
-[INFO] 01:14:02:619 IO/(26451:26451): ## PID: 5 - Inicio de IO
-[INFO] 01:14:02:619 IO/(26451:26451): ## PID: 5 - Haciendo sleep por 100 milisegundos.
-[INFO] 01:14:02:720 IO/(26451:26451): ## PID: 5 - Fin de IO
-[INFO] 01:14:07:971 IO/(26451:26451): ## PID: 5 - Inicio de IO
-[INFO] 01:14:07:971 IO/(26451:26451): ## PID: 5 - Haciendo sleep por 100 milisegundos.
-[INFO] 01:14:08:072 IO/(26451:26451): ## PID: 5 - Fin de IO
-[INFO] 01:15:44:179 IO/(26451:26451): ## PID: 1 - Inicio de IO
-[INFO] 01:15:44:180 IO/(26451:26451): ## PID: 1 - Haciendo sleep por 20000 milisegundos.
-[INFO] 01:16:04:180 IO/(26451:26451): ## PID: 1 - Fin de IO
-[INFO] 01:16:04:181 IO/(26451:26451): ## PID: 2 - Inicio de IO
-[INFO] 01:16:04:181 IO/(26451:26451): ## PID: 2 - Haciendo sleep por 20000 milisegundos.
-[INFO] 01:16:24:182 IO/(26451:26451): ## PID: 2 - Fin de IO
-[INFO] 01:16:24:223 IO/(26451:26451): ## PID: 1 - Inicio de IO
-[INFO] 01:16:24:223 IO/(26451:26451): ## PID: 1 - Haciendo sleep por 20000 milisegundos.
-[INFO] 01:16:44:223 IO/(26451:26451): ## PID: 1 - Fin de IO
-[INFO] 01:16:44:267 IO/(26451:26451): ## PID: 2 - Inicio de IO
-[INFO] 01:16:44:267 IO/(26451:26451): ## PID: 2 - Haciendo sleep por 20000 milisegundos.
-[INFO] 01:17:04:267 IO/(26451:26451): ## PID: 2 - Fin de IO
+[INFO] 15:34:06:317 IO/(2640:2640): ## Conectado a Kernel Scheduler
+[INFO] 15:34:25:161 IO/(2640:2640): ## PID: 5 - Inicio de IO
+[INFO] 15:34:25:161 IO/(2640:2640): ## PID: 5 - Haciendo sleep por 100 milisegundos.
+[INFO] 15:34:25:261 IO/(2640:2640): ## PID: 5 - Fin de IO
+[INFO] 15:34:30:469 IO/(2640:2640): ## PID: 5 - Inicio de IO
+[INFO] 15:34:30:469 IO/(2640:2640): ## PID: 5 - Haciendo sleep por 100 milisegundos.
+[INFO] 15:34:30:569 IO/(2640:2640): ## PID: 5 - Fin de IO
+[INFO] 15:34:35:821 IO/(2640:2640): ## PID: 5 - Inicio de IO
+[INFO] 15:34:35:821 IO/(2640:2640): ## PID: 5 - Haciendo sleep por 100 milisegundos.
+[INFO] 15:34:35:921 IO/(2640:2640): ## PID: 5 - Fin de IO
+[INFO] 15:36:11:561 IO/(2640:2640): ## PID: 1 - Inicio de IO
+[INFO] 15:36:11:561 IO/(2640:2640): ## PID: 1 - Haciendo sleep por 20000 milisegundos.
+[INFO] 15:36:31:561 IO/(2640:2640): ## PID: 1 - Fin de IO
+[INFO] 15:36:31:562 IO/(2640:2640): ## PID: 2 - Inicio de IO
+[INFO] 15:36:31:562 IO/(2640:2640): ## PID: 2 - Haciendo sleep por 20000 milisegundos.
+[INFO] 15:36:51:563 IO/(2640:2640): ## PID: 2 - Fin de IO
+[INFO] 15:36:51:605 IO/(2640:2640): ## PID: 1 - Inicio de IO
+[INFO] 15:36:51:605 IO/(2640:2640): ## PID: 1 - Haciendo sleep por 20000 milisegundos.
+[INFO] 15:37:11:605 IO/(2640:2640): ## PID: 1 - Fin de IO
+[INFO] 15:37:11:649 IO/(2640:2640): ## PID: 2 - Inicio de IO
+[INFO] 15:37:11:649 IO/(2640:2640): ## PID: 2 - Haciendo sleep por 20000 milisegundos.
+[INFO] 15:37:31:650 IO/(2640:2640): ## PID: 2 - Fin de IO
+
+
+
 
 SWAP
 utnso@utnso:~/Desktop/tp-2026-1c-Grupo3113/swap$ ./bin/swap swap.config 
