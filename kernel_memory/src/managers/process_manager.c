@@ -164,7 +164,7 @@ void*manejar_proceso(void*arg){
 
   char * instrucciones = proceso->lista_instrucciones;
   log_info(logger, "## PID: %d - Imprimiendo lista de instrucciones para el proceso...", proceso->pid);
-  log_info(logger,instrucciones);
+  log_info(logger,"instrucciones: %d", *instrucciones);
 
   bool interrumpido = false;
 
