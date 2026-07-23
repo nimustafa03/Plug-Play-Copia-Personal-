@@ -620,6 +620,7 @@ void actualizarEstadoProceso (Proceso* proceso, estado_proceso nuevoEstado){
                     case BLOCK: procesoABlock(procesoEncontrado); break;
                     case SUSP_READY: procesoASuspReady(procesoEncontrado); break;
                     case SUSP_BLOCK: procesoABlock(procesoEncontrado); break;
+                    default: log_error(logger_ks, "ERORR: estado anterior de query inválido");
                 }
                 pthread_mutex_unlock(&mutex_listas);
                 return;
@@ -1324,7 +1325,10 @@ void finalizar_io_y_desbloquear(Proceso* proceso) {
     if (estado_actual == SUSP_BLOCK) {
         log_info(logger_ks, "## (%d) finalizó IO y pasa a SUSP. READY", proceso->id_proceso);
         actualizarEstadoProceso(proceso, SUSP_READY);
-        // en SUSP_READY no se despacha: lo des-suspende el mediano plazo cuando haya memoria
+        // CP3 FIX: el mediano plazo solo corria al liberarse memoria (EXIT) o tras
+        // compactar. Si el ultimo proceso vivo entra a SUSP_READY, nadie lo saca nunca.
+        // Al entrar a SUSP_READY hay que intentar des-suspender aca mismo.
+        intentar_desuspender_procesos();
     } else {
         log_info(logger_ks, "## (%d) finalizó IO y pasa a READY", proceso->id_proceso);
         actualizarEstadoProceso(proceso, READY);
