@@ -313,6 +313,48 @@ bool cpu_esta_conectada(void) {
     return socket_cpu != -1;
 }
 
+bool notificar_segmentos_a_cpu(t_contexto*proceso){
+    if (!cpu_esta_conectada()){
+        log_warning(
+            logger,
+            "No se pudo enviar los segmentos: CPU no conectada."
+        )
+        return false;
+    }
+
+    uint32_t tamanio_buffer = 0;
+
+    void*buffer =
+        serializar_segmentos(
+            proceso->tabla_segmentos,
+            &tamanio_buffer,
+            logger
+        );
+    
+    if (buffer == NULL) {
+        log_error(
+            logger,
+            "## ERROR: No se pudo serializar la tabla de segmentos."
+        );
+
+        return false;
+    }
+
+    pthread_mutex_lock(&mutex_envios_cpu);
+
+    enviar_mensaje(
+        socket_cpu,
+        buffer,
+        (int) tamanio_buffer
+    );
+
+    pthread_mutex_lock(&mutex_envios_cpu);
+
+    free(buffer);
+
+    return true;
+}
+
 bool notificar_mapa_memory_sticks_a_cpu(void) {
     if (!cpu_esta_conectada()) {
         log_warning(
