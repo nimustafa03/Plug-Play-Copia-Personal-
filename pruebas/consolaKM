@@ -1,0 +1,117 @@
+utnso@utnso:~/Desktop/tp-2026-1c-Grupo3113/kernel_scheduler$ ./bin/kernel_scheduler ../config/pruebaBase/KernelScheduler.config /home/utnso/plug-n-pray-pruebas/PLANI_PRE_0.prc
+[INFO] 23:51:59:623 KernelScheduler/(25432:25432): ## Conectado a Kernel Memory
+[INFO] 23:51:59:624 KernelScheduler/(25432:25432): ## Conectado a Kernel Memory y aceptado
+[INFO] 23:51:59:625 KernelScheduler/(25432:25432): Servidor KS listo en puerto 9001
+[INFO] 23:51:59:625 KernelScheduler/(25432:25432): CMN: 4 colas de prioridad inicializadas
+[INFO] 23:51:59:626 KernelScheduler/(25432:25432): ## (0) Se crea el proceso - Estado: NEW
+[INFO] 23:51:59:711 KernelScheduler/(25432:25436): Planificador de Corto Plazo iniciado.
+[INFO] 23:51:59:711 KernelScheduler/(25432:25435): Planificador de Largo Plazo iniciado.
+[INFO] 23:51:59:712 KernelScheduler/(25432:25435): ## (0) Pasa del estado NEW al estado READY
+[INFO] 23:51:59:712 KernelScheduler/(25432:25435): proceso 0 agregado a cola CMN de prioridad 0
+[INFO] 23:52:11:622 KernelScheduler/(25432:25442): CPU conectado - FD: 6
+[INFO] 23:52:11:623 KernelScheduler/(25432:25436): ## (0) Pasa del estado READY al estado EXEC
+[INFO] 23:52:11:623 KernelScheduler/(25432:25436): proceso 0 agregado a lista EXEC
+[INFO] 23:52:12:180 KernelScheduler/(25432:25442): ## (0) - Solicitó syscall: INIT_PROC
+[INFO] 23:52:12:180 KernelScheduler/(25432:25442): ## (1) Se crea el proceso - Estado: NEW
+[INFO] 23:52:12:272 KernelScheduler/(25432:25435): ## (1) Pasa del estado NEW al estado READY
+[INFO] 23:52:12:272 KernelScheduler/(25432:25435): proceso 1 agregado a cola CMN de prioridad 3
+[INFO] 23:52:12:537 KernelScheduler/(25432:25442): ## (0) - Solicitó syscall: INIT_PROC
+[INFO] 23:52:12:537 KernelScheduler/(25432:25442): ## (2) Se crea el proceso - Estado: NEW
+[INFO] 23:52:12:583 KernelScheduler/(25432:25435): ## (2) Pasa del estado NEW al estado READY
+[INFO] 23:52:12:584 KernelScheduler/(25432:25435): proceso 2 agregado a cola CMN de prioridad 3
+[INFO] 23:52:12:836 KernelScheduler/(25432:25442): ## (0) - Solicitó syscall: INIT_PROC
+[INFO] 23:52:12:836 KernelScheduler/(25432:25442): ## (3) Se crea el proceso - Estado: NEW
+[INFO] 23:52:12:879 KernelScheduler/(25432:25435): ## (3) Pasa del estado NEW al estado READY
+[INFO] 23:52:12:879 KernelScheduler/(25432:25435): proceso 3 agregado a cola CMN de prioridad 2
+[INFO] 23:52:13:130 KernelScheduler/(25432:25442): ## (0) - Solicitó syscall: INIT_PROC
+[INFO] 23:52:13:130 KernelScheduler/(25432:25442): ## (4) Se crea el proceso - Estado: NEW
+[INFO] 23:52:13:175 KernelScheduler/(25432:25435): ## (4) Pasa del estado NEW al estado READY
+[INFO] 23:52:13:175 KernelScheduler/(25432:25435): proceso 4 agregado a cola CMN de prioridad 2
+[INFO] 23:52:13:428 KernelScheduler/(25432:25442): ## (0) - Solicitó syscall: INIT_PROC
+[INFO] 23:52:13:428 KernelScheduler/(25432:25442): ## (5) Se crea el proceso - Estado: NEW
+[INFO] 23:52:13:473 KernelScheduler/(25432:25435): ## (5) Pasa del estado NEW al estado READY
+[INFO] 23:52:13:473 KernelScheduler/(25432:25435): proceso 5 agregado a cola CMN de prioridad 1
+[ERROR] 23:52:13:767 KernelScheduler/(25432:25442): ## KM no confirmó la liberación de memoria del PID 0
+[INFO] 23:52:13:767 KernelScheduler/(25432:25442): ## (0) Pasa del estado EXEC al estado EXIT
+[INFO] 23:52:13:767 KernelScheduler/(25432:25442): Se terminó la proceso 0 agregado a lista EXIT
+[INFO] 23:52:13:767 KernelScheduler/(25432:25442): ## (0) finalizó su ejecución con motivo de EXIT
+[INFO] 23:52:13:767 KernelScheduler/(25432:25436): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 23:52:13:767 KernelScheduler/(25432:25436): proceso 5 agregado a lista EXEC
+[INFO] 23:52:14:615 KernelScheduler/(25432:25442): ## (5) - Desalojado por fin de quantum
+[INFO] 23:52:14:615 KernelScheduler/(25432:25442): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 23:52:14:615 KernelScheduler/(25432:25442): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 23:52:14:616 KernelScheduler/(25432:25436): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 23:52:14:616 KernelScheduler/(25432:25436): proceso 5 agregado a lista EXEC
+[INFO] 23:52:15:527 KernelScheduler/(25432:25442): ## (5) - Desalojado por fin de quantum
+[INFO] 23:52:15:528 KernelScheduler/(25432:25436): ## (3) Pasa del estado READY al estado EXEC
+[INFO] 23:52:15:528 KernelScheduler/(25432:25436): proceso 3 agregado a lista EXEC
+[INFO] 23:52:15:529 KernelScheduler/(25432:25442): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 23:52:15:529 KernelScheduler/(25432:25442): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 23:52:15:529 KernelScheduler/(25432:25442): ## (3) Prioridad: 2 - Desalojado por cola más prioritaria por el proceso 5 con prioridad 1
+[INFO] 23:52:16:091 KernelScheduler/(25432:25442): ## (3) - Desalojado por cola más prioritaria
+[INFO] 23:52:16:091 KernelScheduler/(25432:25442): ## (3) Pasa del estado EXEC al estado READY
+[INFO] 23:52:16:092 KernelScheduler/(25432:25442): proceso 3 agregado a cola CMN de prioridad 2
+[INFO] 23:52:16:092 KernelScheduler/(25432:25436): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 23:52:16:092 KernelScheduler/(25432:25436): proceso 5 agregado a lista EXEC
+[INFO] 23:52:16:943 KernelScheduler/(25432:25442): ## (5) - Desalojado por fin de quantum
+[INFO] 23:52:16:943 KernelScheduler/(25432:25436): ## (4) Pasa del estado READY al estado EXEC
+[INFO] 23:52:16:943 KernelScheduler/(25432:25436): proceso 4 agregado a lista EXEC
+[INFO] 23:52:16:944 KernelScheduler/(25432:25442): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 23:52:16:944 KernelScheduler/(25432:25442): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 23:52:16:944 KernelScheduler/(25432:25442): ## (4) Prioridad: 2 - Desalojado por cola más prioritaria por el proceso 5 con prioridad 1
+[INFO] 23:52:17:498 KernelScheduler/(25432:25442): ## (4) - Desalojado por cola más prioritaria
+[INFO] 23:52:17:499 KernelScheduler/(25432:25436): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 23:52:17:499 KernelScheduler/(25432:25436): proceso 5 agregado a lista EXEC
+[INFO] 23:52:17:499 KernelScheduler/(25432:25442): ## (4) Pasa del estado EXEC al estado READY
+[INFO] 23:52:17:499 KernelScheduler/(25432:25442): proceso 4 agregado a cola CMN de prioridad 2
+[INFO] 23:52:18:347 KernelScheduler/(25432:25442): ## (5) - Desalojado por fin de quantum
+[INFO] 23:52:18:347 KernelScheduler/(25432:25442): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 23:52:18:347 KernelScheduler/(25432:25442): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 23:52:18:347 KernelScheduler/(25432:25436): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 23:52:18:347 KernelScheduler/(25432:25436): proceso 5 agregado a lista EXEC
+[INFO] 23:52:19:198 KernelScheduler/(25432:25442): ## (5) - Desalojado por fin de quantum
+[INFO] 23:52:19:199 KernelScheduler/(25432:25442): ## (5) Pasa del estado EXEC al estado READY
+[INFO] 23:52:19:199 KernelScheduler/(25432:25442): proceso 5 agregado a cola CMN de prioridad 1
+[INFO] 23:52:19:199 KernelScheduler/(25432:25436): ## (5) Pasa del estado READY al estado EXEC
+[INFO] 23:52:19:199 KernelScheduler/(25432:25436): proceso 5 agregado a lista EXEC
+[INFO] 23:52:19:755 KernelScheduler/(25432:25442): ## (5) - Solicitó syscall: SLEEP
+[INFO] 23:52:19:756 KernelScheduler/(25432:25436): ## (3) Pasa del estado READY al estado EXEC
+[INFO] 23:52:19:756 KernelScheduler/(25432:25436): proceso 3 agregado a lista EXEC
+[INFO] 23:52:19:759 KernelScheduler/(25432:25460): ## (5) Pasa del estado EXEC al estado BLOCK
+[INFO] 23:52:19:763 KernelScheduler/(25432:25460): Proceso 5 agregado a lista BLOCK
+[ERROR] 23:53:04:407 KernelScheduler/(25432:25442): ## KM no confirmó la liberación de memoria del PID 3
+[INFO] 23:53:04:407 KernelScheduler/(25432:25442): ## (3) Pasa del estado EXEC al estado EXIT
+[INFO] 23:53:04:407 KernelScheduler/(25432:25442): Se terminó la proceso 3 agregado a lista EXIT
+[INFO] 23:53:04:407 KernelScheduler/(25432:25442): ## (3) finalizó su ejecución con motivo de EXIT
+[INFO] 23:53:04:407 KernelScheduler/(25432:25436): ## (4) Pasa del estado READY al estado EXEC
+[INFO] 23:53:04:407 KernelScheduler/(25432:25436): proceso 4 agregado a lista EXEC
+[INFO] 23:53:19:764 KernelScheduler/(25432:25461): ## (5) Pasa del estado BLOCK al estado SUSP_BLOCK
+[INFO] 23:53:19:764 KernelScheduler/(25432:25461): Proceso 5 agregado a lista SUSP BLOCK
+[ERROR] 23:53:49:179 KernelScheduler/(25432:25442): ## KM no confirmó la liberación de memoria del PID 4
+[INFO] 23:53:49:179 KernelScheduler/(25432:25442): ## (4) Pasa del estado EXEC al estado EXIT
+[INFO] 23:53:49:179 KernelScheduler/(25432:25442): Se terminó la proceso 4 agregado a lista EXIT
+[INFO] 23:53:49:179 KernelScheduler/(25432:25442): ## (4) finalizó su ejecución con motivo de EXIT
+[INFO] 23:53:49:179 KernelScheduler/(25432:25436): ## (1) Pasa del estado READY al estado EXEC
+[INFO] 23:53:49:179 KernelScheduler/(25432:25436): proceso 1 agregado a lista EXEC
+[INFO] 23:53:50:027 KernelScheduler/(25432:25442): ## (1) - Desalojado por fin de quantum
+[INFO] 23:53:50:027 KernelScheduler/(25432:25442): ## (1) Pasa del estado EXEC al estado READY
+[INFO] 23:53:50:027 KernelScheduler/(25432:25442): proceso 1 agregado a cola CMN de prioridad 3
+[INFO] 23:53:50:027 KernelScheduler/(25432:25436): ## (2) Pasa del estado READY al estado EXEC
+[INFO] 23:53:50:027 KernelScheduler/(25432:25436): proceso 2 agregado a lista EXEC
+[INFO] 23:53:50:919 KernelScheduler/(25432:25442): ## (2) - Desalojado por fin de quantum
+[INFO] 23:53:50:919 KernelScheduler/(25432:25436): ## (1) Pasa del estado READY al estado EXEC
+[INFO] 23:53:50:920 KernelScheduler/(25432:25436): proceso 1 agregado a lista EXEC
+[INFO] 23:53:50:920 KernelScheduler/(25432:25442): ## (2) Pasa del estado EXEC al estado READY
+[INFO] 23:53:50:920 KernelScheduler/(25432:25442): proceso 2 agregado a cola CMN de prioridad 3
+[INFO] 23:53:51:475 KernelScheduler/(25432:25442): ## (1) - Solicitó syscall: SLEEP
+[INFO] 23:53:51:475 KernelScheduler/(25432:25436): ## (2) Pasa del estado READY al estado EXEC
+[INFO] 23:53:51:476 KernelScheduler/(25432:25436): proceso 2 agregado a lista EXEC
+[INFO] 23:53:51:478 KernelScheduler/(25432:25475): ## (1) Pasa del estado EXEC al estado BLOCK
+[INFO] 23:53:51:478 KernelScheduler/(25432:25475): Proceso 1 agregado a lista BLOCK
+[INFO] 23:53:52:030 KernelScheduler/(25432:25442): ## (2) - Solicitó syscall: SLEEP
+[INFO] 23:53:52:031 KernelScheduler/(25432:25479): ## (2) Pasa del estado EXEC al estado BLOCK
+[INFO] 23:53:52:031 KernelScheduler/(25432:25479): Proceso 2 agregado a lista BLOCK
+[INFO] 23:54:51:479 KernelScheduler/(25432:25477): ## (1) Pasa del estado BLOCK al estado SUSP_BLOCK
+[INFO] 23:54:51:479 KernelScheduler/(25432:25477): Proceso 1 agregado a lista SUSP BLOCK
+[INFO] 23:54:52:031 KernelScheduler/(25432:25480): ## (2) Pasa del estado BLOCK al estado SUSP_BLOCK
+[INFO] 23:54:52:031 KernelScheduler/(25432:25480): Proceso 2 agregado a lista SUSP BLOCK
