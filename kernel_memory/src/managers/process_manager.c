@@ -199,8 +199,8 @@ void*manejar_proceso(void*arg){
   log_info(logger, "Saliendo del ciclo de FETCH");
   if (proceso->contexto->proximo_a_detener) {
     log_info(logger, "## PID: %d - El proceso ha concluido y será eliminado.", proceso -> pid);
-    destruir_proceso(proceso->pid);
-    log_info(logger, "## PID: %d - Proceso eliminado.",proceso -> pid);
+    //destruir_proceso(proceso->pid);
+    //log_info(logger, "## PID: %d - Proceso eliminado.",proceso -> pid);
   }
   
   log_info(logger, "Liberando memoria...");
@@ -377,22 +377,134 @@ static void destruir_proceso_memoria(void* elemento) {
 }
 
 bool destruir_proceso(uint32_t pid) {
-  char* key = pid_to_key(pid);
+  /*char* key = pid_to_key(pid);
 
   t_proceso_memoria* proceso = dictionary_remove(administrador.procesos_por_pid, key);
 
   free(key);
 
-  if (proceso == NULL) return false;
+  if (proceso == NULL) {
+    log_error(logger, "Remover diccionario dio NULL");
+    return false;}
 
   for (int i = 0; i < list_size(proceso->contexto->tabla_segmentos); i++) {
     t_segmento* segmento = list_get(proceso->contexto->tabla_segmentos, i);
     liberar_espacio(segmento->base, segmento->tamanio);
+    free(segmento);
   }
 
   destruir_proceso_memoria(proceso);
 
+  return true;*/
+
+  char* key = pid_to_key(pid);
+
+  if (key == NULL) {
+      log_error(
+          logger,
+          "PID: %u - No se pudo generar la clave",
+          pid
+      );
+
+      return false;
+  }
+
+  t_proceso_memoria* proceso =
+      dictionary_remove(
+          administrador.procesos_por_pid,
+          key
+      );
+
+  free(key);
+
+  if (proceso == NULL) {
+      log_warning(
+          logger,
+          "PID: %u - No existe el proceso a destruir",
+          pid
+      );
+
+      return false;
+  }
+
+  if (proceso->contexto == NULL) {
+      log_error(
+          logger,
+          "PID: %u - El proceso no tiene contexto",
+          pid
+      );
+
+      destruir_proceso_memoria(proceso);
+      return false;
+  }
+
+  if (proceso->contexto->tabla_segmentos == NULL) {
+      log_error(
+          logger,
+          "PID: %u - El proceso no tiene tabla de segmentos",
+          pid
+      );
+
+      destruir_proceso_memoria(proceso);
+      return false;
+  }
+
+  int cantidad_segmentos =
+      list_size(proceso->contexto->tabla_segmentos);
+
+  log_info(
+      logger,
+      "PID: %u - Liberando %d segmentos",
+      pid,
+      cantidad_segmentos
+  );
+
+  for (int i = 0; i < cantidad_segmentos; i++) {
+      t_segmento* segmento =
+          list_get(proceso->contexto->tabla_segmentos, i);
+
+      if (segmento == NULL) {
+          log_warning(
+              logger,
+              "PID: %u - Segmento NULL en posición %d",
+              pid,
+              i
+          );
+
+          continue;
+      }
+
+      log_debug(
+          logger,
+          "PID: %u - Liberando segmento %u - Base: %u - Tamaño: %u",
+          pid,
+          segmento->id_segmento,
+          segmento->base,
+          segmento->tamanio
+      );
+
+      liberar_espacio(
+          segmento->base,
+          segmento->tamanio
+      );
+  }
+
+  log_debug(
+      logger,
+      "PID: %u - Destruyendo estructuras del proceso",
+      pid
+  );
+
+  destruir_proceso_memoria(proceso);
+
+  log_info(
+      logger,
+      "PID: %u - Proceso destruido correctamente",
+      pid
+  );
+
   return true;
+
 }
 
 bool eliminar_segmento(uint32_t pid, uint32_t id_segmento)

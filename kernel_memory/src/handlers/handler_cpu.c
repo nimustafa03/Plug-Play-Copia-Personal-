@@ -36,7 +36,7 @@ t_contexto *recibir_contexto(){
     return contexto;
 }
 
-void atender_mensaje_cpu(){
+/*void atender_mensaje_cpu(){
     int size;
     op_code*codigo;
     while(1){
@@ -59,7 +59,99 @@ void atender_mensaje_cpu(){
             pthread_mutex_unlock(&mutex_recibir_procesos);
         }
     }
+}*/
+
+void atender_mensaje_cpu(void) {
+    while (1) {
+        int size = 0;
+
+        log_info(
+            logger,
+            "Kernel Memory está esperando nuevos procesos..."
+        );
+
+        op_code* codigo =
+            recibir_mensaje(socket_cpu, &size);
+
+        if (codigo == NULL) {
+            log_warning(
+                logger,
+                "La CPU cerró la conexión"
+            );
+
+            break;
+        }
+
+        if (size != sizeof(op_code)) {
+            log_error(
+                logger,
+                "Código inválido recibido: tamaño=%d",
+                size
+            );
+
+            free(codigo);
+            continue;
+        }
+
+        switch (*codigo) {
+            case MSG_INIT_CPU: {
+                log_info(
+                    logger,
+                    "Se recibió un pedido para iniciar un proceso"
+                );
+
+                pthread_mutex_lock(&mutex_recibir_procesos);
+                listo_para_recibir = false;
+                pthread_mutex_unlock(&mutex_recibir_procesos);
+
+                notificar_mapa_memory_sticks_a_cpu();
+
+                log_info(
+                    logger,
+                    "Mapa enviado. Esperando PID"
+                );
+
+                uint32_t pid = recibir_pid();
+
+                inicializar_proceso(pid, socket_cpu);
+
+                pthread_mutex_lock(&mutex_recibir_procesos);
+
+                while (!listo_para_recibir) {
+                    log_info(
+                        logger,
+                        "Bloqueando recepción de mensajes..."
+                    );
+
+                    pthread_cond_wait(
+                        &condicion_recibir_proceso,
+                        &mutex_recibir_procesos
+                    );
+                }
+
+                pthread_mutex_unlock(&mutex_recibir_procesos);
+
+                log_info(
+                    logger,
+                    "Recepción de mensajes habilitada"
+                );
+
+                break;
+            }
+
+            default:
+                log_warning(
+                    logger,
+                    "Código desconocido recibido de CPU: %d",
+                    *codigo
+                );
+                break;
+        }
+
+        free(codigo);
+    }
 }
+
 
 void atender_cpu(int nuevo_socket_cpu){
     socket_cpu = nuevo_socket_cpu;

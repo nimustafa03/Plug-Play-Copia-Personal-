@@ -172,6 +172,7 @@ void atender_kernel_scheduler(int fd) {
           if (atender_destruccion_proceso()){
             respuesta = MSG_OK;
           };
+          log_error(logger, "Respuesta enviar: %d", respuesta);
           enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
           // TODO: recibir PID y llamar a destruir_proceso(pid)
           break;
