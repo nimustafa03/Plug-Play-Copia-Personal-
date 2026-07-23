@@ -246,28 +246,6 @@ int copy_mem(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_
     return 0;
 }
 
-// CP3: guarda el contexto de ejecucion en KM (con el pc ya incrementado) para poder
-// retomar en pc+1 cuando el proceso vuelva de la IO. Reutiliza MSG_INTERRUPT, que es
-// el opcode que KM interpreta como "guardar contexto + confirmar" (handler_cpu.c).
-// Devuelve 0 si ok, -1 si error.
-int guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* logger_cpu) {
-    op_code cod = MSG_INTERRUPT;
-    enviar_mensaje(fd_km, &cod, sizeof(op_code));
-    enviar_mensaje(fd_km, &pid, sizeof(uint32_t));
-
-    int size;
-    void* buffer = serializar_contexto(contexto, &size, logger_cpu);
-    if (buffer == NULL) return -1;
-    enviar_mensaje(fd_km, buffer, size);
-    free(buffer);
-
-    op_code* ok = recibir_mensaje(fd_km, &size);
-    if (ok == NULL) return -1;
-    int r = (*ok == MSG_OK) ? 0 : -1;
-    free(ok);
-    return r;
-}
-
 // STDIN
 int syscall_stdin(char* instruccion, t_registros* registros, int fd_ks, int fd_km, uint32_t pid, t_contexto* contexto, t_log* logger_cpu) {
     char registro_direccion[32];

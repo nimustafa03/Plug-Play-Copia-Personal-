@@ -743,3 +743,21 @@ void* serializar_contexto_inicial(t_contexto* contexto, int* tamanio_buffer, t_l
 
     return buffer;
 }
+
+int guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* logger_cpu) {
+    op_code cod = MSG_INTERRUPT;
+    enviar_mensaje(fd_km, &cod, sizeof(op_code));
+    enviar_mensaje(fd_km, &pid, sizeof(uint32_t));
+
+    int size;
+    void* buffer = serializar_contexto(contexto, &size, logger_cpu);
+    if (buffer == NULL) return -1;
+    enviar_mensaje(fd_km, buffer, size);
+    free(buffer);
+
+    op_code* ok = recibir_mensaje(fd_km, &size);
+    if (ok == NULL) return -1;
+    int r = (*ok == MSG_OK) ? 0 : -1;
+    free(ok);
+    return r;
+}
