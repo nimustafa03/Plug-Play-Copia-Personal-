@@ -353,3 +353,81 @@ t_contexto* deserializar_contexto(void* buffer,int tamanio_buffer,t_log* logger)
     log_info(logger, "===== FIN CONTEXTO =====");
     return contexto;
 }
+
+void*serializar_segmentos(t_list*segmentos, int*tamanio_buffer, t_log*logger){
+    if ( segmentos == NULL || tamanio_buffer == NULL)
+    {
+        log_error(
+            logger,
+            "## ERROR: Segmentos o tamaño NULL."
+        );
+        return NULL;
+    }
+    int cantidad_segmentos = list_size(segmentos);
+
+    *tamanio_buffer = 
+    sizeof(t_segmento)*cantidad_segmentos;
+
+    void*buffer = malloc(*tamanio_buffer);
+
+    if (buffer == NULL) {
+        log_error(
+            logger,
+            "## ERROR: No se pudo reservar memoria para serializar el contexto."
+        );
+        return NULL;
+    }
+
+    uint32_t desplazamiento = 0;
+
+    for (int i = 0; i < cantidad_segmentos; i++)
+    {
+        t_segmento*segmento = list_get(segmentos,i);
+
+        if (segmento == NULL) {
+            log_error(logger,
+            "## ERROR: El segmento de la posición %d es NULL.",
+            i);
+            free(buffer);
+            return NULL;
+        }
+        escribir_en_buffer(
+            buffer,
+            &desplazamiento,
+            segmento,
+            sizeof(t_segmento)
+        );
+    }
+
+    if (desplazamiento != (uint32_t)*tamanio_buffer) {
+        log_error(
+            logger,
+            "## ERROR: Falla de serialización: desplazamiento=%u, tamaño=%d",
+            desplazamiento,
+            *tamanio_buffer
+        );
+
+        free(buffer);
+        return NULL;
+    }
+
+    log_info(
+        logger,
+        "Cantidad de segmentos: %d",
+        cantidad_segmentos);
+
+    for (int i = 0; i < cantidad_segmentos; i++) {
+            t_segmento* segmento = list_get(
+            segmentos,
+            i);
+        log_info(
+            logger,
+            "Segmento[%d] -> ID=%u BASE=%u TAMANIO=%u",
+            i,
+            segmento->id_segmento,
+            segmento->base,
+            segmento->tamanio);
+    }
+
+    return buffer;
+}

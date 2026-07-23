@@ -8,5 +8,7 @@ void escribir_en_buffer(void*buffer, uint32_t*desplazamiento, const void*dato,ui
 
 void*serializar_contexto(t_contexto*contexto,int*tamanio_buffer,t_log*logger);
 t_contexto*deserializar_contexto(void*buffer,int tamanio_buffer,t_log*logger);
+void*serializar_segmentos(t_list*segmento,int*tamanio_buffer,t_log*logger);
+t_list*deserializar_segmentos(void*buffer,int tamanio_buffer,t_log*logger);
 
 #endif

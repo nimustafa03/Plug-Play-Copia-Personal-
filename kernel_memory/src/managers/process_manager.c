@@ -187,6 +187,7 @@ void*manejar_proceso(void*arg){
         log_info(logger,"## PID: %d - Obtener instrucción: %d - Instrucción: %s", proceso->pid,pc,proxima_instruccion);
         enviar_confirmacion_a_CPU(fd_cpu,true);
         enviar_proxima_instruccion_a_cpu(fd_cpu,proxima_instruccion);
+        notificar_segmentos_a_cpu(proceso->contexto);
         free(proxima_instruccion);
       } 
     }
