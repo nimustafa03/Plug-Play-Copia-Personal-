@@ -231,7 +231,7 @@ int main(int argc, char* argv[]) {
             int operacion = execute(codigo, instruccion, &contexto->registros,fd_ks,fd_km,fd_ms,pid, contexto->tabla_segmentos,logger_cpu,mapa,fd_ms_agregados, contexto);
 
             if (operacion == SEG_FAULT) {   
-                manejar_seg_fault(fd_ks, fd_km, logger_cpu);            //en caso de SEG FAULT en las operaciones MOV y COPY
+                manejar_seg_fault(fd_ks, fd_km, contexto, pid, logger_cpu);            //en caso de SEG FAULT en las operaciones MOV y COPY
                 log_info(logger_cpu, "Se aviso SEG FAULT y se envio el contexto a KM");
                 free(instruccion);
                 free(contexto);

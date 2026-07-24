@@ -90,28 +90,22 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             break;
         case OP_MOV_IN:
             int op_mov_in = mov_in(instruccion,registros,mapa,fd_ms,fd_ms_agregados,tabla_segmentos, logger_cpu);
-            if (op_mov_in == NULL){
-                return NULL
-            } else if op_mov_in == SEG_FAULT{
+            if (op_mov_in == SEG_FAULT)
                 return SEG_FAULT;
-            } else break;
+            break;
         case OP_MOV_OUT:
             int op_mov_out = mov_out(instruccion,registros,tabla_segmentos,mapa,fd_ms,fd_ms_agregados, logger_cpu);
-            if (op_mov_out == NULL){
-                return NULL
-            } else if op_mov_out == SEG_FAULT{
+            if (op_mov_out == SEG_FAULT)
                 return SEG_FAULT;
-            } else break;
+            break;
         case OP_JNZ:
             jnz(instruccion, registros);
             break;
         case OP_COPY_MEM:
             int op_copy = copy_mem(instruccion,registros,tabla_segmentos,mapa,fd_ms,fd_ms_agregados,pid,logger_cpu);
-            if (op_copy == NULL){
-                return NULL
-            } else if op_copy == SEG_FAULT{
+            if (op_copy == SEG_FAULT)
                 return SEG_FAULT;
-            } else break;
+            break;
         case OP_NOOP:
             noop(registros);
             break;
@@ -138,7 +132,7 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             }
             break;
         case OP_INIT_PROC:
-            syscall_init_proc(instruccion, registros, fd_ks, pid); 
+            syscall_init_proc(instruccion, registros, fd_ks, pid, logger_cpu); 
             break;
         case OP_SLEEP:
             return syscall_sleep(instruccion, fd_ks, fd_km, pid, registros, contexto, logger_cpu); // CP3: 2 = bloqueo IO
@@ -153,7 +147,7 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
         case OP_STDOUT:
             return syscall_stdout(instruccion, registros, fd_ks, fd_km, pid, contexto, logger_cpu); // CP3: 2 = bloqueo IO
         case OP_EXIT:
-            int sys_exit = syscall_exit(fd_km, fd_ks, contexto, pid, logger_cpu);
+            syscall_exit(fd_km, fd_ks, contexto, pid, logger_cpu);
             romper_ciclo = true;
             break;
         case OP_INVALID:
@@ -265,7 +259,8 @@ int memory_management_unit(uint32_t direccion_logica, uint32_t tamanio_acceso, t
     }
     if (segmento == NULL) {
         log_info(logger_cpu,"Error de segmento en MMU");
-        return NULL;}
+        exit(EXIT_FAILURE);
+        }
 
         if (desplazamiento + tamanio_acceso > segmento->tamanio) {  // CONDICION CONCEPTUAL DE SEGMENTATION FAULT
         return SEG_FAULT;
@@ -622,10 +617,10 @@ void* lectura_ms(uint32_t direccion_global,uint32_t tamanio_lectura,t_mapa_memor
     return buffer_resultado;
 }
 
-int escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio_escritura,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3], t_log* logger_cpu) {
+void escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio_escritura,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3], t_log* logger_cpu) {
     if (buffer_origen == NULL||mapa == NULL||tamanio_escritura == 0||mapa->cantidad == 0||mapa->cantidad > 4) {
         log_info(logger_cpu,"Error de validacion en funcion ESCRITURA");
-        return NULL;
+        exit(EXIT_FAILURE);
     }
 
     uint32_t direccion_actual = direccion_global;
@@ -639,14 +634,14 @@ int escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio_
 
         if (indice_ms == -1) {
             log_info(logger_cpu,"Error de indice en ESCRITURA");
-            return NULL;
+            exit(EXIT_FAILURE);
         }
         t_info_memory_stick_cpu* ms_actual = &mapa->memory_sticks[indice_ms];
 
         int fd_actual = obtener_fd_ms((uint32_t)indice_ms,fd_ms,fd_ms_agregados);
         if (fd_actual < 0){
             log_info(logger_cpu,"Error de dato en ESCRITURA");
-            return NULL;
+            exit(EXIT_FAILURE);
         }
         uint32_t direccion_local = direccion_actual - ms_actual->base_global;
         uint32_t bytes_disponibles = ms_actual->tamanio - direccion_local;
@@ -670,12 +665,12 @@ int escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio_
         op_code* respuesta = recibir_mensaje(fd_actual,&tamanio_respuesta);
         if (respuesta == NULL){
             log_info(logger_cpu,"Error de respuesta en ESCRITURA");
-            return NULL;
+            exit(EXIT_FAILURE);
         }
         if (tamanio_respuesta != sizeof(op_code) ||*respuesta != MSG_DONE) {
             log_info(logger_cpu,"Error de tamanio en ESCRITURA");
             free(respuesta);
-            return NULL;
+            exit(EXIT_FAILURE);
         }
 
         free(respuesta);
@@ -683,7 +678,7 @@ int escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio_
         desplazamiento_buffer += bytes_a_escribir;
         bytes_restantes -= bytes_a_escribir;
     }
-    return 0;
+    return;
 }
 
 void* serializar_contexto_inicial(t_contexto* contexto, int* tamanio_buffer, t_log* logger_cpu){
@@ -847,8 +842,8 @@ t_list* deserializar_tabla_segmentos(void* buffer, int tamanio_buffer){
     return segmentos;
 }
 
-void manejar_seg_fault(int fd_ks, int fd_km, t_log* logger_cpu){
-    guardar_contexto_km(fd_km, logger_cpu);
+void manejar_seg_fault(int fd_ks, int fd_km, t_contexto* contexto, uint32_t pid, t_log* logger_cpu){
+    guardar_contexto_km(fd_km, contexto, pid, logger_cpu);
     op_code seg_fault = MSG_SEG_FAULT;
     enviar_mensaje(fd_ks, &seg_fault, sizeof(op_code));
     enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
