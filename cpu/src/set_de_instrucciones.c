@@ -132,11 +132,13 @@ void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint
     int size;
     op_code* respuesta = recibir_mensaje(fd_ks, &size);
 
-    if (respuesta == NULL)
-    return;
+    if (respuesta == NULL) {
+        log_info(logger_cpu, "Error al recibir respuesta en INIT PROC");
+        exit(EXIT_FAILURE)
+    }
     if (*respuesta != MSG_OK) {
-        free(respuesta);
-        return;
+        log_info(logger_cpu, "En INIC PROC se recibio una respuesta distinta a la esperada: %d", *respuesta);
+        exit(EXIT_FAILURE)
     }
 
     free(respuesta);
@@ -144,7 +146,7 @@ void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint
 }
 
 // MOV_IN
-int mov_in(char* instruccion,t_registros* registros,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3],t_list* tabla_segmentos){
+int mov_in(char* instruccion,t_registros* registros,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3],t_list* tabla_segmentos, t_log* logger_cpu){
     char registro_destino[8];
 
     sscanf(instruccion,"%*s %7s",registro_destino);
@@ -152,18 +154,19 @@ int mov_in(char* instruccion,t_registros* registros,t_mapa_memory_sticks_cpu* ma
     uint32_t direccion_logica = registros->si;
     uint32_t tamanio = tamanio_registro(registro_destino);
 
-    if (tamanio == 0)
-        return MMU_ERROR;
-
+    if (tamanio == 0){
+        log_info(logger_cpu, "Error de tamanio en MOV IN");
+        return NULL;
+    }
     int direccion_fisica =memory_management_unit(direccion_logica,tamanio,tabla_segmentos);
     if (direccion_fisica == SEG_FAULT)
-        return -1;
-        else if (direccion_fisica == MMU_ERROR)
-            return MMU_ERROR;
+        return SEG_FAULT;
+        else if (direccion_fisica == NULL)
+            return NULLR;
 
     void* datos = lectura_ms(direccion_fisica,tamanio,mapa,fd_ms,fd_ms_agregados);
     if (datos == NULL)
-        return MMU_ERROR;
+        return NULL;
 
     uint32_t valor = 0;
 
@@ -177,7 +180,7 @@ int mov_in(char* instruccion,t_registros* registros,t_mapa_memory_sticks_cpu* ma
 
 // MOV_OUT
 
-int mov_out(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3]){
+int mov_out(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3], t_log* logger_cpu){
     char registro_origen[8];
 
     sscanf(instruccion,"%*s %7s",registro_origen);
@@ -185,20 +188,21 @@ int mov_out(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_m
     uint32_t direccion_logica = registros->di;
     uint32_t tamanio = tamanio_registro(registro_origen);
 
-    if (tamanio == 0)
-        return MMU_ERROR;
-
+    if (tamanio == 0){
+        log_info(logger_cpu, "Error de tamanio en MOV OUT");
+        return NULL;
+    }
     int direccion_fisica =memory_management_unit(direccion_logica,tamanio,tabla_segmentos);
     if (direccion_fisica == SEG_FAULT)
-        return -1;
-        else if (direccion_fisica == MMU_ERROR)
-            return MMU_ERROR;
+        return SEG_FAULT;
+        else if (direccion_fisica == NULL)
+            return NULL;
 
     uint32_t valor = obtener_valor(registro_origen,registros);
 
     int resultado = escritura_ms((uint32_t)direccion_fisica,&valor,tamanio,mapa,fd_ms,fd_ms_agregados);
-    if (resultado == -1)
-        return MMU_ERROR;
+    if (resultado == NULL)
+        return NULL;
 
     registros->pc++;
     return 0;
@@ -217,30 +221,25 @@ int copy_mem(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_
 
     int direccion_fisica_origen = memory_management_unit(direccion_logica_origen,tamanio,tabla_segmentos);
     if (direccion_fisica_origen == SEG_FAULT) {
-        log_error(logger_cpu,"## PID: %u - COPY_MEM produjo SEG_FAULT en el origen",pid);
         return SEG_FAULT;
-        } else if (direccion_fisica_origen == MMU_ERROR)
-            return MMU_ERROR;
+        } else if (direccion_fisica_origen == NULL)
+            return NULL;
         
     int direccion_fisica_destino = memory_management_unit(direccion_logica_destino,tamanio,tabla_segmentos);
     if (direccion_fisica_destino == SEG_FAULT) {
-        log_info(logger_cpu,"## PID: %u - COPY_MEM produjo SEG_FAULT en el destino",pid);
         return SEG_FAULT;
-        } else if (direccion_fisica_origen == MMU_ERROR)
-            return MMU_ERROR;
+        } else if (direccion_fisica_origen == NULL)
+            return NULL;
 
     void* buffer = lectura_ms(direccion_fisica_origen,tamanio,mapa_ms,fd_ms,fd_ms_agregados);
     if (buffer == NULL) {
-        log_info(logger_cpu,"## PID: %u - Error al leer memoria en COPY_MEM",pid);
-        return -1;
+        return NULL;
     }
 
     int resultado_escritura = escritura_ms(direccion_fisica_destino,buffer,tamanio,mapa_ms,fd_ms,fd_ms_agregados);
-    if (resultado_escritura == -1) {
-        log_info(logger_cpu,"## PID: %u - Error al escribir memoria en COPY_MEM",pid);
-
+    if (resultado_escritura == NULL) {
         free(buffer);
-        return -1;
+        return NULL;
     }
 
     free(buffer);
@@ -293,7 +292,7 @@ int syscall_stdout(char* instruccion, t_registros* registros, int fd_ks, int fd_
 }
 
 // MEM_ALLOC
-int syscall_mem_alloc(char* instruccion,t_registros* registros,int fd_ks,uint32_t pid) {
+void syscall_mem_alloc(char* instruccion,t_registros* registros,int fd_ks,uint32_t pid, t_log* logger_cpu) {
     char id_segmento_str[32];
     char tamanio_str[32];
 
@@ -312,22 +311,20 @@ int syscall_mem_alloc(char* instruccion,t_registros* registros,int fd_ks,uint32_
     op_code* respuesta = recibir_mensaje(fd_ks, &size);
 
     if (respuesta == NULL) {
-        free(respuesta);
-        return -1;
+        log_info(logger_cpu, "En MEM ALLOC se recibio NULL");
+        exit(EXIT_FAILURE)
     }
     if (*respuesta == MSG_OK) {
         registros->pc++;
     } else {
-        free(respuesta);
-        return 1;
+        log_info(logger_cpu, "En MEM ALLOC se recibio respuesta inesperada: %d.",*respuesta);
+        exit(EXIT_FAILURE)
     }
-
     free(respuesta);
-    return 0;
 }
 
 // MEM_FREE
-int syscall_mem_free(char* instruccion, t_registros* registros, int fd_ks, uint32_t pid) {
+void syscall_mem_free(char* instruccion, t_registros* registros, int fd_ks, uint32_t pid, t_log* logger_cpu) {
     char id_segmento_str[32];
 
     sscanf(instruccion, "%*s %31s", id_segmento_str);
@@ -344,25 +341,23 @@ int syscall_mem_free(char* instruccion, t_registros* registros, int fd_ks, uint3
     op_code* respuesta = recibir_mensaje(fd_ks, &size);
 
     if (respuesta == NULL) {
-        free(respuesta);
-        return -1;
+        log_info(logger_cpu, "En MEM FREE se recibio NULL");
+        exit(EXIT_FAILURE)
     }
     if (*respuesta == MSG_OK) {
         registros->pc++;
     } else {
-        free(respuesta);
-        return 1;
+        log_info(logger_cpu, "En MEM FREE se recibio respuesta inesperada: %d.",*respuesta);
+        exit(EXIT_FAILURE)
     }
-
     free(respuesta);
-    return 0;
 }
 
 // EXIT
 int syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log* logger_cpu){
     if (contexto == NULL) {
         log_info(logger_cpu, "Error al utilizar contexto en instruccion: EXIT");
-        return -1;
+        exit(EXIT_FAILURE);
     }
     // Avisa a KS que el proceso finalizo
     op_code cod = MSG_DONE;
@@ -383,22 +378,21 @@ int syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log
     void* buffer = serializar_contexto(contexto, &size, logger_cpu);
     if (buffer == NULL) {
     log_info(logger_cpu, "Error al serializar el contexto");
-        return -1;
+        exit(EXIT_FAILURE);
     }
 
     enviar_mensaje(fd_km, buffer, size);
     op_code* ok = recibir_mensaje(fd_km, &size);
     if (ok == NULL){
-        log_info(logger_cpu, "Recibio NULL");
-        return -1;
+        log_info(logger_cpu, "Se recibio NULL en instruccion EXIT");
+        exit(EXIT_FAILURE);
     }
     if (*ok != MSG_OK) {
         log_info(logger_cpu, "Se recibio un mensaje distinto al esperado: %d", *ok);
-        free(ok);
-        return -1;
+        exit(EXIT_FAILURE);
     }
-    free(ok);
 
+    free(ok);
     free(buffer);
     return 0;
 }
