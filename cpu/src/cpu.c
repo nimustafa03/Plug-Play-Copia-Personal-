@@ -185,7 +185,7 @@ int main(int argc, char* argv[]) {
 
         t_contexto* contexto = deserializar_contexto(buffer,size,logger_cpu);
         if (contexto == NULL) {log_info(logger_cpu, "Error al recibir contexto");
-            break;
+            exit(EXIT_FAILURE);
         }
         /*printf("AX %d",contexto->registros.ax);
         printf("BX %d",contexto->registros.bx);
@@ -244,21 +244,20 @@ int main(int argc, char* argv[]) {
                 }
 
             // INTERRUPCIONES
-            int atender = atender_interrupcion(fd_ks, fd_km, contexto, pid, logger_cpu);
-            if (atender == 0){
-                log_info(logger_cpu, "## Interrupcion recibida");
+            int resultado_interrupcion =atender_interrupcion(fd_ks,fd_km,contexto,pid,logger_cpu);
+
+            if (resultado_interrupcion == -1) {
+                log_error(logger_cpu,"Error al atender una interrupción del PID %u",pid);
+                proceso_en_ejecucion = false;
+                break;
+            }
+
+            if (resultado_interrupcion == 0) {
+                log_info(logger_cpu,"El PID %u fue desalojado por una interrupción",pid);
                 free(instruccion);
                 break;
-            } else if (atender == 1){
-                log_info(logger_cpu, "No llego interrupcion");
-            } else if (atender == -1){
-                log_info(logger_cpu, "Error (-1) en la atencion de interrupcion del proceso %d", pid);
-                exit(EXIT_FAILURE);
-            } else if (atender == -2){
-                log_info(logger_cpu, "Error (-2) en la atencion de interrupcion del proceso %d", pid);
-                exit(EXIT_FAILURE);
             }
-            free(instruccion);
+
             log_info(logger_cpu, "evalua EXIT");
             if (romper_ciclo == true){
                 log_info(logger_cpu, "Concluyo proceso %d con EXIT", pid);
