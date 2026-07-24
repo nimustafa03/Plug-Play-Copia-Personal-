@@ -321,8 +321,16 @@ bool notificar_segmentos_a_cpu(t_contexto*proceso){
         );
         return false;
     }
-
+    op_code codigo;
     uint32_t tamanio_buffer = 0;
+
+    if (list_size(proceso->tabla_segmentos) == 0)
+    {
+        log_info(logger, "La tabla de segmentos se encuentra vacía. Esto es normal si el proceso recien se creo.");
+        codigo = MSG_TABLA_SEGMENTOS_VACIA;
+        enviar_mensaje(socket_cpu, &codigo, sizeof(op_code));
+        return true;
+    }
 
     void*buffer =
         serializar_segmentos(
@@ -341,6 +349,14 @@ bool notificar_segmentos_a_cpu(t_contexto*proceso){
     }
 
     pthread_mutex_lock(&mutex_envios_cpu);
+
+    codigo = MSG_TABLA_SEGMENTOS_NO_VACIA;
+
+    enviar_mensaje(
+        socket_cpu,
+        &codigo,
+        sizeof(op_code)
+    );
 
     enviar_mensaje(
         socket_cpu,
