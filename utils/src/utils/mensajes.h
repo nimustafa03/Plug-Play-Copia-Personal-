@@ -72,7 +72,8 @@ typedef enum {
     // 39 usado en MSG_ACTUALIZAR_MEMORY_STICK
     MSG_EXIT_CPU = 40, // CPU Le avisa a KM que va a cerrar un proceso.
     MSG_TABLA_SEGMENTOS_VACIA = 41, // KM avisa a CPU que la tabla de segmentos está vacía y no va a enviar nada.
-    MSG_TABLA_SEGMENTOS_NO_VACIA = 42 // Opuesto a arriba
+    MSG_TABLA_SEGMENTOS_NO_VACIA = 42, // Opuesto a arriba
+    MSG_SOLICITAR_PID = 43, // o el proximo libre
     
 } op_code;
 
