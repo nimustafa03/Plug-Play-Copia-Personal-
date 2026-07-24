@@ -201,6 +201,7 @@ int main(int argc, char* argv[]) {
                 exit(EXIT_FAILURE);
             }
             log_info(logger_cpu, "recibiendo segmentos");
+            
             actualizar_tabla_segmentos(contexto,fd_km,logger_cpu);
 
             // DECODE

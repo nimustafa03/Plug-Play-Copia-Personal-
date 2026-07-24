@@ -759,54 +759,63 @@ int guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* lo
     return r;
 }
 
-void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km,t_log* logger_cpu){
-    int tamanio_buffer = 0;
+void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km, t_log* logger_cpu){
 
-    log_info(logger_cpu,"## se recibira buffer.");
-    void* buffer = recibir_mensaje(fd_km,&tamanio_buffer);
-    log_info(logger_cpu,"## se recibio buffer");
+    int size_respuesta;
+    op_code* mensaje_km = recibir_mensaje(fd_km,&size_respuesta);
+    if (*mensaje_km == MSG_TABLA_SEGMENTOS_NO_VACIA){
+        int tamanio_buffer = 0;
 
-    if (buffer == NULL) {
-        log_info(logger_cpu,"## ERROR: No se pudo recibir el buffer de segmentos.");
-        return;
-    }
+        log_info(logger_cpu,"## se recibira buffer.");
+        void* buffer = recibir_mensaje(fd_km,&tamanio_buffer);
+        log_info(logger_cpu,"## se recibio buffer");
 
-    t_list* tabla_actualizada = deserializar_tabla_segmentos(buffer,tamanio_buffer);
+        if (buffer == NULL) {
+            log_info(logger_cpu,"## ERROR: No se pudo recibir el buffer de segmentos.");
+            return;
+        }
 
-    free(buffer);
+        t_list* tabla_actualizada = deserializar_tabla_segmentos(buffer,tamanio_buffer);
 
-    if (tabla_actualizada == NULL) {
-        log_info(logger_cpu,"## ERROR: No se pudo deserializar la tabla de segmentos."
-        );
-        return;
-    }
+        free(buffer);
 
-    /*
-     * Se elimina la tabla anterior junto con
-     * los segmentos que contenía.
-     */
-    if (contexto->tabla_segmentos != NULL) {
-        list_destroy_and_destroy_elements(
-            contexto->tabla_segmentos,
-            free
-        );
-    }
+        if (tabla_actualizada == NULL) {
+            log_info(logger_cpu,"## ERROR: No se pudo deserializar la tabla de segmentos."
+            );
+            return;
+        }
 
-    contexto->tabla_segmentos = tabla_actualizada;
+        /*
+        * Se elimina la tabla anterior junto con
+        * los segmentos que contenía.
+        */
+        if (contexto->tabla_segmentos != NULL) {
+            list_destroy_and_destroy_elements(
+                contexto->tabla_segmentos,
+                free
+            );
+        }
 
-    log_info(logger_cpu,"Tabla de segmentos actualizada. Cantidad: %d",list_size(contexto->tabla_segmentos));
-    for (int i = 0; i < list_size(contexto->tabla_segmentos); i++) {
+        contexto->tabla_segmentos = tabla_actualizada;
 
-    t_segmento* segmento =list_get(contexto->tabla_segmentos, i);
+        log_info(logger_cpu,"Tabla de segmentos actualizada. Cantidad: %d",list_size(contexto->tabla_segmentos));
+        for (int i = 0; i < list_size(contexto->tabla_segmentos); i++) {
 
-    log_info(logger_cpu,
-        "Segmento[%d] -> ID=%u BASE=%u TAMANIO=%u",
-        i,
-        segmento->id_segmento,
-        segmento->base,
-        segmento->tamanio);
-    }
+        t_segmento* segmento =list_get(contexto->tabla_segmentos, i);
+
+        log_info(logger_cpu,
+            "Segmento[%d] -> ID=%u BASE=%u TAMANIO=%u",
+            i,
+            segmento->id_segmento,
+            segmento->base,
+            segmento->tamanio);
+        }
+    } else if (*mensaje_km == MSG_TABLA_SEGMENTOS_VACIA){
+        return
+    } else {log_info(logger_cpu, "No llego el mensaje esperado al consultar por la tabla de segmentos")
+        return}
 }
+    
 
 t_list* deserializar_tabla_segmentos(void* buffer, int tamanio_buffer){
     if (buffer == NULL)
