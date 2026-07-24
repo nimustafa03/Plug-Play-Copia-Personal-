@@ -811,9 +811,10 @@ void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km, t_log* logger_cp
             segmento->tamanio);
         }
     } else if (*mensaje_km == MSG_TABLA_SEGMENTOS_VACIA){
-        return
-    } else {log_info(logger_cpu, "No llego el mensaje esperado al consultar por la tabla de segmentos")
-        return}
+        return;
+    } else {log_info(logger_cpu, "No llego el mensaje esperado al consultar por la tabla de segmentos");
+        return;
+        }
 }
     
 
