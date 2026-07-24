@@ -348,7 +348,7 @@ bool notificar_segmentos_a_cpu(t_contexto*proceso){
         (int) tamanio_buffer
     );
 
-    pthread_mutex_lock(&mutex_envios_cpu);
+    pthread_mutex_unlock(&mutex_envios_cpu);
 
     free(buffer);
 
