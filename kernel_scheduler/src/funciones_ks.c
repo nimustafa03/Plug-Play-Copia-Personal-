@@ -439,6 +439,8 @@ void* iniciar_planificador_corto_plazo() {
     // CP3: protegido para que un timer_rr rezagado no se entrelace con el despacho
     pthread_mutex_t* m_cpu = obtener_mutex_cpu(fd_cpu);
     if (m_cpu) pthread_mutex_lock(m_cpu);
+    op_code cod = MSG_SOLICITAR_PID;                 // Mando codigo del mensaje para aclarar al CPU si es un PID o una interrupcion 
+    enviar_mensaje(fd_cpu, &cod, sizeof(op_code));
     enviar_mensaje(fd_cpu, &proceso->id_proceso, sizeof(uint32_t));
     if (m_cpu) pthread_mutex_unlock(m_cpu);
  
