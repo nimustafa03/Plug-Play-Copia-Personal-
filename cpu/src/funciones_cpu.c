@@ -94,6 +94,7 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
                 op_code codigo = MSG_SEG_FAULT;
                 enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
                 enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
+                log_info(logger_cpu, "SEG FAULT CONCEPTUAL");
                 return -1;
             }
             break;
@@ -102,6 +103,7 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
                 op_code codigo = MSG_SEG_FAULT;
                 enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
                 enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
+                log_info(logger_cpu, "SEG FAULT CONCEPTUAL");
                 return -1;
             }
             break;
@@ -113,6 +115,7 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
                 op_code codigo = MSG_SEG_FAULT;
                 enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
                 enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
+                log_info(logger_cpu, "SEG FAULT CONCEPTUAL");
                 return -1;
             }
             break;
@@ -276,8 +279,8 @@ int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto, uint32_t pid,
 }
 
 int memory_management_unit(uint32_t direccion_logica, uint32_t tamanio_acceso, t_list* tabla_segmentos) {
-    uint32_t num_segmento = direccion_logica / 256;
-    uint32_t desplazamiento = direccion_logica % 256;
+    uint32_t num_segmento = direccion_logica / segment_max_size;
+    uint32_t desplazamiento = direccion_logica % segment_max_size;
 
     t_segmento* segmento = NULL;
 
@@ -291,9 +294,9 @@ int memory_management_unit(uint32_t direccion_logica, uint32_t tamanio_acceso, t
     }
     if (segmento == NULL) 
         return MMU_ERROR;
-    if (desplazamiento + tamanio_acceso > segmento->tamanio) {
-        return MMU_ERROR;
-    }
+    if (desplazamiento + tamanio_acceso > segmento->tamanio) {  // CONDICION CONCEPTUAL DE SEGMENTATION FAULT
+        return SEG_FAULT;
+        }
     return segmento->base + desplazamiento;
 }
 

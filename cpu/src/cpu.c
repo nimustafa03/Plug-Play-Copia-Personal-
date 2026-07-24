@@ -33,6 +33,15 @@ int conexionCPUKernelMemory (t_config* config, int identificador_cpu) {
     int size_ok;
     op_code* ok = recibir_mensaje(fd_km, &size_ok);
     free(ok);
+    int bytes_recibidos = 0;
+    uint32_t* ptr_tamanio_segmento = recibir_mensaje(fd_km, &bytes_recibidos);
+    if (ptr_tamanio_segmento != NULL) {
+        segment_max_size = ptr_tamanio_segmento;
+        printf("Tamaño máximo del segmento recibido: %u\n", segment_max_size);
+        free(ptr_tamanio_segmento);
+    } else {
+        printf("Error al recibir el tamaño máximo de segmento desde Kernel Memory.\n");
+    }
     return fd_km;
 }
 
@@ -79,9 +88,11 @@ int esperar_pid(int fd_ks, t_log* logger_cpu) {
         return pid;
     }
 }
+
 int ms_conectados = 1;
 int fd_ms_agregados[3] = {-1, -1, -1};
 bool romper_ciclo = false;
+uint32_t segment_max_size;
 
 /*----------------------------- MAIN -----------------------------*/
 
@@ -224,7 +235,7 @@ int main(int argc, char* argv[]) {
                 enviar_mensaje(fd_km, &guardar_contexto, sizeof(op_code));
                 enviar_mensaje(fd_km, contexto, sizeof(t_contexto));
                 free(instruccion);
-                log_info(logger_cpu, "En situacion de SEG FAULT");
+                log_info(logger_cpu, "Se aviso a KM SEG FAULT y se envio el contexto");
                 break;
             } else if (operacion == 1)
                 romper_ciclo = true;

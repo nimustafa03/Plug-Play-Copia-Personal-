@@ -9,7 +9,7 @@
 #include <string.h>
 #include <cpu.h>
 
-#define MMU_ERROR -1
+#define MMU_ERROR -3
 
 uint32_t obtener_valor(char* posicion, t_registros* registro) {
     if (strcmp(posicion, "AX") == 0) return registro->ax;
@@ -155,15 +155,17 @@ int mov_in(char* instruccion,t_registros* registros,t_mapa_memory_sticks_cpu* ma
     uint32_t tamanio = tamanio_registro(registro_destino);
 
     if (tamanio == 0)
-        return -1;
+        return MMU_ERROR;
 
     int direccion_fisica =memory_management_unit(direccion_logica,tamanio,tabla_segmentos);
-    if (direccion_fisica == MMU_ERROR)
+    if (direccion_fisica == SEG_FAULT)
         return -1;
+        else if (direccion_fisica == MMU_ERROR)
+            return MMU_ERROR;
 
     void* datos = lectura_ms(direccion_fisica,tamanio,mapa,fd_ms,fd_ms_agregados);
     if (datos == NULL)
-        return -1;
+        return MMU_ERROR;
 
     uint32_t valor = 0;
 
@@ -186,17 +188,19 @@ int mov_out(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_m
     uint32_t tamanio = tamanio_registro(registro_origen);
 
     if (tamanio == 0)
-        return -1;
+        return MMU_ERROR;
 
     int direccion_fisica =memory_management_unit(direccion_logica,tamanio,tabla_segmentos);
-    if (direccion_fisica == MMU_ERROR) 
+    if (direccion_fisica == SEG_FAULT)
         return -1;
+        else if (direccion_fisica == MMU_ERROR)
+            return MMU_ERROR;
 
     uint32_t valor = obtener_valor(registro_origen,registros);
 
     int resultado = escritura_ms((uint32_t)direccion_fisica,&valor,tamanio,mapa,fd_ms,fd_ms_agregados);
     if (resultado == -1)
-        return -1;
+        return MMU_ERROR;
 
     registros->pc++;
     return 0;
@@ -214,16 +218,18 @@ int copy_mem(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_
     uint32_t direccion_logica_destino = registros->di;
 
     int direccion_fisica_origen = memory_management_unit(direccion_logica_origen,tamanio,tabla_segmentos);
-    if (direccion_fisica_origen == MMU_ERROR) {
+    if (direccion_fisica_origen == SEG_FAULT) {
         log_error(logger_cpu,"## PID: %u - COPY_MEM produjo SEG_FAULT en el origen",pid);
-        return -1;
-    }
-
+        return SEG_FAULT;
+        } else if (direccion_fisica_origen == MMU_ERROR)
+            return MMU_ERROR;
+        
     int direccion_fisica_destino = memory_management_unit(direccion_logica_destino,tamanio,tabla_segmentos);
-    if (direccion_fisica_destino == MMU_ERROR) {
+    if (direccion_fisica_destino == SEG_FAULT) {
         log_info(logger_cpu,"## PID: %u - COPY_MEM produjo SEG_FAULT en el destino",pid);
-        return -1;
-    }
+        return SEG_FAULT;
+        } else if (direccion_fisica_origen == MMU_ERROR)
+            return MMU_ERROR;
 
     void* buffer = lectura_ms(direccion_fisica_origen,tamanio,mapa_ms,fd_ms,fd_ms_agregados);
     if (buffer == NULL) {
