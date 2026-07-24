@@ -73,7 +73,7 @@ int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto, uint32_t pid,
 // MMU
 int memory_management_unit(uint32_t direccion_logica, uint32_t tamanio_acceso, t_list* tabla_segmentos, t_log* logger_cpu);
 void* lectura_ms(uint32_t direccion_global,uint32_t tamanio_lectura,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3], t_log* logger_cpu);
-int escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio_escritura,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3], t_log* logger_cpu);
+void escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio_escritura,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3], t_log* logger_cpu);
 
 // MANEJO DE INFORMACION
 extern uint32_t segment_max_size;
@@ -89,9 +89,9 @@ void escribir_en_buffer(void* buffer,uint32_t* desplazamiento,const void* dato,u
 void* serializar_contexto(t_contexto* contexto,int* tamanio_buffer, t_log* logger_cpu);
 t_contexto* deserializar_contexto(void* buffer,int tamanio_buffer, t_log* logger_cpu);
 void enviar_contexto(t_contexto* contexto, int fd_km, t_log* logger_cpu);
-int guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* logger_cpu); 
+void guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* logger_cpu); 
 void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km,t_log* logger_cpu);
-void manejar_seg_fault(int fd_ks, int fd_km, t_log* logger_cpu);
+void manejar_seg_fault(int fd_ks, int fd_km, t_contexto* contexto, uint32_t pid, t_log* logger_cpu);
 
 // OPERACIONES CON REGISTROS
 uint32_t obtener_valor(char* posicion, t_registros* registro);
@@ -109,7 +109,7 @@ int copy_mem(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_
 void noop(t_registros* registro);
 
 // SYSCALLS
-void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid);
+void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid, t_log* logger_cpu);
 int syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
 int syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
 int syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
@@ -118,7 +118,7 @@ int syscall_stdin(char* instruccion, t_registros* registros, int fd_ks, int fd_k
 int syscall_stdout(char* instruccion,t_registros* registro, int fd_ks, int fd_km, uint32_t pid, t_contexto* contexto, t_log* logger_cpu);
 void syscall_mem_alloc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid, t_log* logger_cpu);
 void syscall_mem_free(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid, t_log* logger_cpu);
-int syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log* logger_cpu);
+void syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log* logger_cpu);
 
 
 

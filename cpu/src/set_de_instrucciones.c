@@ -117,7 +117,7 @@ void noop(t_registros* registros) {
 }
 
 // INIT_PROC
-void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid){
+void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid, t_log* logger_cpu){
     char archivo[256];
     int prioridad;
     sscanf(instruccion, "%*s %255s %d", archivo, &prioridad);
@@ -134,11 +134,11 @@ void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint
 
     if (respuesta == NULL) {
         log_info(logger_cpu, "Error al recibir respuesta en INIT PROC");
-        exit(EXIT_FAILURE)
+        exit(EXIT_FAILURE);
     }
     if (*respuesta != MSG_OK) {
         log_info(logger_cpu, "En INIC PROC se recibio una respuesta distinta a la esperada: %d", *respuesta);
-        exit(EXIT_FAILURE)
+        exit(EXIT_FAILURE);
     }
 
     free(respuesta);
@@ -156,18 +156,17 @@ int mov_in(char* instruccion,t_registros* registros,t_mapa_memory_sticks_cpu* ma
 
     if (tamanio == 0){
         log_info(logger_cpu, "Error de tamanio en MOV IN");
-        return NULL;
+        exit(EXIT_FAILURE);
     }
-    int direccion_fisica =memory_management_unit(direccion_logica,tamanio,tabla_segmentos);
+    int direccion_fisica =memory_management_unit(direccion_logica,tamanio,tabla_segmentos, logger_cpu);
     if (direccion_fisica == SEG_FAULT)
         return SEG_FAULT;
-        else if (direccion_fisica == NULL)
-            return NULLR;
 
-    void* datos = lectura_ms(direccion_fisica,tamanio,mapa,fd_ms,fd_ms_agregados);
-    if (datos == NULL)
-        return NULL;
-
+    void* datos = lectura_ms(direccion_fisica,tamanio,mapa,fd_ms,fd_ms_agregados, logger_cpu);
+    if (datos == NULL){
+        log_info(logger_cpu, "LECTURA devolvio NULL");
+        exit(EXIT_FAILURE);
+    }
     uint32_t valor = 0;
 
     memcpy(&valor,datos,tamanio);
@@ -190,19 +189,15 @@ int mov_out(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_m
 
     if (tamanio == 0){
         log_info(logger_cpu, "Error de tamanio en MOV OUT");
-        return NULL;
+        exit(EXIT_FAILURE);
     }
-    int direccion_fisica =memory_management_unit(direccion_logica,tamanio,tabla_segmentos);
+    int direccion_fisica =memory_management_unit(direccion_logica,tamanio,tabla_segmentos, logger_cpu);
     if (direccion_fisica == SEG_FAULT)
         return SEG_FAULT;
-        else if (direccion_fisica == NULL)
-            return NULL;
 
     uint32_t valor = obtener_valor(registro_origen,registros);
 
-    int resultado = escritura_ms((uint32_t)direccion_fisica,&valor,tamanio,mapa,fd_ms,fd_ms_agregados);
-    if (resultado == NULL)
-        return NULL;
+    escritura_ms((uint32_t)direccion_fisica,&valor,tamanio,mapa,fd_ms,fd_ms_agregados,logger_cpu);
 
     registros->pc++;
     return 0;
@@ -219,28 +214,21 @@ int copy_mem(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_
     uint32_t direccion_logica_origen = registros->si;
     uint32_t direccion_logica_destino = registros->di;
 
-    int direccion_fisica_origen = memory_management_unit(direccion_logica_origen,tamanio,tabla_segmentos);
-    if (direccion_fisica_origen == SEG_FAULT) {
+    int direccion_fisica_origen = memory_management_unit(direccion_logica_origen,tamanio,tabla_segmentos, logger_cpu);
+    if (direccion_fisica_origen == SEG_FAULT)
         return SEG_FAULT;
-        } else if (direccion_fisica_origen == NULL)
-            return NULL;
         
-    int direccion_fisica_destino = memory_management_unit(direccion_logica_destino,tamanio,tabla_segmentos);
-    if (direccion_fisica_destino == SEG_FAULT) {
+    int direccion_fisica_destino = memory_management_unit(direccion_logica_destino,tamanio,tabla_segmentos,logger_cpu);
+    if (direccion_fisica_destino == SEG_FAULT)
         return SEG_FAULT;
-        } else if (direccion_fisica_origen == NULL)
-            return NULL;
 
-    void* buffer = lectura_ms(direccion_fisica_origen,tamanio,mapa_ms,fd_ms,fd_ms_agregados);
+    void* buffer = lectura_ms(direccion_fisica_origen,tamanio,mapa_ms,fd_ms,fd_ms_agregados,logger_cpu);
     if (buffer == NULL) {
-        return NULL;
+        log_info(logger_cpu, "LECTURA devolvio NULL");
+        exit(EXIT_FAILURE);
     }
 
-    int resultado_escritura = escritura_ms(direccion_fisica_destino,buffer,tamanio,mapa_ms,fd_ms,fd_ms_agregados);
-    if (resultado_escritura == NULL) {
-        free(buffer);
-        return NULL;
-    }
+    escritura_ms(direccion_fisica_destino,buffer,tamanio,mapa_ms,fd_ms,fd_ms_agregados,logger_cpu);
 
     free(buffer);
     registros->pc++;
@@ -258,8 +246,9 @@ int syscall_stdin(char* instruccion, t_registros* registros, int fd_ks, int fd_k
     uint32_t direccion_logica = obtener_valor(registro_direccion, registros);
     uint32_t tamanio = obtener_valor(registro_tamanio, registros);
 
-    registros->pc++;                                            // CP3: la instruccion ya se emitio
-    if (guardar_contexto_km(fd_km, contexto, pid, logger_cpu) == -1) return -1;
+    registros->pc++; 
+                                             // CP3: la instruccion ya se emitio
+    guardar_contexto_km(fd_km, contexto, pid, logger_cpu);
 
     op_code codigo = MSG_STDIN;                                 // CP3: aviso al KS, NO se espera respuesta
     enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
@@ -280,7 +269,7 @@ int syscall_stdout(char* instruccion, t_registros* registros, int fd_ks, int fd_
     uint32_t tamanio = obtener_valor(registro_tamanio, registros);
 
     registros->pc++;                                            // CP3: la instruccion ya se emitio
-    if (guardar_contexto_km(fd_km, contexto, pid, logger_cpu) == -1) return -1;
+    guardar_contexto_km(fd_km, contexto, pid, logger_cpu);
 
     op_code codigo = MSG_STDOUT;                                // CP3: aviso al KS, NO se espera respuesta
     enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
@@ -312,13 +301,13 @@ void syscall_mem_alloc(char* instruccion,t_registros* registros,int fd_ks,uint32
 
     if (respuesta == NULL) {
         log_info(logger_cpu, "En MEM ALLOC se recibio NULL");
-        exit(EXIT_FAILURE)
+        exit(EXIT_FAILURE);
     }
     if (*respuesta == MSG_OK) {
         registros->pc++;
     } else {
         log_info(logger_cpu, "En MEM ALLOC se recibio respuesta inesperada: %d.",*respuesta);
-        exit(EXIT_FAILURE)
+        exit(EXIT_FAILURE);
     }
     free(respuesta);
 }
@@ -342,19 +331,19 @@ void syscall_mem_free(char* instruccion, t_registros* registros, int fd_ks, uint
 
     if (respuesta == NULL) {
         log_info(logger_cpu, "En MEM FREE se recibio NULL");
-        exit(EXIT_FAILURE)
+        exit(EXIT_FAILURE);
     }
     if (*respuesta == MSG_OK) {
         registros->pc++;
     } else {
         log_info(logger_cpu, "En MEM FREE se recibio respuesta inesperada: %d.",*respuesta);
-        exit(EXIT_FAILURE)
+        exit(EXIT_FAILURE);
     }
     free(respuesta);
 }
 
 // EXIT
-int syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log* logger_cpu){
+void syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log* logger_cpu){
     if (contexto == NULL) {
         log_info(logger_cpu, "Error al utilizar contexto en instruccion: EXIT");
         exit(EXIT_FAILURE);
@@ -394,7 +383,6 @@ int syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log
 
     free(ok);
     free(buffer);
-    return 0;
 }
 
 // MUTEX_CREATE
@@ -475,7 +463,7 @@ int syscall_sleep(char* instruccion, int fd_ks, int fd_km, uint32_t pid, t_regis
     int tiempo = atoi(tiempo_str);
 
     registros->pc++;                                            // CP3: la instruccion ya se emitio
-    if (guardar_contexto_km(fd_km, contexto, pid, logger_cpu) == -1) return -1;
+    guardar_contexto_km(fd_km, contexto, pid, logger_cpu);
 
     op_code cod = MSG_SLEEP;                                    // CP3: aviso al KS, NO se espera respuesta
     enviar_mensaje(fd_ks, &cod, sizeof(op_code));
