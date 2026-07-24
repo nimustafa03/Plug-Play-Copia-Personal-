@@ -230,25 +230,18 @@ int main(int argc, char* argv[]) {
             //log_info(logger_cpu, "OPCODE: %d", codigo);
             int operacion = execute(codigo, instruccion, &contexto->registros,fd_ks,fd_km,fd_ms,pid, contexto->tabla_segmentos,logger_cpu,mapa,fd_ms_agregados, contexto);
 
-            if (operacion == -1) {                                  //en caso de SEG FAULT en las operaciones MOV y COPY
-                op_code guardar_contexto = MSG_SEG_FAULT;
-                enviar_mensaje(fd_km, &guardar_contexto, sizeof(op_code));
-                enviar_mensaje(fd_km, contexto, sizeof(t_contexto));
+            if (operacion == SEG_FAULT) {   
+                manejar_seg_fault(fd_ks, fd_km, logger_cpu);            //en caso de SEG FAULT en las operaciones MOV y COPY
+                log_info(logger_cpu, "Se aviso SEG FAULT y se envio el contexto a KM");
                 free(instruccion);
-                log_info(logger_cpu, "Se aviso a KM SEG FAULT y se envio el contexto");
+                free(contexto);
                 break;
-            } else if (operacion == 1)
-                romper_ciclo = true;
-            else if (operacion == 2){                            // CP3: syscall de IO -> desalojo voluntario
+            } else if (operacion == 2){                            // CP3: syscall de IO -> desalojo voluntario
                 log_info(logger_cpu, "## PID: %u - Bloqueado por IO, se libera la CPU", pid);
                 free(instruccion);
                 free(contexto);                                  // se retoma con el contexto guardado en KM
                 break;                                           // vuelve a esperar_pid -> CPU libre
-            }
-            else if (operacion == -2){
-                log_info(logger_cpu, "Operacion invalida en proceso %d.",pid);
-                exit(EXIT_FAILURE);
-            }
+                }
 
             // INTERRUPCIONES
             int atender = atender_interrupcion(fd_ks, fd_km, contexto, pid, logger_cpu);
