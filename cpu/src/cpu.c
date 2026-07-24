@@ -224,6 +224,7 @@ int main(int argc, char* argv[]) {
                 enviar_mensaje(fd_km, &guardar_contexto, sizeof(op_code));
                 enviar_mensaje(fd_km, contexto, sizeof(t_contexto));
                 free(instruccion);
+                log_info(logger_cpu, "En situacion de SEG FAULT");
                 break;
             } else if (operacion == 1)
                 romper_ciclo = true;
