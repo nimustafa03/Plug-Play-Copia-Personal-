@@ -27,11 +27,7 @@ char* fetch(int fd_km, u_int32_t pid, t_registros* cpu, t_log* logger_cpu){
     // Envio PC
     int pc = cpu->pc;
     enviar_mensaje(fd_km, &pc, sizeof(pc));
-    log_info(
-        logger_cpu,
-        "FETCH: enviando PC=%d",
-        cpu->pc
-    );
+    log_info(logger_cpu,"FETCH: enviando PC=%d",cpu->pc);
     // KM responde por OK/ERROR
     int size_respuesta;
     op_code* respuesta_km = (op_code*) recibir_mensaje(fd_km,&size_respuesta);
@@ -45,7 +41,7 @@ char* fetch(int fd_km, u_int32_t pid, t_registros* cpu, t_log* logger_cpu){
             "FETCH: KM respondio ERROR");
             return NULL;
             }
-
+    log_info(logger_cpu, "llego la respuesta");
     free(respuesta_km);
     
     // Recibe Instruccion
@@ -56,6 +52,7 @@ char* fetch(int fd_km, u_int32_t pid, t_registros* cpu, t_log* logger_cpu){
         free(instruccion);
         return NULL;
     }
+    log_info(logger_cpu, "llego la instruccion");
     return instruccion;
 }
 
