@@ -70,7 +70,9 @@ typedef enum {
     MSG_SWAP_WRITE = 37, // KM -> SWAP, escribir un bloque
     MSG_SWAP_READ  = 38, // KM -> SWAP, leer un bloque
     // 39 usado en MSG_ACTUALIZAR_MEMORY_STICK
-    MSG_EXIT_CPU = 40 // CPU Le avisa a KM que va a cerrar un proceso.
+    MSG_EXIT_CPU = 40, // CPU Le avisa a KM que va a cerrar un proceso.
+    MSG_TABLA_SEGMENTOS_VACIA = 41, // KM avisa a CPU que la tabla de segmentos está vacía y no va a enviar nada.
+    MSG_TABLA_SEGMENTOS_NO_VACIA = 42 // Opuesto a arriba
     
 } op_code;
 
