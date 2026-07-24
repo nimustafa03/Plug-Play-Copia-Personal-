@@ -768,7 +768,7 @@ void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km,t_log* logger_cpu
     void* buffer = recibir_mensaje(fd_km,&tamanio_buffer);
 
     if (buffer == NULL) {
-        log_error(logger_cpu,"## ERROR: No se pudo recibir el buffer de segmentos.");
+        log_info(logger_cpu,"## ERROR: No se pudo recibir el buffer de segmentos.");
         return;
     }
 
@@ -777,7 +777,7 @@ void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km,t_log* logger_cpu
     free(buffer);
 
     if (tabla_actualizada == NULL) {
-        log_error(logger_cpu,"## ERROR: No se pudo deserializar la tabla de segmentos."
+        log_info(logger_cpu,"## ERROR: No se pudo deserializar la tabla de segmentos."
         );
         return;
     }
