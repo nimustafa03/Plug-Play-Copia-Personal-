@@ -1,4 +1,5 @@
 #include "handler_cpu.h"
+#include "kernel_memory.h" // agrego este include para poder utilizar la funcion y obtener el valor max de seg
 
 #include <string.h>
 #include <unistd.h>
@@ -173,6 +174,14 @@ void atender_cpu(int nuevo_socket_cpu){
         socket_cpu,
         &ok,
         sizeof(op_code)
+    );
+
+    uint32_t max_size = get_segment_max_size(); // obtenemos el valor max de seg a traves del getter q creamos en kernel_memory.h
+    // enviar el tamaño máximo de segmento (config)
+    enviar_mensaje(
+        socket_cpu,
+        &max_size,
+        sizeof(uint32_t)
     );
 
 

@@ -12,6 +12,12 @@
 t_log* logger;
 t_config* config;
 
+static uint32_t segment_max_size_val = 0; // agrego esto para poder guardar el valor máximo
+
+uint32_t get_segment_max_size(void) { // uso esto q agregue en el .h para poder compartirla
+    return segment_max_size_val;
+}
+
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         printf("Uso: ./bin/kernel_memory [archivo_config]\n");
@@ -37,6 +43,13 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    char* max_size_str = config_get_string_value(config, "SEGMENT_MAX_SIZE");
+    if (max_size_str != NULL) {
+        segment_max_size_val = (uint32_t) atoi(max_size_str);
+    } else {
+        log_error(logger, "No se encontró SEGMENT_MAX_SIZE en la configuración");
+    }
+
     char* estrategia = config_get_string_value(config, "ALLOCATION_STRATEGY");
 
     if (strcmp(estrategia, "BEST") == 0)
@@ -48,6 +61,8 @@ int main(int argc, char* argv[]) {
 
     char* puerto = config_get_string_value(config, "PORT");
     iniciar_servidor_kernel_memory(puerto);
+
+    char* segment_max_size = config_get_string_value(config, "SEGMENT_MAX_SIZE");
 
     destruir_administrador_procesos();
     destruir_administrador_memoria();
