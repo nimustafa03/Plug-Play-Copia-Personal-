@@ -157,7 +157,7 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
     return 0;
 }
 
-int recibir_interrupcion(int fd_ks){
+/*int recibir_interrupcion(int fd_ks){
     int size;
     op_code codigo;
     int bytes = recv(fd_ks, &size, sizeof(int), MSG_DONTWAIT);
@@ -241,7 +241,7 @@ int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto, uint32_t pid,
         return 0;
     }
     return -2;
-}
+}*/
 
 int memory_management_unit(uint32_t direccion_logica, uint32_t tamanio_acceso, t_list* tabla_segmentos, t_log* logger_cpu) {
     uint32_t num_segmento = direccion_logica / segment_max_size;
@@ -847,4 +847,137 @@ void manejar_seg_fault(int fd_ks, int fd_km, t_contexto* contexto, uint32_t pid,
     op_code seg_fault = MSG_SEG_FAULT;
     enviar_mensaje(fd_ks, &seg_fault, sizeof(op_code));
     enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
+}
+
+int hay_mensaje_completo(int fd){
+    int size = 0;
+
+    /*
+     * Primer PEEK: verificar el encabezado.
+     */
+    ssize_t bytes = recv(fd,&size,sizeof(int),MSG_PEEK | MSG_DONTWAIT);
+
+    if (bytes == -1) {if (errno == EAGAIN || errno == EWOULDBLOCK)
+            return 0;
+        return -1;
+    }
+    if (bytes == 0)
+        return -1;
+    if (bytes < (ssize_t)sizeof(int))
+        return 0;
+    if (size <= 0)
+        return -1;
+
+    /*
+     * Segundo PEEK: verificar encabezado más payload.
+     */
+    size_t tamanio_total = sizeof(int) + (size_t)size;
+
+    void* buffer = malloc(tamanio_total);
+
+    if (buffer == NULL)
+        return -1;
+
+    bytes = recv(fd,buffer,tamanio_total,MSG_PEEK | MSG_DONTWAIT);
+
+    free(buffer);
+
+    if (bytes == -1) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+            return 0;
+        return -1;
+    }
+
+    if ((size_t)bytes < tamanio_total)
+        return 0;
+
+    return 1;
+}
+
+int atender_interrupcion(int fd_ks, int fd_km, t_contexto* contexto,uint32_t pid,t_log* logger_cpu){
+    int estado = hay_mensaje_completo(fd_ks);
+
+    if (estado == 0) {
+        // No hay interrupción pendiente.
+        return 1;
+    }
+
+    if (estado == -1) {
+        log_error(logger_cpu,"Error al revisar el socket de Kernel Scheduler");
+        return -1;
+    }
+
+    /*
+     * Primer mensaje: MSG_INTERRUPT
+     */
+    int size = 0;
+
+    op_code* codigo = recibir_mensaje(fd_ks, &size);
+
+    if (codigo == NULL) {
+        log_error(logger_cpu,"No se pudo recibir el código de interrupción");
+        return -1;
+    }
+
+    if (size != sizeof(op_code)) {
+        log_error(logger_cpu,"Tamaño inválido para el código de interrupción. ""Esperado: %zu - Recibido: %d",sizeof(op_code),size);
+
+        free(codigo);
+        return -1;
+    }
+
+    if (*codigo != MSG_INTERRUPT) {
+        log_error(logger_cpu,"Se recibió un mensaje inesperado desde KS: %d",*codigo);
+
+        free(codigo);
+        return -1;
+    }
+
+    free(codigo);
+
+    /*
+     * Segundo mensaje: t_interrupcion.
+     */
+    t_interrupcion* interrupcion =recibir_mensaje(fd_ks, &size);
+
+    if (interrupcion == NULL) {
+        log_error(logger_cpu,"No se pudo recibir la estructura de interrupción");
+        return -1;
+    }
+
+    if (size != sizeof(t_interrupcion)) {
+        log_error(logger_cpu,"Tamaño inválido para t_interrupcion. ""Esperado: %zu - Recibido: %d",sizeof(t_interrupcion),size);
+
+        free(interrupcion);
+        return -1;
+    }
+
+    uint32_t pid_int = interrupcion->pid;
+    int motivo = interrupcion->motivo;
+
+    free(interrupcion);
+
+    if (pid_int != pid) {
+        log_info(logger_cpu,
+            "Se descarto interrupcion por no corresponder "
+            "al proceso actual. PID INTERRUPCION: %u, "
+            "PID ACTUAL: %u",
+            pid_int,
+            pid
+        );
+
+        return 1;
+    }
+
+    log_info(logger_cpu,"Se recibio una interrupcion para el PID %u. Motivo: %d",pid_int,motivo);
+
+    guardar_contexto_km(fd_km, contexto, pid, logger_cpu);
+
+    // avisar al KS que se interrumpió
+    op_code atendido = MSG_INTERRUPCION_ATENDIDA;
+    enviar_mensaje(fd_ks, &atendido, sizeof(op_code));
+    enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
+    enviar_mensaje(fd_ks, &motivo, sizeof(int));
+
+    return 0;
 }
