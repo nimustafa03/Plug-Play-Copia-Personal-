@@ -74,12 +74,13 @@ void* lectura_ms(uint32_t direccion_global,uint32_t tamanio_lectura,t_mapa_memor
 int escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio_escritura,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3]);
 
 // MANEJO DE INFORMACION
+extern uint32_t segment_max_size;
+extern int ms_conectados;
+extern int fd_ms_agregados[3];
 t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu);
 void destruir_mapa_memory_sticks(t_mapa_memory_sticks_cpu* mapa);
 int conectar_memory_sticks_faltantes(t_mapa_memory_sticks_cpu* mapa,t_log* logger_cpu);
 int actualizar_conexiones_ms(t_info_memory_stick_cpu* info_ms,t_log* logger_cpu);
-extern int ms_conectados;
-extern int fd_ms_agregados[3];
 int buscar_indice_ms(uint32_t direccion_global,t_mapa_memory_sticks_cpu* mapa);
 int obtener_fd_ms(uint32_t indice_ms,int fd_ms,int fd_ms_agregados[3]);
 void escribir_en_buffer(void* buffer,uint32_t* desplazamiento,const void* dato,uint32_t tamanio);
