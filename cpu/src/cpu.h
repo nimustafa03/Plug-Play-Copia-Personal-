@@ -11,6 +11,9 @@
 #include <utils/tipos.h>
 #include <utils/serializacion.h>
 
+#define SEG_FAULT (-5)
+#define MMU_ERROR (-3)
+
 // OPCODES
 typedef enum {
     OP_NOOP =100,
