@@ -36,7 +36,7 @@ int conexionCPUKernelMemory (t_config* config, int identificador_cpu) {
     int bytes_recibidos = 0;
     uint32_t* ptr_tamanio_segmento = recibir_mensaje(fd_km, &bytes_recibidos);
     if (ptr_tamanio_segmento != NULL) {
-        segment_max_size = ptr_tamanio_segmento;
+        segment_max_size = *ptr_tamanio_segmento;
         printf("Tamaño máximo del segmento recibido: %u\n", segment_max_size);
         free(ptr_tamanio_segmento);
     } else {

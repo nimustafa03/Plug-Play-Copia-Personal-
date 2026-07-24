@@ -12,7 +12,6 @@
 #include <sys/socket.h> 
 #include <errno.h>
 
-#define MMU_ERROR (-1)
 extern bool romper_ciclo;
 
 char* fetch(int fd_km, u_int32_t pid, t_registros* cpu, t_log* logger_cpu){

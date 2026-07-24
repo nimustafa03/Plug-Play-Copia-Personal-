@@ -9,8 +9,6 @@
 #include <string.h>
 #include <cpu.h>
 
-#define MMU_ERROR -3
-
 uint32_t obtener_valor(char* posicion, t_registros* registro) {
     if (strcmp(posicion, "AX") == 0) return registro->ax;
     if (strcmp(posicion, "BX") == 0) return registro->bx;
