@@ -762,7 +762,9 @@ int guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* lo
 void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km,t_log* logger_cpu){
     int tamanio_buffer = 0;
 
+    log_info(logger_cpu,"## se recibira buffer.");
     void* buffer = recibir_mensaje(fd_km,&tamanio_buffer);
+    log_info(logger_cpu,"## se recibio buffer");
 
     if (buffer == NULL) {
         log_info(logger_cpu,"## ERROR: No se pudo recibir el buffer de segmentos.");
