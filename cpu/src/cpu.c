@@ -76,6 +76,9 @@ int esperar_pid(int fd_ks, t_log* logger_cpu) {
     log_info(logger_cpu, "CPU esperando PID del Kernel Scheduler...");
     while (1) {
         int size;
+        op_code* request = recibir_mensaje(fd_ks, &size);
+        //MSG_SOLICITAR_PID
+        free(request);
         uint32_t* pid_ptr = recibir_mensaje(fd_ks, &size);
 
         if (pid_ptr == NULL) {
@@ -149,6 +152,8 @@ int main(int argc, char* argv[]) {
     //WHILE PID
     while (1) {
         // CPU espera la llegada de un pid por parte del KS
+
+
         int pid = esperar_pid(fd_ks, logger_cpu);
         if (pid == -1) {
             log_info(logger_cpu, "Error al recibir pid");
@@ -235,7 +240,7 @@ int main(int argc, char* argv[]) {
                 log_info(logger_cpu, "Se aviso SEG FAULT y se envio el contexto a KM");
                 free(instruccion);
                 free(contexto);
-                break;
+                //break;
             } else if (operacion == 2){                            // CP3: syscall de IO -> desalojo voluntario
                 log_info(logger_cpu, "## PID: %u - Bloqueado por IO, se libera la CPU", pid);
                 free(instruccion);
@@ -244,14 +249,13 @@ int main(int argc, char* argv[]) {
                 }
 
             // INTERRUPCIONES
-            int resultado_interrupcion =atender_interrupcion(fd_ks,fd_km,contexto,pid,logger_cpu);
+            int resultado_interrupcion = atender_interrupcion(fd_ks,fd_km,contexto,pid,logger_cpu);
 
             if (resultado_interrupcion == -1) {
                 log_error(logger_cpu,"Error al atender una interrupción del PID %u",pid);
-                proceso_en_ejecucion = false;
-                break;
+                exit(EXIT_FAILURE);
             }
-
+            log_error(logger_cpu,"PRUEBA");
             if (resultado_interrupcion == 0) {
                 log_info(logger_cpu,"El PID %u fue desalojado por una interrupción",pid);
                 free(instruccion);
