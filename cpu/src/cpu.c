@@ -152,8 +152,6 @@ int main(int argc, char* argv[]) {
     //WHILE PID
     while (1) {
         // CPU espera la llegada de un pid por parte del KS
-
-
         int pid = esperar_pid(fd_ks, logger_cpu);
         if (pid == -1) {
             log_info(logger_cpu, "Error al recibir pid");
@@ -255,7 +253,7 @@ int main(int argc, char* argv[]) {
                 log_error(logger_cpu,"Error al atender una interrupción del PID %u",pid);
                 exit(EXIT_FAILURE);
             }
-            log_error(logger_cpu,"PRUEBA");
+
             if (resultado_interrupcion == 0) {
                 log_info(logger_cpu,"El PID %u fue desalojado por una interrupción",pid);
                 free(instruccion);
