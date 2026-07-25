@@ -727,7 +727,7 @@ void guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* l
     op_code cod = MSG_INTERRUPT;
     enviar_mensaje(fd_km, &cod, sizeof(op_code));
     enviar_mensaje(fd_km, &pid, sizeof(uint32_t));
-    log_info(logger_cpu,"SERIALIZA");
+
     int size;
     void* buffer = serializar_contexto(contexto, &size, logger_cpu);
     if (buffer == NULL) {
