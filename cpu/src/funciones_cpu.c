@@ -723,16 +723,18 @@ void* serializar_contexto_inicial(t_contexto* contexto, int* tamanio_buffer, t_l
 }
 
 void guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* logger_cpu) {
+
     op_code cod = MSG_INTERRUPT;
     enviar_mensaje(fd_km, &cod, sizeof(op_code));
     enviar_mensaje(fd_km, &pid, sizeof(uint32_t));
-
+    log_info(logger_cpu,"SERIALIZA");
     int size;
     void* buffer = serializar_contexto(contexto, &size, logger_cpu);
     if (buffer == NULL) {
         log_info(logger_cpu, "Error al serializar contexto");
         exit(EXIT_FAILURE);
     }
+
     enviar_mensaje(fd_km, buffer, size);
     free(buffer);
 
@@ -974,6 +976,7 @@ int atender_interrupcion(int fd_ks, int fd_km, t_contexto* contexto,uint32_t pid
     guardar_contexto_km(fd_km, contexto, pid, logger_cpu);
 
     // avisar al KS que se interrumpió
+    
     op_code atendido = MSG_INTERRUPCION_ATENDIDA;
     enviar_mensaje(fd_ks, &atendido, sizeof(op_code));
     enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
