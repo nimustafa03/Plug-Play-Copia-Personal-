@@ -233,7 +233,7 @@ int main(int argc, char* argv[]) {
             int operacion = execute(codigo, instruccion, &contexto->registros, fd_ks, fd_km, fd_ms, pid, contexto->tabla_segmentos, logger_cpu, mapa, fd_ms_agregados, contexto);
 
             if (operacion == SEG_FAULT) {   
-                manejar_seg_fault(fd_ks, pid, logger_cpu);
+                manejar_seg_fault(fd_ks, pid, logger_cpu, fd_km);
                 log_info(logger_cpu, "## PID: %u - Finalizado por SEG_FAULT notificando a KS", pid);
                 
                 free(instruccion);
