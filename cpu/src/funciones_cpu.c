@@ -848,6 +848,17 @@ void manejar_seg_fault(int fd_ks, uint32_t pid, t_log* logger_cpu, int fd_km) {
     op_code seg_fault = MSG_SEG_FAULT;
     enviar_mensaje(fd_ks, &seg_fault, sizeof(op_code));
     enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
+
+    // ESPERAR CONFIRMACIÓN DEL SCHEDULER:
+    // Garantiza que KS ya pasó el PID a EXIT y que la red quedó limpia.
+    int size;
+    op_code* ack = recibir_mensaje(fd_ks, &size);
+    if (ack != NULL) {
+        free(ack);
+    }
+    
+    log_info(logger_cpu, "## PID: %u - Notificado SEG_FAULT a KS y confirmado", pid);
+    
     enviar_mensaje(fd_km,&seg_fault, sizeof(uint32_t));
 }
 
