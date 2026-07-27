@@ -984,3 +984,16 @@ int atender_interrupcion(int fd_ks, int fd_km, t_contexto* contexto,uint32_t pid
 
     return 0;
 }
+
+void destruir_contexto(t_contexto* contexto) {
+    if (contexto == NULL) {
+        return;
+    }
+    
+    // Destruye la lista commons y aplica free a cada t_segmento
+    if (contexto->tabla_segmentos != NULL) {
+        list_destroy_and_destroy_elements(contexto->tabla_segmentos, free);
+    }
+    
+    free(contexto);
+}
