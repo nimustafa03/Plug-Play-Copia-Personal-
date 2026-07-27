@@ -206,18 +206,20 @@ void atender_kernel_scheduler(int fd) {
           break;
 
         case MSG_STDIN: {
+          /*
           // CP3: escribir en memoria de usuario. KS envía: pid + dir_logica + tamanio + datos.
           uint32_t* pid = recibir_mensaje(fd_kernel_scheduler, &size);
           uint32_t* dir = recibir_mensaje(fd_kernel_scheduler, &size);
           uint32_t* tam = recibir_mensaje(fd_kernel_scheduler, &size);
-          void* datos  = recibir_mensaje(fd_kernel_scheduler, &size);
+          char* texto  = recibir_mensaje(fd_kernel_scheduler, &size);
+          
 
           uint32_t dir_global;
           int tr = traducir_direccion(*pid, *dir, *tam, &dir_global);
 
           if (tr == TRADUCCION_SEG_FAULT) {
             respuesta = MSG_SEG_FAULT;
-          } else if (tr == TRADUCCION_INEXISTENTE || !escribir_memoria_fisica(dir_global, *tam, datos)) {
+          } else if (tr == TRADUCCION_INEXISTENTE || !escribir_memoria_fisica(dir_global, *tam, texto)) {
             respuesta = MSG_ERROR;
           } else {
             log_info(logger, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %.*s",
@@ -228,6 +230,37 @@ void atender_kernel_scheduler(int fd) {
 
           free(pid); free(dir); free(tam); free(datos);
           break;
+          */
+           int size;
+
+          // 1. Recibir PID
+          uint32_t* pid_ptr = recibir_mensaje(fd_ks, &size);
+          uint32_t pid = *pid_ptr;
+          free(pid_ptr);
+
+          // 2. Recibir dirección lógica
+          uint32_t* dir_ptr = recibir_mensaje(fd_ks, &size);
+          uint32_t dir_logica = *dir_ptr;
+          free(dir_ptr);
+
+          // 3. Recibir tamaño
+          uint32_t* tam_ptr = recibir_mensaje(fd_ks, &size);
+          uint32_t tamanio = *tam_ptr;
+          free(tam_ptr);
+
+          // 4. Recibir el buffer/texto leído por la IO
+          char* texto = recibir_mensaje(fd_ks, &size);
+
+          // 5. Escribir el texto en la memoria física del proceso (Memory Stick / SWAP)
+          bool ok = escribir_en_memoria_proceso(pid, dir_logica, tamanio, texto);
+          free(texto);
+
+          // 6. Enviar respuesta OK/ERROR al Scheduler
+          op_code respuesta = ok ? MSG_OK : MSG_SEG_FAULT;
+          enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
+
+          break;
+
         }
 
         case MSG_STDOUT: {
