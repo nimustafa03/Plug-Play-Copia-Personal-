@@ -228,23 +228,27 @@ int main(int argc, char* argv[]) {
             // EXECUTE
             char inst[32], parametro1[32], parametro2[32];
             sscanf(instruccion, "%31s %31s %31s", inst, parametro1, parametro2);
-            log_info(logger_cpu, "## PID: %u - Ejecutando: %s - %s %s",pid, inst, parametro1, parametro2);
+            log_info(logger_cpu, "## PID: %u - Ejecutando: %s - %s %s", pid, inst, parametro1, parametro2);
 
-            //log_info(logger_cpu, "OPCODE: %d", codigo);
-            int operacion = execute(codigo, instruccion, &contexto->registros,fd_ks,fd_km,fd_ms,pid, contexto->tabla_segmentos,logger_cpu,mapa,fd_ms_agregados, contexto);
+            int operacion = execute(codigo, instruccion, &contexto->registros, fd_ks, fd_km, fd_ms, pid, contexto->tabla_segmentos, logger_cpu, mapa, fd_ms_agregados, contexto);
 
             if (operacion == SEG_FAULT) {   
-                manejar_seg_fault(fd_ks, fd_km, contexto, pid, logger_cpu);            //en caso de SEG FAULT en las operaciones MOV y COPY
+                manejar_seg_fault(fd_ks, fd_km, contexto, pid, logger_cpu);
                 log_info(logger_cpu, "Se aviso SEG FAULT y se envio el contexto a KM");
+                
+                // 1. Liberar memoria
                 free(instruccion);
-                free(contexto);
-                //break;
-            } else if (operacion == 2){                            // CP3: syscall de IO -> desalojo voluntario
+                destruir_contexto(contexto); // Usar función que libere también la lista de segmentos
+                
+                // 2. CORTAR EL CICLO INMEDIATAMENTE (No atender interrupciones ni continuar ejecucion)
+                break; 
+
+            } else if (operacion == 2) { // Bloqueo por IO -> desalojo voluntario
                 log_info(logger_cpu, "## PID: %u - Bloqueado por IO, se libera la CPU", pid);
                 free(instruccion);
-                free(contexto);                                  // se retoma con el contexto guardado en KM
-                break;                                           // vuelve a esperar_pid -> CPU libre
-                }
+                destruir_contexto(contexto);
+                break; // CPU Libre esperando nuevo PID
+            }
 
             // INTERRUPCIONES
             int resultado_interrupcion = atender_interrupcion(fd_ks,fd_km,contexto,pid,logger_cpu);
