@@ -19,6 +19,7 @@ extern t_log*logger;
 extern t_config* config; // CP3: para leer SEGMENT_MAX_SIZE en la traducción
 extern pthread_cond_t condicion_recibir_proceso;
 extern bool listo_para_recibir;
+bool interrumpido;
 
 // CP3: traduce (pid, dir_logica) a dirección física global. Retorna:
 //   TRADUCCION_OK        y deja la dir global en *dir_global_out
@@ -166,7 +167,7 @@ void*manejar_proceso(void*arg){
   log_info(logger, "## PID: %d - Imprimiendo lista de instrucciones para el proceso...", proceso->pid);
   log_info(logger,"instrucciones: %d", *instrucciones);
 
-  bool interrumpido = false;
+  interrumpido = false;
 
   while (!interrumpido && !proceso->contexto->proximo_a_detener){
     op_code*codigo = esperar_pedido_de_instruccion(fd_cpu);
@@ -191,7 +192,7 @@ void*manejar_proceso(void*arg){
         free(proxima_instruccion);
       } 
     }
-    if (*codigo == MSG_INTERRUPT || *codigo == MSG_EXIT_CPU) {
+    if (*codigo == MSG_INTERRUPT || *codigo == MSG_EXIT_CPU || *codigo == MSG_SEG_FAULT) {
       log_info(logger, "Interrumpiendo proceso...");
       interrumpido = true;
       }
@@ -503,6 +504,8 @@ bool destruir_proceso(uint32_t pid) {
       "PID: %u - Proceso destruido correctamente",
       pid
   );
+
+  interrumpido = true;
 
   return true;
 
