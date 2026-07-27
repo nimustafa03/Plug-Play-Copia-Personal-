@@ -879,45 +879,36 @@ void atender_cpu_ks(int fd_cpu) {
 
         switch (*codigo) {
             case MSG_DONE: {
-                // CP2/CP3: proceso terminó (fin de instrucciones o syscall EXIT)
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
-                // DEBUG: deserializacion - si pid_ptr==NULL el *pid_ptr de abajo SEGFAULTEA
-                log_debug(logger_ks, "[DBG][atender_cpu_ks:MSG_DONE] fd=%d - pid_ptr=%p, pid=%d", fd_cpu, (void*)pid_ptr, pid_ptr ? (int)*pid_ptr : -1);
                 Proceso* proceso = buscar_proceso_por_pid(*pid_ptr);
-                // DEBUG: puntero del proceso (NULL si ya no esta en ninguna lista viva)
-                log_debug(logger_ks, "[DBG][atender_cpu_ks:MSG_DONE] pid=%d - buscar_proceso -> ptr=%p", *pid_ptr, (void*)proceso);
                 free(pid_ptr);
-                // CP3: finalizar_proceso avisa a KM (libera memoria) + log obligatorio de fin
-                if (proceso) finalizar_proceso(proceso, "EXIT");
 
-                pthread_mutex_lock(&mutex_listas);
-                int* fd_libre2 = malloc(sizeof(int));
-                // DEBUG: heap
-                log_debug(logger_ks, "[DBG][atender_cpu_ks:MSG_DONE] malloc fd_libre2=%p (fd=%d) -> CPU libre de nuevo", (void*)fd_libre2, fd_cpu);
-                *fd_libre2 = fd_cpu;
-                list_add(listaCPUsLibres, fd_libre2);
-                pthread_mutex_unlock(&mutex_listas);
-                sem_post(&sem_hay_cpu_libre);
+                if (proceso) {
+                    // remover de EXEC antes de pasar a EXIT y liberar la CPU
+                    pthread_mutex_lock(&mutex_listas);
+                    list_remove_element(listaProcesosExec, proceso);
+                    pthread_mutex_unlock(&mutex_listas);
+
+                    finalizar_proceso(proceso, "EXIT");
+                }
+
+                liberar_cpu(fd_cpu); // libera la CPU de forma limpia para el planificador
                 break;
             }
             case MSG_SEG_FAULT: {
-                // CP3: la CPU detectó un Segmentation Fault -> se finaliza el proceso
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
-                // DEBUG: deserializacion
-                log_debug(logger_ks, "[DBG][atender_cpu_ks:MSG_SEG_FAULT] fd=%d - pid_ptr=%p, pid=%d", fd_cpu, (void*)pid_ptr, pid_ptr ? (int)*pid_ptr : -1);
                 Proceso* proceso = buscar_proceso_por_pid(*pid_ptr);
-                log_debug(logger_ks, "[DBG][atender_cpu_ks:MSG_SEG_FAULT] pid=%d - buscar_proceso -> ptr=%p", *pid_ptr, (void*)proceso);
                 free(pid_ptr);
-                if (proceso) finalizar_proceso(proceso, "SEG_FAULT");
 
-                pthread_mutex_lock(&mutex_listas);
-                int* fd_libre_sf = malloc(sizeof(int));
-                // DEBUG: heap
-                log_debug(logger_ks, "[DBG][atender_cpu_ks:MSG_SEG_FAULT] malloc fd_libre_sf=%p (fd=%d)", (void*)fd_libre_sf, fd_cpu);
-                *fd_libre_sf = fd_cpu;
-                list_add(listaCPUsLibres, fd_libre_sf);
-                pthread_mutex_unlock(&mutex_listas);
-                sem_post(&sem_hay_cpu_libre);
+                if (proceso) {
+                    pthread_mutex_lock(&mutex_listas);
+                    list_remove_element(listaProcesosExec, proceso);
+                    pthread_mutex_unlock(&mutex_listas);
+
+                    finalizar_proceso(proceso, "SEG_FAULT");
+                }
+
+                liberar_cpu(fd_cpu);
                 break;
             }
             case MSG_INTERRUPCION_ATENDIDA: {
