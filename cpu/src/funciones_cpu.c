@@ -844,8 +844,7 @@ t_list* deserializar_tabla_segmentos(void* buffer, int tamanio_buffer){
     return segmentos;
 }
 
-void manejar_seg_fault(int fd_ks, int fd_km, t_contexto* contexto, uint32_t pid, t_log* logger_cpu){
-    guardar_contexto_km(fd_km, contexto, pid, logger_cpu);
+void manejar_seg_fault(int fd_ks, uint32_t pid, t_log* logger_cpu) {
     op_code seg_fault = MSG_SEG_FAULT;
     enviar_mensaje(fd_ks, &seg_fault, sizeof(op_code));
     enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
