@@ -1497,8 +1497,8 @@ void manejar_solicitud_desalojo(uint32_t pid_issuer) {
 // para recrear los segmentos SIN compactar. Eso requiere un mensaje "¿hay espacio
 // para el PID X?" a KM que hoy no existe -> por ahora es best-effort (mueve todos).
 void intentar_desuspender_procesos() {
-    // DEBUG: frontera de funcion
     log_debug(logger_ks, "[DBG][intentar_desuspender] ENTRADA - SUSP_READY size=%d", list_size(listaProcesosSuspReady));
+    
     pthread_mutex_lock(&mutex_listas);
     while (!list_is_empty(listaProcesosSuspReady)) {
         int best = 0;
@@ -1506,21 +1506,28 @@ void intentar_desuspender_procesos() {
             Proceso* a = list_get(listaProcesosSuspReady, i);
             Proceso* b = list_get(listaProcesosSuspReady, best);
             if (a->prioridad < b->prioridad ||
-               (a->prioridad == b->prioridad && a->orden_suspension < b->orden_suspension))
+               (a->prioridad == b->prioridad && a->orden_suspension < b->orden_suspension)) {
                 best = i;
+            }
         }
-        Proceso* p = list_get(listaProcesosSuspReady, best);
-        // DEBUG: extraccion de SUSP_READY (via actualizarEstadoProceso)
+        
+        Proceso* p = list_remove(listaProcesosSuspReady, best);
+        
         log_debug(logger_ks, "[DBG][intentar_desuspender] elegido pid=%d ptr=%p (prio=%d) -> READY", p->id_proceso, (void*)p, p->prioridad);
+        
+        p->estado = READY;
+        
+        agregar_a_ready_o_cmn(p); 
+
         pthread_mutex_unlock(&mutex_listas);
 
-        actualizarEstadoProceso(p, READY); // hace su propio lock y saca de SUSP_READY
+        log_info(logger_ks, "## (%d) Pasa del estado SUSP. READY al estado READY", p->id_proceso);
         sem_post(&sem_hay_proceso_ready);
 
         pthread_mutex_lock(&mutex_listas);
     }
     pthread_mutex_unlock(&mutex_listas);
-    // DEBUG: frontera de funcion
+    
     log_debug(logger_ks, "[DBG][intentar_desuspender] SALIDA");
 }
 
