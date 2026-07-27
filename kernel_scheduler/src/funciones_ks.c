@@ -360,9 +360,10 @@ Proceso* seleccionar_proceso_a_ejecutar(char* algoritmo, int* nivel_out) {
         for (int i = 0; i < cantidadColas; i++) {
             if (!list_is_empty(colasMultinivel[i])) {
                 *nivel_out = i;
-                Proceso* elegido = list_remove(colasMultinivel[i], 0);
-                // DEBUG: extraccion de cola CMN - valor devuelto fundamental para el scheduler
-                log_debug(logger_ks, "[DBG][seleccionar_proceso] CMN: removido pid=%d ptr=%p de cola[%d] (size ahora=%d)", elegido->id_proceso, (void*)elegido, i, list_size(colasMultinivel[i]));
+                Proceso* elegido = list_get(colasMultinivel[i], 0); // consulta sin remover
+                // DEBUG: seleccion de cola CMN
+                log_debug(logger_ks, "[DBG][seleccionar_proceso] CMN: seleccionado pid=%d ptr=%p de cola[%d] (size=%d)", 
+                          elegido->id_proceso, (void*)elegido, i, list_size(colasMultinivel[i]));
                 return elegido;
             }
         }
@@ -377,9 +378,10 @@ Proceso* seleccionar_proceso_a_ejecutar(char* algoritmo, int* nivel_out) {
         log_debug(logger_ks, "[DBG][seleccionar_proceso] %s: READY vacia -> NULL", algoritmo);
         return NULL;
     }
-    Proceso* elegido = list_remove(listaProcesosReady, 0);
-    // DEBUG: extraccion de READY - valor devuelto fundamental para el scheduler
-    log_debug(logger_ks, "[DBG][seleccionar_proceso] %s: removido pid=%d ptr=%p de READY (size ahora=%d)", algoritmo, elegido->id_proceso, (void*)elegido, list_size(listaProcesosReady));
+    Proceso* elegido = list_get(listaProcesosReady, 0); // consulta sin remover
+    // DEBUG: seleccion de READY
+    log_debug(logger_ks, "[DBG][seleccionar_proceso] %s: seleccionado pid=%d ptr=%p de READY (size=%d)", 
+              algoritmo, elegido->id_proceso, (void*)elegido, list_size(listaProcesosReady));
     return elegido;
 }
 
@@ -884,27 +886,19 @@ void atender_cpu_ks(int fd_cpu) {
                 free(pid_ptr);
 
                 if (proceso) {
-                    // remover de EXEC antes de pasar a EXIT y liberar la CPU
-                    pthread_mutex_lock(&mutex_listas);
-                    list_remove_element(listaProcesosExec, proceso);
-                    pthread_mutex_unlock(&mutex_listas);
-
                     finalizar_proceso(proceso, "EXIT");
                 }
 
-                liberar_cpu(fd_cpu); // libera la CPU de forma limpia para el planificador
+                liberar_cpu(fd_cpu); 
                 break;
             }
+
             case MSG_SEG_FAULT: {
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
                 Proceso* proceso = buscar_proceso_por_pid(*pid_ptr);
                 free(pid_ptr);
 
                 if (proceso) {
-                    pthread_mutex_lock(&mutex_listas);
-                    list_remove_element(listaProcesosExec, proceso);
-                    pthread_mutex_unlock(&mutex_listas);
-
                     finalizar_proceso(proceso, "SEG_FAULT");
                 }
 
