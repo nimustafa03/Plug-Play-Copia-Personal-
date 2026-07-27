@@ -91,7 +91,7 @@ t_contexto* deserializar_contexto(void* buffer,int tamanio_buffer, t_log* logger
 void enviar_contexto(t_contexto* contexto, int fd_km, t_log* logger_cpu);
 void guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* logger_cpu); 
 void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km,t_log* logger_cpu);
-void manejar_seg_fault(int fd_ks, int fd_km, t_contexto* contexto, uint32_t pid, t_log* logger_cpu);
+void manejar_seg_fault(int fd_ks, t_contexto* contexto, uint32_t pid, t_log* logger_cpu);
 
 // OPERACIONES CON REGISTROS
 uint32_t obtener_valor(char* posicion, t_registros* registro);
