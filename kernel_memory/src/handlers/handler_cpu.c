@@ -479,6 +479,10 @@ op_code*esperar_pedido_de_instruccion(int fd_cpu){
         enviar_confirmacion_a_CPU(socket_cpu,true);
         return codigo;
     }
+    if (*codigo == MSG_SEG_FAULT){
+        log_info(logger, "OCURRIÓ UN SEGMENTATION FAULT. CORTANDO CICLO DE FETCH.");
+        return codigo;
+    }
     log_info(logger, "NO SE RECIBIÓ FETCH");
     return codigo;
 }
