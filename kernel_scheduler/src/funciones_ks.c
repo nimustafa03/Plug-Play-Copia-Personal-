@@ -902,6 +902,10 @@ void atender_cpu_ks(int fd_cpu) {
                     finalizar_proceso(proceso, "SEG_FAULT");
                 }
 
+                // Le confirmamos a la CPU que el SEG_FAULT fue procesado
+                enviar_ok_cpu(fd_cpu, MSG_OK);
+
+                // Recién ahora liberamos la CPU para el planificador
                 liberar_cpu(fd_cpu);
                 break;
             }
