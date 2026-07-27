@@ -233,14 +233,11 @@ int main(int argc, char* argv[]) {
             int operacion = execute(codigo, instruccion, &contexto->registros, fd_ks, fd_km, fd_ms, pid, contexto->tabla_segmentos, logger_cpu, mapa, fd_ms_agregados, contexto);
 
             if (operacion == SEG_FAULT) {   
-                manejar_seg_fault(fd_ks, fd_km, contexto, pid, logger_cpu);
-                log_info(logger_cpu, "Se aviso SEG FAULT y se envio el contexto a KM");
+                manejar_seg_fault(fd_ks, pid, logger_cpu);
+                log_info(logger_cpu, "## PID: %u - Finalizado por SEG_FAULT notificando a KS", pid);
                 
-                // 1. Liberar memoria
                 free(instruccion);
-                destruir_contexto(contexto); // Usar función que libere también la lista de segmentos
-                
-                // 2. CORTAR EL CICLO INMEDIATAMENTE (No atender interrupciones ni continuar ejecucion)
+                destruir_contexto(contexto);
                 break; 
 
             } else if (operacion == 2) { // Bloqueo por IO -> desalojo voluntario
