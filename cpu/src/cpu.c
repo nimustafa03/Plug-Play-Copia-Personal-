@@ -77,18 +77,30 @@ int esperar_pid(int fd_ks, t_log* logger_cpu) {
     while (1) {
         int size;
         op_code* request = recibir_mensaje(fd_ks, &size);
-        //MSG_SOLICITAR_PID
-        free(request);
-        uint32_t* pid_ptr = recibir_mensaje(fd_ks, &size);
-
-        if (pid_ptr == NULL) {
+        
+        if (request == NULL) {
+            log_error(logger_cpu, "Conexión cerrada por el Scheduler");
             return -1;
         }
-        uint32_t pid = *pid_ptr;
-        free(pid_ptr);
 
-        log_info(logger_cpu, "PID recibido: %u", pid);
-        return pid;
+        op_code codigo = *request;
+        free(request);
+
+        // si es la orden explícita de recibir PID:
+        if (codigo == MSG_SOLICITAR_PID) {
+            uint32_t* pid_ptr = recibir_mensaje(fd_ks, &size);
+            if (pid_ptr == NULL) {
+                return -1;
+            }
+            uint32_t pid = *pid_ptr;
+            free(pid_ptr);
+
+            log_info(logger_cpu, "PID recibido: %u", pid);
+            return pid;
+        } else {
+            // si llego un MSG_OK (10) o cualquier respuesta fuera de tiempo, se descarta y se sigue esperando
+            log_debug(logger_cpu, "[DBG] Se recibió opcode %d en lugar de MSG_SOLICITAR_PID. Descartando...", codigo);
+        }
     }
 }
 
