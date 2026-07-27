@@ -844,7 +844,7 @@ t_list* deserializar_tabla_segmentos(void* buffer, int tamanio_buffer){
     return segmentos;
 }
 
-void manejar_seg_fault(int fd_ks, uint32_t pid, t_log* logger_cpu) {
+void manejar_seg_fault(int fd_ks, uint32_t pid, t_log* logger_cpu, int fd_km) {
     op_code seg_fault = MSG_SEG_FAULT;
     enviar_mensaje(fd_ks, &seg_fault, sizeof(op_code));
     enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
@@ -858,6 +858,8 @@ void manejar_seg_fault(int fd_ks, uint32_t pid, t_log* logger_cpu) {
     }
     
     log_info(logger_cpu, "## PID: %u - Notificado SEG_FAULT a KS y confirmado", pid);
+    
+    enviar_mensaje(fd_km,&seg_fault, sizeof(uint32_t));
 }
 
 int hay_mensaje_completo(int fd){
