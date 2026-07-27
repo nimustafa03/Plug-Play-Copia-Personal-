@@ -1517,7 +1517,7 @@ void intentar_desuspender_procesos() {
         
         p->estado = READY;
         
-        agregar_a_ready_o_cmn(p); 
+        procesoAReady(p); 
 
         pthread_mutex_unlock(&mutex_listas);
 
