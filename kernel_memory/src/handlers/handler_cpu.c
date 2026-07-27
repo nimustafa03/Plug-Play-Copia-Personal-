@@ -140,6 +140,17 @@ void atender_mensaje_cpu(void) {
                 break;
             }
 
+            case MSG_INTERRUPT: {
+                log_info(logger, "INTERRUPCION RECIBIDA.");
+                uint32_t pid = recibir_pid();
+                t_contexto*contexto = recibir_contexto();
+                actualizar_contexto(pid, contexto);
+                pthread_mutex_lock(&mutex_envios_cpu);
+                enviar_confirmacion_a_CPU(socket_cpu,true);
+                pthread_mutex_unlock(&mutex_envios_cpu);
+                break;
+            }
+
             default:
                 log_warning(
                     logger,
