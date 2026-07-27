@@ -48,7 +48,7 @@ uint32_t tamanio_registro(char* nombre_registro) {
     if (strcmp(nombre_registro, "EDX") == 0) return sizeof(uint32_t);
     if (strcmp(nombre_registro, "SI") == 0) return sizeof(uint32_t);
     if (strcmp(nombre_registro, "DI") == 0) return sizeof(uint32_t);
-    return -1;
+    return 0;
 }
 
 /*------------------------ INSTRUCCIONES ------------------------*/
@@ -64,7 +64,7 @@ void sum(char* instruccion, t_registros* registro) {
     uint32_t resultado = valor_destino + valor_origen;
     escribir_registro(posicion_destino, registro, resultado);
 
-registro->pc++;
+    registro->pc++;
 }
 
 // SUB
@@ -78,12 +78,11 @@ void sub(char* instruccion, t_registros* registro) {
     uint32_t resultado = valor_destino - valor_origen;
     escribir_registro(posicion_destino, registro, resultado);
 
-registro->pc++;
+    registro->pc++;
 }
 
 // SET
 void set(char* instruccion, t_registros* registro) {
-
     char posicion_destino[32];
     char valor_str[32];
     sscanf(instruccion, "%*s %s %s", posicion_destino, valor_str);
@@ -91,12 +90,11 @@ void set(char* instruccion, t_registros* registro) {
     uint32_t valor = atoi(valor_str);
     escribir_registro(posicion_destino, registro, valor);
 
-registro->pc++;
+    registro->pc++;
 }
 
 // JNZ
 void jnz(char* instruccion, t_registros* registro) {
-
     char registro_destino[32];
     char pc_ptr[32];
     sscanf(instruccion, "%*s %31s %31s", registro_destino, pc_ptr);
@@ -105,8 +103,8 @@ void jnz(char* instruccion, t_registros* registro) {
     uint32_t nuevo_pc = (uint32_t) strtol(pc_ptr, NULL, 10);
 
     if (valor != 0) {
-    registro->pc = nuevo_pc;
-        }  else {
+        registro->pc = nuevo_pc;
+    } else {
         registro->pc++;
     }
 }
@@ -117,7 +115,7 @@ void noop(t_registros* registros) {
 }
 
 // INIT_PROC
-void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid, t_log* logger_cpu){
+void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid, t_log* logger_cpu) {
     char archivo[256];
     int prioridad;
     sscanf(instruccion, "%*s %255s %d", archivo, &prioridad);
@@ -137,7 +135,8 @@ void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint
         exit(EXIT_FAILURE);
     }
     if (*respuesta != MSG_OK) {
-        log_info(logger_cpu, "En INIC PROC se recibio una respuesta distinta a la esperada: %d", *respuesta);
+        log_info(logger_cpu, "En INIT PROC se recibio una respuesta distinta a la esperada: %d", *respuesta);
+        free(respuesta);
         exit(EXIT_FAILURE);
     }
 
@@ -146,65 +145,64 @@ void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint
 }
 
 // MOV_IN
-int mov_in(char* instruccion,t_registros* registros,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3],t_list* tabla_segmentos, t_log* logger_cpu){
+int mov_in(char* instruccion, t_registros* registros, t_mapa_memory_sticks_cpu* mapa, int fd_ms, int fd_ms_agregados[3], t_list* tabla_segmentos, t_log* logger_cpu) {
     char registro_destino[8];
 
-    sscanf(instruccion,"%*s %7s",registro_destino);
+    sscanf(instruccion, "%*s %7s", registro_destino);
 
     uint32_t direccion_logica = registros->si;
     uint32_t tamanio = tamanio_registro(registro_destino);
 
-    if (tamanio == 0){
+    if (tamanio == 0) {
         log_info(logger_cpu, "Error de tamanio en MOV IN");
         exit(EXIT_FAILURE);
     }
-    int direccion_fisica =memory_management_unit(direccion_logica,tamanio,tabla_segmentos, logger_cpu);
+    int direccion_fisica = memory_management_unit(direccion_logica, tamanio, tabla_segmentos, logger_cpu);
     if (direccion_fisica == SEG_FAULT)
         return SEG_FAULT;
 
-    void* datos = lectura_ms(direccion_fisica,tamanio,mapa,fd_ms,fd_ms_agregados, logger_cpu);
-    if (datos == NULL){
+    void* datos = lectura_ms(direccion_fisica, tamanio, mapa, fd_ms, fd_ms_agregados, logger_cpu);
+    if (datos == NULL) {
         log_info(logger_cpu, "LECTURA devolvio NULL");
         exit(EXIT_FAILURE);
     }
     uint32_t valor = 0;
 
-    memcpy(&valor,datos,tamanio);
+    memcpy(&valor, datos, tamanio);
     free(datos);
 
-    escribir_registro(registro_destino,registros,valor);
+    escribir_registro(registro_destino, registros, valor);
     registros->pc++;
     return 0;
 }
 
 // MOV_OUT
-
-int mov_out(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3], t_log* logger_cpu){
+int mov_out(char* instruccion, t_registros* registros, t_list* tabla_segmentos, t_mapa_memory_sticks_cpu* mapa, int fd_ms, int fd_ms_agregados[3], t_log* logger_cpu) {
     char registro_origen[8];
 
-    sscanf(instruccion,"%*s %7s",registro_origen);
+    sscanf(instruccion, "%*s %7s", registro_origen);
 
     uint32_t direccion_logica = registros->di;
     uint32_t tamanio = tamanio_registro(registro_origen);
 
-    if (tamanio == 0){
+    if (tamanio == 0) {
         log_info(logger_cpu, "Error de tamanio en MOV OUT");
         exit(EXIT_FAILURE);
     }
-    int direccion_fisica =memory_management_unit(direccion_logica,tamanio,tabla_segmentos, logger_cpu);
+    int direccion_fisica = memory_management_unit(direccion_logica, tamanio, tabla_segmentos, logger_cpu);
     if (direccion_fisica == SEG_FAULT)
         return SEG_FAULT;
 
-    uint32_t valor = obtener_valor(registro_origen,registros);
+    uint32_t valor = obtener_valor(registro_origen, registros);
 
-    escritura_ms((uint32_t)direccion_fisica,&valor,tamanio,mapa,fd_ms,fd_ms_agregados,logger_cpu);
+    escritura_ms((uint32_t)direccion_fisica, &valor, tamanio, mapa, fd_ms, fd_ms_agregados, logger_cpu);
 
     registros->pc++;
     return 0;
 }
 
 // COPY_MEM
-int copy_mem(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_mapa_memory_sticks_cpu* mapa_ms,int fd_ms,int fd_ms_agregados[3],uint32_t pid,t_log* logger_cpu){
+int copy_mem(char* instruccion, t_registros* registros, t_list* tabla_segmentos, t_mapa_memory_sticks_cpu* mapa_ms, int fd_ms, int fd_ms_agregados[3], uint32_t pid, t_log* logger_cpu) {
     char registro_tamanio[8];
 
     sscanf(instruccion, "%*s %7s", registro_tamanio);
@@ -214,26 +212,26 @@ int copy_mem(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_
     uint32_t direccion_logica_origen = registros->si;
     uint32_t direccion_logica_destino = registros->di;
 
-    int direccion_fisica_origen = memory_management_unit(direccion_logica_origen,tamanio,tabla_segmentos, logger_cpu);
+    int direccion_fisica_origen = memory_management_unit(direccion_logica_origen, tamanio, tabla_segmentos, logger_cpu);
     if (direccion_fisica_origen == SEG_FAULT)
         return SEG_FAULT;
         
-    int direccion_fisica_destino = memory_management_unit(direccion_logica_destino,tamanio,tabla_segmentos,logger_cpu);
+    int direccion_fisica_destino = memory_management_unit(direccion_logica_destino, tamanio, tabla_segmentos, logger_cpu);
     if (direccion_fisica_destino == SEG_FAULT)
         return SEG_FAULT;
 
-    void* buffer = lectura_ms(direccion_fisica_origen,tamanio,mapa_ms,fd_ms,fd_ms_agregados,logger_cpu);
+    void* buffer = lectura_ms(direccion_fisica_origen, tamanio, mapa_ms, fd_ms, fd_ms_agregados, logger_cpu);
     if (buffer == NULL) {
         log_info(logger_cpu, "LECTURA devolvio NULL");
         exit(EXIT_FAILURE);
     }
 
-    escritura_ms(direccion_fisica_destino,buffer,tamanio,mapa_ms,fd_ms,fd_ms_agregados,logger_cpu);
+    escritura_ms(direccion_fisica_destino, buffer, tamanio, mapa_ms, fd_ms, fd_ms_agregados, logger_cpu);
 
     free(buffer);
     registros->pc++;
 
-    log_info(logger_cpu,"## PID: %u - Ejecutando: COPY_MEM - %s",pid,registro_tamanio);
+    log_info(logger_cpu, "## PID: %u - Ejecutando: COPY_MEM - %s", pid, registro_tamanio);
     return 0;
 }
 
@@ -247,20 +245,19 @@ int syscall_stdin(char* instruccion, t_registros* registros, int fd_ks, int fd_k
     uint32_t tamanio = obtener_valor(registro_tamanio, registros);
 
     registros->pc++; 
-                                             // CP3: la instruccion ya se emitio
     guardar_contexto_km(fd_km, contexto, pid, logger_cpu);
 
-    op_code codigo = MSG_STDIN;                                 // CP3: aviso al KS, NO se espera respuesta
+    op_code codigo = MSG_STDIN;
     enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
     enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
     enviar_mensaje(fd_ks, &direccion_logica, sizeof(uint32_t));
     enviar_mensaje(fd_ks, &tamanio, sizeof(uint32_t));
 
-    return 2;                                                  // CP3: bloqueado por IO -> la CPU se libera
+    return 2; // bloqueado por IO -> la CPU se libera
 }
 
 // STDOUT
-int syscall_stdout(char* instruccion, t_registros* registros, int fd_ks, int fd_km, uint32_t pid, t_contexto* contexto, t_log* logger_cpu){
+int syscall_stdout(char* instruccion, t_registros* registros, int fd_ks, int fd_km, uint32_t pid, t_contexto* contexto, t_log* logger_cpu) {
     char registro_direccion[32];
     char registro_tamanio[32];
     sscanf(instruccion, "%*s %31s %31s", registro_direccion, registro_tamanio);
@@ -268,24 +265,24 @@ int syscall_stdout(char* instruccion, t_registros* registros, int fd_ks, int fd_
     uint32_t direccion_logica = obtener_valor(registro_direccion, registros);
     uint32_t tamanio = obtener_valor(registro_tamanio, registros);
 
-    registros->pc++;                                            // CP3: la instruccion ya se emitio
+    registros->pc++;
     guardar_contexto_km(fd_km, contexto, pid, logger_cpu);
 
-    op_code codigo = MSG_STDOUT;                                // CP3: aviso al KS, NO se espera respuesta
+    op_code codigo = MSG_STDOUT;
     enviar_mensaje(fd_ks, &codigo, sizeof(op_code));
     enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
     enviar_mensaje(fd_ks, &direccion_logica, sizeof(uint32_t));
     enviar_mensaje(fd_ks, &tamanio, sizeof(uint32_t));
 
-    return 2;                                                  // CP3: bloqueado por IO -> la CPU se libera
+    return 2; // bloqueado por IO -> la CPU se libera
 }
 
 // MEM_ALLOC
-void syscall_mem_alloc(char* instruccion,t_registros* registros,int fd_ks,uint32_t pid, t_log* logger_cpu) {
+void syscall_mem_alloc(char* instruccion, t_registros* registros, int fd_ks, uint32_t pid, t_log* logger_cpu) {
     char id_segmento_str[32];
     char tamanio_str[32];
 
-    sscanf(instruccion,"%*s %31s %31s",id_segmento_str,tamanio_str);
+    sscanf(instruccion, "%*s %31s %31s", id_segmento_str, tamanio_str);
 
     op_code codigo = MSG_MEM_ALLOC;
     uint32_t id_segmento = (uint32_t) atoi(id_segmento_str);
@@ -306,7 +303,8 @@ void syscall_mem_alloc(char* instruccion,t_registros* registros,int fd_ks,uint32
     if (*respuesta == MSG_OK) {
         registros->pc++;
     } else {
-        log_info(logger_cpu, "En MEM ALLOC se recibio respuesta inesperada: %d.",*respuesta);
+        log_info(logger_cpu, "En MEM ALLOC se recibio respuesta inesperada: %d.", *respuesta);
+        free(respuesta);
         exit(EXIT_FAILURE);
     }
     free(respuesta);
@@ -336,48 +334,51 @@ void syscall_mem_free(char* instruccion, t_registros* registros, int fd_ks, uint
     if (*respuesta == MSG_OK) {
         registros->pc++;
     } else {
-        log_info(logger_cpu, "En MEM FREE se recibio respuesta inesperada: %d.",*respuesta);
+        log_info(logger_cpu, "En MEM FREE se recibio respuesta inesperada: %d.", *respuesta);
+        free(respuesta);
         exit(EXIT_FAILURE);
     }
     free(respuesta);
 }
 
 // EXIT
-void syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log* logger_cpu){
+void syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log* logger_cpu) {
     if (contexto == NULL) {
         log_info(logger_cpu, "Error al utilizar contexto en instruccion: EXIT");
         exit(EXIT_FAILURE);
     }
+
     // Avisa a KS que el proceso finalizo
     op_code cod = MSG_DONE;
     enviar_mensaje(fd_ks, &cod, sizeof(op_code));
-    enviar_mensaje(fd_ks, &pid, sizeof(pid));
+    enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
 
     // Se envia contexto final a KM
-
     contexto->proximo_a_detener = true;
 
     op_code codigo = MSG_EXIT_CPU;
     enviar_mensaje(fd_km, &codigo, sizeof(op_code));
     log_info(logger_cpu, "Se envio MSG_EXIT_CPU");
-    enviar_mensaje(fd_km, &pid, sizeof(pid));
+    enviar_mensaje(fd_km, &pid, sizeof(uint32_t));
     log_info(logger_cpu, "Se envio PID");
 
     int size;
     void* buffer = serializar_contexto(contexto, &size, logger_cpu);
     if (buffer == NULL) {
-    log_info(logger_cpu, "Error al serializar el contexto");
+        log_info(logger_cpu, "Error al serializar el contexto");
         exit(EXIT_FAILURE);
     }
 
     enviar_mensaje(fd_km, buffer, size);
     op_code* ok = recibir_mensaje(fd_km, &size);
-    if (ok == NULL){
+    if (ok == NULL) {
         log_info(logger_cpu, "Se recibio NULL en instruccion EXIT");
         exit(EXIT_FAILURE);
     }
     if (*ok != MSG_OK) {
         log_info(logger_cpu, "Se recibio un mensaje distinto al esperado: %d", *ok);
+        free(ok);
+        free(buffer);
         exit(EXIT_FAILURE);
     }
 
@@ -418,7 +419,6 @@ int syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* 
     enviar_mensaje(fd_ks, nombre, strlen(nombre) + 1);
     enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
 
-    // bloqueante — espera hasta que KS lo desbloquee
     int size; 
     op_code* ok = recibir_mensaje(fd_ks, &size);
     if (ok == NULL)
@@ -462,13 +462,13 @@ int syscall_sleep(char* instruccion, int fd_ks, int fd_km, uint32_t pid, t_regis
     sscanf(instruccion, "SLEEP %31s", tiempo_str);
     int tiempo = atoi(tiempo_str);
 
-    registros->pc++;                                            // CP3: la instruccion ya se emitio
+    registros->pc++;
     guardar_contexto_km(fd_km, contexto, pid, logger_cpu);
 
-    op_code cod = MSG_SLEEP;                                    // CP3: aviso al KS, NO se espera respuesta
+    op_code cod = MSG_SLEEP;
     enviar_mensaje(fd_ks, &cod, sizeof(op_code));
     enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
     enviar_mensaje(fd_ks, &tiempo, sizeof(int));
 
-    return 2;                                                  // CP3: bloqueado por IO -> la CPU se libera
+    return 2; // bloqueado por IO -> la CPU se libera
 }
