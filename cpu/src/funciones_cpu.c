@@ -379,7 +379,7 @@ t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu) {
 }
 
 
-int actualizar_conexiones_ms(t_info_memory_stick_cpu* info_ms,t_log* logger_cpu) {
+int actualizar_conexiones_ms(t_info_memory_stick_cpu* info_ms,t_log* logger_cpu,int identificador_cpu) {
     if (info_ms == NULL)
         return -1;
 
@@ -391,6 +391,8 @@ int actualizar_conexiones_ms(t_info_memory_stick_cpu* info_ms,t_log* logger_cpu)
 
     op_code handshake = MSG_HANDSHAKE_CPU;
     enviar_mensaje(fd_ms, &handshake, sizeof(op_code));
+    enviar_mensaje(fd_ms,&identificador_cpu,sizeof(int));
+
     int size;
     op_code* respuesta = recibir_mensaje(fd_ms, &size);
         if (respuesta == NULL ||size != sizeof(op_code) ||*respuesta != MSG_OK){
@@ -404,7 +406,7 @@ int actualizar_conexiones_ms(t_info_memory_stick_cpu* info_ms,t_log* logger_cpu)
     return fd_ms;
 }
 
-int conectar_memory_sticks_faltantes(t_mapa_memory_sticks_cpu* mapa,t_log* logger_cpu){
+int conectar_memory_sticks_faltantes(t_mapa_memory_sticks_cpu* mapa,t_log* logger_cpu,int identificador_cpu){
     if (mapa->cantidad <= ms_conectados) 
         return 0;
 
@@ -412,7 +414,7 @@ int conectar_memory_sticks_faltantes(t_mapa_memory_sticks_cpu* mapa,t_log* logge
 
         t_info_memory_stick_cpu* nuevo_ms =&mapa->memory_sticks[i];
 
-        int nuevo_fd = actualizar_conexiones_ms(nuevo_ms, logger_cpu);
+        int nuevo_fd = actualizar_conexiones_ms(nuevo_ms, logger_cpu, identificador_cpu);
         if (nuevo_fd == -1) {
             log_warning(logger_cpu,"No se pudo conectar al MS %u: %s:%s",i,nuevo_ms->ip,nuevo_ms->puerto);
             return -1;

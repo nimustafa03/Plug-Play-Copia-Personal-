@@ -88,8 +88,8 @@ extern bool interrupcion_en_espera;
 // MANEJO DE INFORMACION
 t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu);
 void destruir_mapa_memory_sticks(t_mapa_memory_sticks_cpu* mapa);
-int conectar_memory_sticks_faltantes(t_mapa_memory_sticks_cpu* mapa,t_log* logger_cpu);
-int actualizar_conexiones_ms(t_info_memory_stick_cpu* info_ms,t_log* logger_cpu);
+int conectar_memory_sticks_faltantes(t_mapa_memory_sticks_cpu* mapa,t_log* logger_cpu, int identificador_cpu);
+int actualizar_conexiones_ms(t_info_memory_stick_cpu* info_ms,t_log* logger_cpu, int identificador_cpu);
 int buscar_indice_ms(uint32_t direccion_global,t_mapa_memory_sticks_cpu* mapa);
 int obtener_fd_ms(uint32_t indice_ms,int fd_ms,int fd_ms_agregados[3]);
 
