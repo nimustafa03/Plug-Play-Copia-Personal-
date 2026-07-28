@@ -12,6 +12,7 @@ void destruir_administrador_procesos(void);
 
 char*generar_lista_instrucciones(char*path);
 
+
 bool crear_proceso(uint32_t pid, char*path);
 bool inicializar_proceso(uint32_t pid,int fd_cpu);
 bool destruir_proceso(uint32_t pid);

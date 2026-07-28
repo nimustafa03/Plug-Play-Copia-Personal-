@@ -19,7 +19,6 @@ extern t_log*logger;
 extern t_config* config; // CP3: para leer SEGMENT_MAX_SIZE en la traducción
 extern pthread_cond_t condicion_recibir_proceso;
 extern bool listo_para_recibir;
-bool interrumpido;
 
 // CP3: traduce (pid, dir_logica) a dirección física global. Retorna:
 //   TRADUCCION_OK        y deja la dir global en *dir_global_out
@@ -137,82 +136,93 @@ bool crear_proceso(uint32_t pid, char*path){
 }
 
 char*devolver_instruccion(uint32_t pc,char*lista_instrucciones){
+  if (lista_instrucciones == NULL) return NULL;
 
-    char*instruccion;
-    int contador = 0; // NICO M: Según los ejemplos, el PC tomaría la primera linea de una lista de instrucciones como 1.
-    char*copia_lista_instrucciones = string_duplicate(lista_instrucciones); // NICO M: CREO que string_split() rompe el string que se le pase. No queremos que la lista de instrucciones se rompa.
-    char** tokenizado = string_split(copia_lista_instrucciones,"\n"); 
-    do
-    {
-        instruccion = string_duplicate(tokenizado[contador]);
-        // log_info(logger, "Instruccion %d: %s",contador, instruccion);
-        contador++;
-    } while (contador-1 != pc && instruccion != NULL); // NICO M: Nos movemos por el array tokenizado hasta donde nos indique el PC, siempre y cuando no nos encontremos en un espacio inválido, lo que indicaría que el PC se sale del rango de la lista.
-    free(copia_lista_instrucciones);
-    if (tokenizado[contador-1] == NULL){
-      string_array_destroy(tokenizado);
-      return NULL;
-    }
-    string_array_destroy(tokenizado); // NICO M: Eliminamos el tokenizado, para liberar memoria.
-    return instruccion;
+  int contador = 0; // NICO M: Según los ejemplos, el PC tomaría la primera linea de una lista de instrucciones como 1.
+  char*copia_lista_instrucciones = string_duplicate(lista_instrucciones); // NICO M: CREO que string_split() rompe el string que se le pase. No queremos que la lista de instrucciones se rompa.
+  char** tokenizado = string_split(copia_lista_instrucciones,"\n"); 
+  while (tokenizado[contador] != NULL)
+  {
+      contador++;
+  } 
+  char*instruccion = NULL;
+  if (pc < contador){
+    instruccion = string_duplicate(tokenizado[pc]);
+  }
+  string_array_destroy(tokenizado); // NICO M: Eliminamos el tokenizado, para liberar memoria.
+  free(copia_lista_instrucciones);
+  return instruccion;
 }
 
 void*manejar_proceso(void*arg){
   t_args_proceso*args = (t_args_proceso*) arg;
-  log_info(logger, "Comenzando manejo del proceso de PID %d.", args->proceso->pid);
+  uint32_t pid_local = args->proceso->pid;
+  log_info(logger, "Comenzando manejo del proceso de PID %d.", pid_local);
   int fd_cpu = args->fd_cpu;
   t_proceso_memoria*proceso = args->proceso;
 
   char * instrucciones = proceso->lista_instrucciones;
-  log_info(logger, "## PID: %d - Imprimiendo lista de instrucciones para el proceso...", proceso->pid);
-  log_info(logger,"instrucciones: %d", *instrucciones);
+  if (instrucciones != NULL){
+    log_info(logger, "Instrucciones cargadas correctamente");
+  }
+  log_info(logger, "## PID: %d - Imprimiendo lista de instrucciones para el proceso...", pid_local);
+  log_info(logger,"instrucciones: %s", instrucciones);
 
-  interrumpido = false;
+  
+  bool interrumpido_local = false;
 
-  while (!interrumpido && !proceso->contexto->proximo_a_detener){
+  while (!interrumpido_local && !proceso->contexto->proximo_a_detener){
+    t_proceso_memoria*proceso_actual = obtener_proceso(pid_local);
+    if (proceso_actual == NULL || proceso_actual->contexto == NULL || proceso_actual->contexto->proximo_a_detener){
+      break;
+    }
+
     op_code*codigo = esperar_pedido_de_instruccion(fd_cpu);
 
+    if (codigo == NULL){
+      log_error(logger, "Se perdió la conexión con el socket CPU");
+      break;
+    }
     if (*codigo == MSG_FETCH_CPU){
       uint32_t pc = recibir_pc(fd_cpu);
-      log_info(logger, "## PID: %d - Recibido PC: %d.", proceso->pid, pc);
+      log_info(logger, "## PID: %d - Recibido PC: %d.", pid_local, pc);
+
       char*proxima_instruccion = devolver_instruccion(pc, instrucciones);
       log_info(logger, "Busqueda de instrucción concluida.");
+
       if (proxima_instruccion == NULL)
       {
-        log_error(logger, "## PID: %d - Obtener instruccion: %d - INSTRUCCION FUERA DE RANGO.", proceso->pid, pc);
+        log_error(logger, "## PID: %d - Obtener instruccion: %d - INSTRUCCION FUERA DE RANGO.", pid_local, pc);
         enviar_confirmacion_a_CPU(fd_cpu,false);
         free(proxima_instruccion);
       }
       else
       {
-        log_info(logger,"## PID: %d - Obtener instrucción: %d - Instrucción: %s", proceso->pid,pc,proxima_instruccion);
+        log_info(logger,"## PID: %d - Obtener instrucción: %d - Instrucción: %s", pid_local,pc,proxima_instruccion);
         enviar_confirmacion_a_CPU(fd_cpu,true);
         enviar_proxima_instruccion_a_cpu(fd_cpu,proxima_instruccion);
-        notificar_segmentos_a_cpu(proceso->contexto);
+
+        if (proceso_actual->contexto != NULL) {notificar_segmentos_a_cpu(proceso->contexto);}
         free(proxima_instruccion);
       } 
     }
+
     if (*codigo == MSG_INTERRUPT || *codigo == MSG_EXIT_CPU || *codigo == MSG_SEG_FAULT) {
       log_info(logger, "Interrumpiendo proceso...");
-      interrumpido = true;
+      interrumpido_local = true;
       }
+    free(codigo);
   }
 
-  log_info(logger, "Saliendo del ciclo de FETCH");
-  if (proceso->contexto->proximo_a_detener) {
-    log_info(logger, "## PID: %d - El proceso ha concluido y será eliminado.", proceso -> pid);
-    //destruir_proceso(proceso->pid);
-    //log_info(logger, "## PID: %d - Proceso eliminado.",proceso -> pid);
-  }
+  log_info(logger, "## PID: %d - Saliendo del ciclo de FETCH", pid_local);
   
   log_info(logger, "Liberando memoria...");
   free(args);
-  int*returnval = malloc(sizeof(1));
 
   log_info(logger,"Reactivando recepción de procesos.");
   listo_para_recibir = true;
   pthread_cond_signal(&condicion_recibir_proceso); // NICO M: Esto sirve para que volvamos a aceptar pedidos de iniciar nuevos procesos.
-  pthread_exit(returnval);
+  return NULL;
 }
 
 bool inicializar_proceso(uint32_t pid, int fd_cpu) {
@@ -244,8 +254,11 @@ bool inicializar_proceso(uint32_t pid, int fd_cpu) {
   t_args_proceso*args = malloc(sizeof(t_args_proceso));
   args->fd_cpu = fd_cpu;
   args->proceso = proceso;
+
   pthread_t nuevo_proceso;
-  pthread_create(&nuevo_proceso, NULL, manejar_proceso,args);
+  if (pthread_create(&nuevo_proceso, NULL, manejar_proceso,args) == 0){
+    pthread_detach(nuevo_proceso); 
+  }
   // free(args);
 
   log_info(logger, "Proceso creado");
@@ -505,8 +518,6 @@ bool destruir_proceso(uint32_t pid) {
       pid
   );
 
-  interrumpido = true;
-
   return true;
 
 }
@@ -549,18 +560,26 @@ void destruir_administrador_procesos(void) {
 }
 
 bool actualizar_contexto(uint32_t p,t_contexto*contexto){
-  uint32_t pid = p;
-  char*key = pid_to_key(pid);
-  
-  if (!existe_proceso(pid)){
-    log_error(logger, "## ERROR: EL PID %d NO CORRESPONDE A UN PROCESO REGISTRADO", pid);
-    return false;
-  }
+   char* key = pid_to_key(p);
+    if (key == NULL) {
+        log_error(logger, "## ERROR: No se pudo generar la clave para el PID %u", p);
+        return false;
+    }
 
-  t_proceso_memoria *proceso = dictionary_get(administrador.procesos_por_pid, key);
+    t_proceso_memoria *proceso = dictionary_get(administrador.procesos_por_pid, key);
+    free(key); // <--- Liberación indispensable para evitar fugas de memoria
 
-  proceso->contexto = contexto;
+    if (proceso == NULL) {
+        log_warning(logger, "## WARNING: El PID %u ya no existe en el diccionario (fue destruido por el Scheduler).", p);
+        return false;
+    }
 
-  return true;
+    // Opcional: Si el contexto anterior requiere ser liberado antes de reasignar
+    if (proceso->contexto != NULL && proceso->contexto != contexto) {
+        // destruir_contexto(proceso->contexto); // Activar si la CPU devuelve un contexto totalmente nuevo malloc'eado
+    }
+
+    proceso->contexto = contexto;
+    return true;
 
 }
