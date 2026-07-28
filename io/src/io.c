@@ -1,15 +1,5 @@
 // =============================================================
-//  io.c  —  Módulo IO
-//  Cómo ejecutar: ./bin/io io.config [tipo]
-//  Tipos posibles: STDIN / STDOUT / SLEEP
-//
-//  Responsable CP1:
-//    Bianca → cliente IO→KS
-//
-//  Te toca conectarte al Kernel Scheduler e informar tu tipo.
-//  Dale que se puede
-
-// CP2: Bianca
+Bianca
 // =============================================================
  
 #include <stdio.h>
@@ -79,12 +69,20 @@ int main(int argc, char* argv[]) {
     // 2. Esperar OK 
     int size_resp;
     op_code* respuesta = recibir_mensaje(fd_ks, &size_resp);
+
     
-    if (*respuesta == MSG_OK) {
+    if (respuesta != NULL && *respuesta == MSG_OK) {
         // Log obligatorio: log_info(logger, "## Conectado a Kernel Scheduler");
         log_info(logger, "## Conectado a Kernel Scheduler");
+        free(respuesta); // Liberar la memoria del mensaje recibido
+    } else {
+        log_error(logger, "Error al recibir respuesta de handshake de Kernel Scheduler");
+        if (respuesta != NULL) free(respuesta);
+        close(fd_ks);
+        config_destroy(config);
+        log_destroy(logger);
+        return EXIT_FAILURE;
     }
-    free(respuesta); // Liberar la memoria del mensaje recibido
     
     // informamos a KS quE tipo de IO somos (STDIN/STDOUT/SLEEP),
     // asi puede elegir la IO correcta para cada syscall
@@ -118,14 +116,22 @@ int main(int argc, char* argv[]) {
                 // extraer cadena de caracteres
                 int size_cant;
                 int* cant_ptr = recibir_mensaje(fd_ks, &size_cant);
+
+                if (cant_ptr == NULL){
+                    log_error(logger, "Error al recibir cantidad de caracteres para STDIN");
+                    break;
+                }
+
                 int cant_carac = *cant_ptr;
                 free(cant_ptr);
 
                 // Validación de tipo de interfaz por seguridad
-                    if (strcmp(tipo_io, "STDIN") != 0) {
-                        log_error(logger, "Error: Esta interfaz no es de tipo STDIN.");
-                        break;
-                    }
+                if (strcmp(tipo_io, "STDIN") != 0) {
+                    log_error(logger, "Error: Esta interfaz no es de tipo STDIN.");
+                    op_code error = MSG_ERROR;
+                    enviar_mensaje(fd_ks, &error, sizeof(op_code));
+                    break;
+                }
 
                 log_info(logger, "## PID: %d - Ingrese %d caracteres:" , pid, cant_carac);
                 
@@ -135,8 +141,8 @@ int main(int argc, char* argv[]) {
                     buffer_leido[strcspn(buffer_leido, "\n")] = '\0';
                 }; 
 
-
-                char* texto_final = calloc(1, cant_carac); // garantizar que el ultimo byte sea \0
+                // reserva espacio suficiente en caso de \0
+                char* texto_final = calloc(1, cant_carac + 1); // garantizar que el ultimo byte sea \0
                 int longitud_leida = strlen(buffer_leido);
 
                 for (int i = 0; i < cant_carac; i++) {
@@ -144,7 +150,7 @@ int main(int argc, char* argv[]) {
                 }
 
                 // a stdin no se le manda msg_done, se devuelve la cadena leida
-                enviar_mensaje(fd_ks, texto_final, cant_carac);
+                enviar_mensaje(fd_ks, texto_final, cant_carac + 1);
                 free(buffer_leido);
                 free(texto_final);
                 break;
@@ -202,7 +208,7 @@ int main(int argc, char* argv[]) {
             }
 		
             default: 
-		log_error(logger, "ERROR, se espera STDIN/STDOUT/SLEEP y se recibió: %d", *orden);
+		        log_error(logger, "ERROR, se espera STDIN/STDOUT/SLEEP y se recibió: %d", *orden);
                 break;
             }
 
