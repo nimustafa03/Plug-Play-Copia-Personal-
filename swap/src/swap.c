@@ -18,6 +18,7 @@ t_config* config;
 
 int   swap_fd;        // fd del archivo de swap
 int   block_size;
+int swap_size;
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -38,17 +39,24 @@ int main(int argc, char* argv[]) {
     char* km_ip    = config_get_string_value(config, "KM_IP");
     char* km_port  = config_get_string_value(config, "KM_PORT");
     char* path     = config_get_string_value(config, "SWAP_FILE_PATH");
-    int   swap_size = config_get_int_value(config, "SWAP_FILE_SIZE");
+    swap_size = config_get_int_value(config, "SWAP_FILE_SIZE");
     block_size     = config_get_int_value(config, "BLOCK_SIZE");
+
+    log_debug(logger, "[DBG][main] Iniciando SWAP. File: %s | Total Size: %d bytes | Block Size: %d bytes", path, swap_size, block_size);
 
     // archivo de swap: se crea al tamaño total. Se asume vacío (no hace falta limpiarlo).
     swap_fd = open(path, O_RDWR | O_CREAT, 0644);
     if (swap_fd == -1) {
         log_error(logger, "No se pudo abrir/crear el archivo de swap: %s", path);
+        config_destroy(config);
+        log_destroy(logger);
         return EXIT_FAILURE;
     }
     if (ftruncate(swap_fd, swap_size) != 0) {
         log_error(logger, "No se pudo dimensionar el archivo de swap a %d bytes", swap_size);
+        close(swap_fd);
+        config_destroy(config);
+        log_destroy(logger);
         return EXIT_FAILURE;
     }
 
@@ -56,8 +64,14 @@ int main(int argc, char* argv[]) {
     int fd_km = crear_conexion(km_ip, km_port);
     if (fd_km == -1) {
         log_error(logger, "No se pudo conectar a Kernel Memory en %s:%s", km_ip, km_port);
+        close(swap_fd);
+        config_destroy(config);
+        log_destroy(logger);
         return EXIT_FAILURE;
     }
+
+    log_debug(logger, "[DBG][handshake] Enviando MSG_HANDSHAKE_SWAP a Kernel Memory...");
+
     op_code codigo = MSG_HANDSHAKE_SWAP;
     enviar_mensaje(fd_km, &codigo, sizeof(op_code));
     enviar_mensaje(fd_km, &block_size, sizeof(int));
@@ -65,9 +79,20 @@ int main(int argc, char* argv[]) {
 
     int size_resp;
     op_code* respuesta = recibir_mensaje(fd_km, &size_resp);
-    if (respuesta != NULL && *respuesta == MSG_OK)
+    if (respuesta != NULL && *respuesta == MSG_OK){
         log_info(logger, "## Conectado a Kernel Memory");
-    free(respuesta);
+        free(respuesta);
+    } else {
+        log_error(logger, "##ERROR. Falló el Handshake con Kernel Memory");
+        if(respuesta) free(respuesta);
+        close(fd_km);
+        close(swap_fd);
+        config_destroy(config);
+        log_destroy(logger);
+        return EXIT_FAILURE;
+        
+    }
+
 
     // loop de operaciones de bloque (siempre 1 bloque por operación)
     while (1) {
@@ -78,17 +103,47 @@ int main(int argc, char* argv[]) {
             break;
         }
 
+        log_debug(logger, "[DBG][loop] Orden recibida de KM: %d", *orden);
+
         int* nro_ptr = recibir_mensaje(fd_km, &size);
+        int* nro_ptr = recibir_mensaje(fd_km, &size);
+        if (nro_ptr == NULL) {
+            log_error(logger, "[DBG][loop] Se perdió la conexión con KM esperando número de bloque.");
+            free(orden);
+            break;
+        }
+
         int nro_bloque = *nro_ptr;
         free(nro_ptr);
-        off_t offset = (off_t) nro_bloque * block_size;
 
+        off_t offset = (off_t) nro_bloque * block_size;
+        log_debug(logger, "[DBG][loop] Bloque objetivo: %d | Offset calculado: %ld bytes", nro_bloque, (long)offset);
+
+        // validacion limites de archivo
+        if (offset + block_size > swap_size){
+            log_error(logger, "## ERROR: Solicitud de bloque fuera de rango. Bloque %d excede el tamaño total (%d)", nro_bloque, swap_size);
+            free(orden);
+            break;
+        }
         switch (*orden) {
             case MSG_SWAP_WRITE: {
                 int size_datos;
                 void* datos = recibir_mensaje(fd_km, &size_datos);
-                pwrite(swap_fd, datos, block_size, offset);
-                log_info(logger, "## Escritura del bloque: %d", nro_bloque);
+                if (datos == NULL) {
+                    log_error(logger, "[DBG][WRITE] Error al recibir datos para escribir en bloque %d", nro_bloque);
+                    break;
+                }
+
+                log_debug(logger, "[DBG][WRITE] Escribiendo %d bytes en offset %ld...", size_datos, (long)offset);
+
+                ssize_t bytes_escritos = pwrite(swap_fd, datos, block_size, offset);
+
+                if (bytes_escritos < block_size) {
+                    log_error(logger, "[DBG][WRITE] Error o escritura incompleta en pwrite: %ld bytes", (long)bytes_escritos);
+                } else {
+                    log_info(logger, "## Escritura del bloque: %d", nro_bloque);
+                }                
+                
                 op_code ok = MSG_OK;
                 enviar_mensaje(fd_km, &ok, sizeof(op_code));
                 free(datos);
@@ -96,8 +151,21 @@ int main(int argc, char* argv[]) {
             }
             case MSG_SWAP_READ: {
                 void* buffer = malloc(block_size);
-                pread(swap_fd, buffer, block_size, offset);
-                log_info(logger, "## Lectura del bloque: %d", nro_bloque);
+                if (buffer == NULL) {
+                    log_error(logger, "[DBG][READ] Error al alocar memoria para el buffer de lectura");
+                    break;
+                }
+
+                log_debug(logger, "[DBG][READ] Leyendo %d bytes en offset %ld...", block_size, (long)offset);
+                ssize_t bytes_leidos = pread(swap_fd, buffer, block_size, offset);
+
+
+                if (bytes_leidos < block_size) {
+                    log_error(logger, "[DBG][READ] Error o lectura incompleta en pread: %ld bytes", (long)bytes_leidos);
+                } else {
+                    log_info(logger, "## Lectura del bloque: %d", nro_bloque);
+                }                
+                
                 enviar_mensaje(fd_km, buffer, block_size);
                 free(buffer);
                 break;
@@ -108,7 +176,8 @@ int main(int argc, char* argv[]) {
         }
         free(orden);
     }
-
+    
+    close(fd_km);
     close(swap_fd);
     config_destroy(config);
     log_destroy(logger);
