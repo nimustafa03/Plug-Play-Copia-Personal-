@@ -106,7 +106,6 @@ int main(int argc, char* argv[]) {
         log_debug(logger, "[DBG][loop] Orden recibida de KM: %d", *orden);
 
         int* nro_ptr = recibir_mensaje(fd_km, &size);
-        int* nro_ptr = recibir_mensaje(fd_km, &size);
         if (nro_ptr == NULL) {
             log_error(logger, "[DBG][loop] Se perdió la conexión con KM esperando número de bloque.");
             free(orden);
