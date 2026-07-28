@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <commons/log.h>
 #include <commons/config.h>
 #include <utils/conexiones.h>
@@ -70,29 +71,38 @@ operacion decode(char* instruccion);
 int execute(operacion codigo, char* instruccion, t_registros* cpu, int fd_ks, int fd_km, int fd_ms, uint32_t pid, t_list* tabla_segmentos, t_log* logger_cpu,t_mapa_memory_sticks_cpu* mapa,int fd_ms_agregados[3], t_contexto* contexto);
 int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto, uint32_t pid, t_log* logger_cpu);
 int hay_mensaje_completo(int fd, t_log* logger_cpu);
+void atender_interrupcion_en_espera (t_interrupcion* interrupcion_entrante, uint32_t pid,int fd_ks,int fd_km,t_contexto* contexto,t_log* logger_cpu);
 
 // MMU
 int memory_management_unit(uint32_t direccion_logica, uint32_t tamanio_acceso, t_list* tabla_segmentos, t_log* logger_cpu);
 void* lectura_ms(uint32_t direccion_global,uint32_t tamanio_lectura,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3], t_log* logger_cpu);
 void escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio_escritura,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3], t_log* logger_cpu);
 
-// MANEJO DE INFORMACION
+// DEFINICIONES
 extern uint32_t segment_max_size;
 extern int ms_conectados;
 extern int fd_ms_agregados[3];
+extern t_interrupcion* interrupcion_entrante;
+extern bool interrupcion_en_espera;
+
+// MANEJO DE INFORMACION
 t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu);
 void destruir_mapa_memory_sticks(t_mapa_memory_sticks_cpu* mapa);
 int conectar_memory_sticks_faltantes(t_mapa_memory_sticks_cpu* mapa,t_log* logger_cpu);
 int actualizar_conexiones_ms(t_info_memory_stick_cpu* info_ms,t_log* logger_cpu);
 int buscar_indice_ms(uint32_t direccion_global,t_mapa_memory_sticks_cpu* mapa);
 int obtener_fd_ms(uint32_t indice_ms,int fd_ms,int fd_ms_agregados[3]);
+
 void escribir_en_buffer(void* buffer,uint32_t* desplazamiento,const void* dato,uint32_t tamanio);
-void* serializar_contexto(t_contexto* contexto,int* tamanio_buffer, t_log* logger_cpu);
-t_contexto* deserializar_contexto(void* buffer,int tamanio_buffer, t_log* logger_cpu);
+t_list* deserializar_tabla_segmentos(void* buffer, int tamanio_buffer);
+
 void enviar_contexto(t_contexto* contexto, int fd_km, t_log* logger_cpu);
+void destruir_contexto(t_contexto* contexto);
 void guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* logger_cpu); 
+
 void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km,t_log* logger_cpu);
 void manejar_seg_fault(int fd_ks, uint32_t pid, t_log* logger_cpu, int fd_km);
+
 // OPERACIONES CON REGISTROS
 uint32_t obtener_valor(char* posicion, t_registros* registro);
 void escribir_registro(char* posicion,t_registros* registro,uint32_t valor);
@@ -120,7 +130,4 @@ void syscall_mem_alloc(char* instruccion, t_registros* registro, int fd_ks, uint
 void syscall_mem_free(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid, t_log* logger_cpu);
 void syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log* logger_cpu);
 
-
-
-t_list* deserializar_tabla_segmentos(void* buffer, int tamanio_buffer);
 #endif
