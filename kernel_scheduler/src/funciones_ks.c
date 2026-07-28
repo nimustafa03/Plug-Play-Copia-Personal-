@@ -58,7 +58,7 @@ void inicializarListasProcesos() {
   listaProcesosBlock = list_create();
   listaProcesosSuspBlock = list_create();
   listaProcesosSuspReady = list_create();
-  listaProcesosExit = list_create(); // faltaba crear esta linea
+  listaProcesosExit = list_create(); 
   listaCPUsLibres = list_create();
   listaIOsLibres = list_create();
   listaMutex = list_create();
@@ -78,20 +78,33 @@ void inicializarListasProcesos() {
   listaConexionesCPU = list_create();               // CP3
   pthread_mutex_init(&mutex_conexiones_cpu, NULL);  // CP3
 
-  // inicializar colas multinivel a partir de QUEUES_ALGORITHMS.
-  // config_get_array_value devuelve un char** terminado en NULL.
-  algoritmosColas = config_get_array_value(config, "QUEUES_ALGORITHMS");
+  // Inicialización defensiva de Colas Multinivel
   cantidadColas = 0;
-  while (algoritmosColas[cantidadColas] != NULL) {
-      cantidadColas++;
+  
+  if (config_has_property(config, "QUEUES_ALGORITHMS")) {
+      algoritmosColas = config_get_array_value(config, "QUEUES_ALGORITHMS");
+  } else {
+      algoritmosColas = NULL;
   }
-  colasMultinivel = malloc(sizeof(t_list*) * cantidadColas);
-  // DEBUG: heap
-  log_debug(logger_ks, "[DBG][inicializarListasProcesos] malloc colasMultinivel=%p (%d colas)", (void*)colasMultinivel, cantidadColas);
-  for (int i = 0; i < cantidadColas; i++) {
-      colasMultinivel[i] = list_create();
+
+  if (algoritmosColas != NULL) {
+      while (algoritmosColas[cantidadColas] != NULL) {
+          cantidadColas++;
+      }
   }
-  log_info(logger_ks, "CMN: %d colas de prioridad inicializadas", cantidadColas);
+
+  if (cantidadColas > 0) {
+      colasMultinivel = malloc(sizeof(t_list*) * cantidadColas);
+      log_debug(logger_ks, "[DBG][inicializarListasProcesos] malloc colasMultinivel=%p (%d colas)", (void*)colasMultinivel, cantidadColas);
+      for (int i = 0; i < cantidadColas; i++) {
+          colasMultinivel[i] = list_create();
+      }
+      log_info(logger_ks, "CMN: %d colas de prioridad inicializadas", cantidadColas);
+  } else {
+      colasMultinivel = NULL;
+      log_info(logger_ks, "Planificación sin colas multinivel (RR/FIFO)");
+  }
+
   // DEBUG: frontera de funcion
   log_debug(logger_ks, "[DBG][inicializarListasProcesos] SALIDA");
 }
