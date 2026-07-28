@@ -31,27 +31,27 @@ char* fetch(int fd_km, u_int32_t pid, t_registros* cpu, t_log* logger_cpu){
     int size_respuesta;
     op_code* respuesta_km = (op_code*) recibir_mensaje(fd_km,&size_respuesta);
     if (respuesta_km == NULL){
-        log_info(logger_cpu, "KM cerró la conexión o no envió respuesta");
+        log_error(logger_cpu, "KM cerró la conexión o no envió respuesta");
         free(respuesta_km);
         return NULL;
     } else if (*respuesta_km == MSG_ERROR){
-            log_info(
+            log_error(
             logger_cpu,
             "FETCH: KM respondio ERROR");
             return NULL;
             }
-    log_info(logger_cpu, "llego la respuesta");
+    log_debug(logger_cpu, "llego la respuesta");
     free(respuesta_km);
     
     // Recibe Instruccion
     int size_instruccion;
     char* instruccion = recibir_mensaje(fd_km, &size_instruccion);
     if (instruccion == NULL) {
-        log_info(logger_cpu, "Error al recibir instruccion");
+        log_error(logger_cpu, "Error al recibir instruccion");
         free(instruccion);
         return NULL;
     }
-    log_info(logger_cpu, "llego la instruccion");
+    log_debug(logger_cpu, "llego la instruccion");
     return instruccion;
 }
 
@@ -113,21 +113,21 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
         case OP_MUTEX_CREATE:
             int comprobacion_m_create = syscall_mutex_create(instruccion, fd_ks, pid, registros); 
             if (comprobacion_m_create == -1){
-                log_info(logger_cpu, "ERROR - MUTEX_CREATE devolvio -1");
+                log_error(logger_cpu, "ERROR - MUTEX_CREATE devolvio -1");
                 exit(EXIT_FAILURE);
             }
             break;
         case OP_MUTEX_LOCK:
             int comprobacion_m_lock = syscall_mutex_lock(instruccion, fd_ks, pid, registros); 
             if (comprobacion_m_lock == -1){
-                log_info(logger_cpu, "ERROR - MUTEX_LOCK devolvio -1");
+                log_error(logger_cpu, "ERROR - MUTEX_LOCK devolvio -1");
                 exit(EXIT_FAILURE);
             }
             break;
         case OP_MUTEX_UNLOCK:
             int comprobacion_m_unlock = syscall_mutex_unlock(instruccion, fd_ks, pid, registros);
             if (comprobacion_m_unlock == -1){
-                log_info(logger_cpu, "ERROR - MUTEX_UNLOCK devolvio -1");
+                log_error(logger_cpu, "ERROR - MUTEX_UNLOCK devolvio -1");
                 exit(EXIT_FAILURE);
             }
             break;
@@ -151,97 +151,11 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             romper_ciclo = true;
             break;
         case OP_INVALID:
-            log_info(logger_cpu, "Operacion invalida: %d", codigo);
+            log_error(logger_cpu, "Operacion invalida: %d", codigo);
             exit(EXIT_FAILURE);
     }
     return 0;
 }
-
-/*int recibir_interrupcion(int fd_ks){
-    int size;
-    op_code codigo;
-    int bytes = recv(fd_ks, &size, sizeof(int), MSG_DONTWAIT);
-    if (bytes == -1) {
-        if (errno == EAGAIN || errno == EWOULDBLOCK)
-            return 1;  // No hay mensaje pendiente
-        return -1;     // Error de recepcion
-    }
-    if (bytes == 0)
-        return -1;     // KS cerró la conexión.
-    bytes = recv(fd_ks, &codigo, sizeof(op_code), MSG_WAITALL);
-    if (bytes != sizeof(op_code))
-        return -1;
-    if (codigo != MSG_INTERRUPT)
-        return -1;
-    return 0;          // Llego MSG_INTERRUPT
-}
-
-int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto, uint32_t pid, t_log* logger_cpu){
-    int resultado = recibir_interrupcion(fd_ks);
-
-    if (resultado == 1)
-        return 1;
-    if (resultado == -1)
-        return -1;
-
-    if (resultado == 0) {
-        int size;
-        t_interrupcion* interrupcion = recibir_mensaje(fd_ks, &size);
-
-        if (interrupcion == NULL)
-            return -1;
-        if (size != sizeof(t_interrupcion)) {
-            free(interrupcion);
-            return -1;
-        }
-
-        uint32_t pid_int = interrupcion->pid;
-        int motivo = interrupcion->motivo;
-        free(interrupcion);
-
-        if (pid_int != pid) {
-            log_info(logger_cpu, "Se descarto interrupcion por no corresponder al proceso actual. PID INTERRUPCION: %u, PID ACTUAL: %u", pid_int, pid);
-            return 1;   // Retornar uno no afecta en cpu.c, por lo tanto la ejecucion continua normal (se ignora interrupcion inconsistente)
-        }
-
-        op_code avisar_km = MSG_INTERRUPT;
-        enviar_mensaje(fd_km, &avisar_km, sizeof(op_code));
-        enviar_mensaje(fd_km, &pid, sizeof(uint32_t));
-
-        void* buffer = serializar_contexto(contexto, &size, logger_cpu);
-        if (buffer == NULL) {
-        log_info(logger_cpu, "Error al serializar el contexto");
-            return -1;
-        }
-
-        enviar_mensaje(fd_km, buffer, size);
-        log_info(logger_cpu, "Se envio el contexto a KM por interrupcion: %u", pid_int);
-        free(buffer);
-
-        int size_respuesta;
-        op_code* respuesta_km = recibir_mensaje(fd_km, &size_respuesta);
-        if (respuesta_km == NULL) 
-            return -1;
-        if (size_respuesta != sizeof(op_code)) {
-            free(respuesta_km);
-            return -1;
-        }
-        if (*respuesta_km == MSG_ERROR){
-            free(respuesta_km);
-            return -1;
-        }
-        free(respuesta_km);
-
-        // avisar al KS que se interrumpió
-        op_code atendido = MSG_INTERRUPCION_ATENDIDA;
-        enviar_mensaje(fd_ks, &atendido, sizeof(op_code));
-        enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
-        enviar_mensaje(fd_ks, &motivo, sizeof(int));
-
-        return 0;
-    }
-    return -2;
-}*/
 
 int memory_management_unit(uint32_t direccion_logica, uint32_t tamanio_acceso, t_list* tabla_segmentos, t_log* logger_cpu) {
     uint32_t num_segmento = direccion_logica / segment_max_size;
@@ -258,7 +172,7 @@ int memory_management_unit(uint32_t direccion_logica, uint32_t tamanio_acceso, t
         }
     }
     if (segmento == NULL) {
-        log_info(logger_cpu,"Error de segmento en MMU");
+        log_error(logger_cpu,"Error de segmento en MMU");
         exit(EXIT_FAILURE);
         }
 
@@ -291,13 +205,13 @@ t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu) {
     }
 
     if (tamanio_opcode != sizeof(op_code)) {
-        log_info(logger_cpu,"Tamaño inválido del opcode: recibido=%d esperado=%zu",tamanio_opcode,sizeof(op_code));
+        log_error(logger_cpu,"Tamaño inválido del opcode: recibido=%d esperado=%zu",tamanio_opcode,sizeof(op_code));
         free(codigo);
         return NULL;
     }
 
     if (*codigo != MSG_ACTUALIZAR_MEMORY_STICKS) {
-        log_info(logger_cpu,"Opcode inesperado: recibido=%d esperado=%d",*codigo,MSG_ACTUALIZAR_MEMORY_STICKS);
+        log_error(logger_cpu,"Opcode inesperado: recibido=%d",*codigo);
         free(codigo);
         return NULL;
     }
@@ -309,19 +223,19 @@ t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu) {
     void* buffer = recibir_mensaje(fd_km, &tamanio_buffer); //  BUFFER
 
     if (buffer == NULL) {
-        log_info(logger_cpu, "No se pudo recibir el buffer del mapa");
+        log_error(logger_cpu, "No se pudo recibir el buffer del mapa");
         return NULL;
     }
 
     if (tamanio_buffer < (int)sizeof(uint32_t)) {
-        log_info(logger_cpu, "Buffer del mapa demasiado pequeño: %d bytes", tamanio_buffer);
+        log_error(logger_cpu, "Buffer del mapa demasiado pequeño: %d bytes", tamanio_buffer);
         free(buffer);
         return NULL;
     }
 
     t_mapa_memory_sticks_cpu* mapa = calloc(1, sizeof(t_mapa_memory_sticks_cpu));
 
-    if (mapa == NULL) {log_info(logger_cpu,"No se pudo reservar memoria para el mapa");
+    if (mapa == NULL) {log_error(logger_cpu,"No se pudo reservar memoria para el mapa");
         free(buffer);
         return NULL;
     }
@@ -334,7 +248,7 @@ t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu) {
     desplazamiento += sizeof(uint32_t);
 
     if (mapa->cantidad == 0 || mapa->cantidad > 4) {
-        log_info(logger_cpu,"Cantidad inválida de Memory Sticks: %u",mapa->cantidad);
+        log_error(logger_cpu,"Cantidad inválida de Memory Sticks: %u",mapa->cantidad);
         free(buffer);
         destruir_mapa_memory_sticks(mapa);
         return NULL;
@@ -350,7 +264,7 @@ t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu) {
         /* Longitud de IP */
         if (desplazamiento + sizeof(uint32_t) > (uint32_t)tamanio_buffer) {
 
-            log_info(logger_cpu, "Error al reconstruir la longitud de IP del MS %u", i);
+            log_error(logger_cpu, "Error al reconstruir la longitud de IP del MS %u", i);
             destruir_mapa_memory_sticks(mapa);
             free(buffer);
             return NULL;
@@ -364,7 +278,7 @@ t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu) {
             desplazamiento + longitud_ip >
             (uint32_t)tamanio_buffer) {
 
-            log_info(logger_cpu, "Error al reconstruir la IP del MS %u", i);
+            log_error(logger_cpu, "Error al reconstruir la IP del MS %u", i);
             destruir_mapa_memory_sticks(mapa);
             free(buffer);
             return NULL;
@@ -373,7 +287,7 @@ t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu) {
         mapa->memory_sticks[i].ip = malloc(longitud_ip);
 
         if (mapa->memory_sticks[i].ip == NULL) {
-            log_info(logger_cpu, "No se pudo reservar memoria para la IP del MS %u", i);
+            log_error(logger_cpu, "No se pudo reservar memoria para la IP del MS %u", i);
             destruir_mapa_memory_sticks(mapa);
             free(buffer);
             return NULL;
@@ -387,7 +301,7 @@ t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu) {
         if (desplazamiento + sizeof(uint32_t) >
             (uint32_t)tamanio_buffer) {
 
-            log_info(logger_cpu, "Error al reconstruir la longitud del puerto del MS %u", i);
+            log_error(logger_cpu, "Error al reconstruir la longitud del puerto del MS %u", i);
             destruir_mapa_memory_sticks(mapa);
             free(buffer);
             return NULL;
@@ -401,7 +315,7 @@ t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu) {
             desplazamiento + longitud_puerto >
             (uint32_t)tamanio_buffer) {
 
-            log_info(logger_cpu,"Error al reconstruir el puerto del MS %u",i);
+            log_error(logger_cpu,"Error al reconstruir el puerto del MS %u",i);
             destruir_mapa_memory_sticks(mapa);
             free(buffer);
             return NULL;
@@ -410,7 +324,7 @@ t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu) {
         mapa->memory_sticks[i].puerto = malloc(longitud_puerto);
 
         if (mapa->memory_sticks[i].puerto == NULL) {
-            log_info(logger_cpu, "No se pudo reservar memoria para el puerto del MS %u",i);
+            log_error(logger_cpu, "No se pudo reservar memoria para el puerto del MS %u",i);
             destruir_mapa_memory_sticks(mapa);
             free(buffer);
             return NULL;
@@ -424,7 +338,7 @@ t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu) {
         if (desplazamiento + sizeof(uint32_t) >
             (uint32_t)tamanio_buffer) {
 
-            log_info(logger_cpu,"Error al reconstruir la base global del MS %u",i);
+            log_error(logger_cpu,"Error al reconstruir la base global del MS %u",i);
             destruir_mapa_memory_sticks(mapa);
             free(buffer);
             return NULL;
@@ -471,7 +385,7 @@ int actualizar_conexiones_ms(t_info_memory_stick_cpu* info_ms,t_log* logger_cpu)
 
     int fd_ms = crear_conexion(info_ms->ip,info_ms->puerto);
     if (fd_ms == -1) {
-        log_info(logger_cpu,"No se pudo conectar al MS %s:%s",info_ms->ip,info_ms->puerto);
+        log_warning(logger_cpu,"No se pudo conectar al MS %s:%s",info_ms->ip,info_ms->puerto);
         return -1;
     }
 
@@ -500,7 +414,7 @@ int conectar_memory_sticks_faltantes(t_mapa_memory_sticks_cpu* mapa,t_log* logge
 
         int nuevo_fd = actualizar_conexiones_ms(nuevo_ms, logger_cpu);
         if (nuevo_fd == -1) {
-            log_info(logger_cpu,"No se pudo conectar al MS %u: %s:%s",i,nuevo_ms->ip,nuevo_ms->puerto);
+            log_warning(logger_cpu,"No se pudo conectar al MS %u: %s:%s",i,nuevo_ms->ip,nuevo_ms->puerto);
             return -1;
         }
         fd_ms_agregados[i-1] = nuevo_fd;
@@ -544,13 +458,13 @@ int obtener_fd_ms(uint32_t indice_ms,int fd_ms,int fd_ms_agregados[3]) {
 
 void* lectura_ms(uint32_t direccion_global,uint32_t tamanio_lectura,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3], t_log* logger_cpu) {
     if (mapa == NULL ||fd_ms < 0 ||tamanio_lectura == 0 ||mapa->cantidad == 0 ||mapa->cantidad > 4){
-        log_info(logger_cpu,"Error de validacion en funcion LECTURA");
+        log_error(logger_cpu,"Error de validacion en funcion LECTURA");
         return NULL;
     }
     uint8_t* buffer_resultado = malloc(tamanio_lectura);
 
     if (buffer_resultado == NULL) {
-        log_info(logger_cpu,"Error de LECTURA");
+        log_error(logger_cpu,"Error de LECTURA");
         return NULL;
     }
 
@@ -595,12 +509,12 @@ void* lectura_ms(uint32_t direccion_global,uint32_t tamanio_lectura,t_mapa_memor
 
         if (respuesta == NULL) {
             free(buffer_resultado);
-            log_info(logger_cpu,"Error de respuesta en LECTURA");
+            log_error(logger_cpu,"Error de respuesta en LECTURA");
             return NULL;
         }
 
         if (tamanio_respuesta < 0 ||(uint32_t)tamanio_respuesta != bytes_a_leer) {
-            log_info(logger_cpu,"Error de tamanio en LECTURA");
+            log_error(logger_cpu,"Error de tamanio en LECTURA");
             free(respuesta);
             free(buffer_resultado);
             return NULL;
@@ -619,7 +533,7 @@ void* lectura_ms(uint32_t direccion_global,uint32_t tamanio_lectura,t_mapa_memor
 
 void escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio_escritura,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3], t_log* logger_cpu) {
     if (buffer_origen == NULL||mapa == NULL||tamanio_escritura == 0||mapa->cantidad == 0||mapa->cantidad > 4) {
-        log_info(logger_cpu,"Error de validacion en funcion ESCRITURA");
+        log_error(logger_cpu,"Error de validacion en funcion ESCRITURA");
         exit(EXIT_FAILURE);
     }
 
@@ -633,14 +547,14 @@ void escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio
         int indice_ms = buscar_indice_ms(direccion_actual,mapa);
 
         if (indice_ms == -1) {
-            log_info(logger_cpu,"Error de indice en ESCRITURA");
+            log_error(logger_cpu,"Error de indice en ESCRITURA");
             exit(EXIT_FAILURE);
         }
         t_info_memory_stick_cpu* ms_actual = &mapa->memory_sticks[indice_ms];
 
         int fd_actual = obtener_fd_ms((uint32_t)indice_ms,fd_ms,fd_ms_agregados);
         if (fd_actual < 0){
-            log_info(logger_cpu,"Error de dato en ESCRITURA");
+            log_error(logger_cpu,"Error de dato en ESCRITURA");
             exit(EXIT_FAILURE);
         }
         uint32_t direccion_local = direccion_actual - ms_actual->base_global;
@@ -664,11 +578,11 @@ void escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio
 
         op_code* respuesta = recibir_mensaje(fd_actual,&tamanio_respuesta);
         if (respuesta == NULL){
-            log_info(logger_cpu,"Error de respuesta en ESCRITURA");
+            log_error(logger_cpu,"Error de respuesta en ESCRITURA");
             exit(EXIT_FAILURE);
         }
         if (tamanio_respuesta != sizeof(op_code) ||*respuesta != MSG_DONE) {
-            log_info(logger_cpu,"Error de tamanio en ESCRITURA");
+            log_error(logger_cpu,"Error de tamanio en ESCRITURA");
             free(respuesta);
             exit(EXIT_FAILURE);
         }
@@ -690,7 +604,7 @@ void guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* l
     int size;
     void* buffer = serializar_contexto(contexto, &size, logger_cpu);
     if (buffer == NULL) {
-        log_info(logger_cpu, "Error al serializar contexto");
+        log_error(logger_cpu, "Error al serializar contexto");
         exit(EXIT_FAILURE);
     }
 
@@ -699,11 +613,11 @@ void guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* l
 
     op_code* ok = recibir_mensaje(fd_km, &size);
     if (ok == NULL) {
-        log_info(logger_cpu, "Error al recibir respuesta");
+        log_error(logger_cpu, "Error al recibir respuesta");
         exit(EXIT_FAILURE);
     }
     if (*ok != MSG_OK) {
-        log_info(logger_cpu, "No se recibio respuesta esperada");
+        log_error(logger_cpu, "No se recibio respuesta esperada. %d", *ok);
         exit(EXIT_FAILURE);
     }
     free(ok);
@@ -716,12 +630,12 @@ void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km, t_log* logger_cp
     if (*mensaje_km == MSG_TABLA_SEGMENTOS_NO_VACIA){
         int tamanio_buffer = 0;
 
-        log_info(logger_cpu,"## se recibira buffer.");
+        log_debug(logger_cpu,"## se recibira buffer.");
         void* buffer = recibir_mensaje(fd_km,&tamanio_buffer);
-        log_info(logger_cpu,"## se recibio buffer");
+        log_debug(logger_cpu,"## se recibio buffer");
 
         if (buffer == NULL) {
-            log_info(logger_cpu,"## ERROR: No se pudo recibir el buffer de segmentos.");
+            log_error(logger_cpu,"## ERROR: No se pudo recibir el buffer de segmentos.");
             return;
         }
 
@@ -730,7 +644,7 @@ void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km, t_log* logger_cp
         free(buffer);
 
         if (tabla_actualizada == NULL) {
-            log_info(logger_cpu,"## ERROR: No se pudo deserializar la tabla de segmentos."
+            log_error(logger_cpu,"## ERROR: No se pudo deserializar la tabla de segmentos."
             );
             return;
         }
@@ -762,7 +676,7 @@ void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km, t_log* logger_cp
         }
     } else if (*mensaje_km == MSG_TABLA_SEGMENTOS_VACIA){
         return;
-    } else {log_info(logger_cpu, "No llego el mensaje esperado al consultar por la tabla de segmentos");
+    } else {log_error(logger_cpu, "No llego el mensaje esperado al consultar por la tabla de segmentos. %d", *mensaje_km);
         return;
         }
 }
@@ -831,16 +745,16 @@ int hay_mensaje_completo(int fd, t_log* logger_cpu){
 
     if (bytes == -1) {if (errno == EAGAIN || errno == EWOULDBLOCK)
             return 0;
-        log_info(logger_cpu, "error bytes");
+        log_error(logger_cpu, "error bytes");
         return -1;
     }
     if (bytes == 0){
-        log_info(logger_cpu, "error ==0");
+        log_error(logger_cpu, "error ==0");
         return -1;}
     if (bytes < (ssize_t)sizeof(int))
         return 0;
     if (size <= 0){
-        log_info(logger_cpu, "error tamanio");
+        log_error(logger_cpu, "error tamanio");
         return -1;
     }
     /*
@@ -851,7 +765,7 @@ int hay_mensaje_completo(int fd, t_log* logger_cpu){
     void* buffer = malloc(tamanio_total);
 
     if (buffer == NULL){
-        log_info(logger_cpu, "buffer null");
+        log_error(logger_cpu, "buffer null");
         return -1;}
 
     bytes = recv(fd,buffer,tamanio_total,MSG_PEEK | MSG_DONTWAIT);
@@ -861,7 +775,7 @@ int hay_mensaje_completo(int fd, t_log* logger_cpu){
     if (bytes == -1) {
         if (errno == EAGAIN || errno == EWOULDBLOCK){
             return 0;
-        log_info(logger_cpu, "error segundo bytes");
+        log_error(logger_cpu, "error segundo bytes");
         return -1;}
     }
 
@@ -935,7 +849,7 @@ int atender_interrupcion(int fd_ks, int fd_km, t_contexto* contexto,uint32_t pid
     free(interrupcion);
 
     if (pid_int != pid) {
-        log_info(logger_cpu,
+        log_warning(logger_cpu,
             "Se descarto interrupcion por no corresponder "
             "al proceso actual. PID INTERRUPCION: %u, "
             "PID ACTUAL: %u",
@@ -967,7 +881,7 @@ void atender_interrupcion_en_espera (t_interrupcion* interrupcion_entrante, uint
 
 
     if (pid_int != pid) {
-        log_info(logger_cpu,
+        log_warning(logger_cpu,
             "Se descarto interrupcion por no corresponder "
             "al proceso actual. PID INTERRUPCION: %u, "
             "PID ACTUAL: %u",
