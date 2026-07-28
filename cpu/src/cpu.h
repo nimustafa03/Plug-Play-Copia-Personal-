@@ -69,6 +69,7 @@ char* fetch(int conexion_servidor,uint32_t pid, t_registros* cpu, t_log* logger_
 operacion decode(char* instruccion);
 int execute(operacion codigo, char* instruccion, t_registros* cpu, int fd_ks, int fd_km, int fd_ms, uint32_t pid, t_list* tabla_segmentos, t_log* logger_cpu,t_mapa_memory_sticks_cpu* mapa,int fd_ms_agregados[3], t_contexto* contexto);
 int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto, uint32_t pid, t_log* logger_cpu);
+int hay_mensaje_completo(int fd, t_log* logger_cpu);
 
 // MMU
 int memory_management_unit(uint32_t direccion_logica, uint32_t tamanio_acceso, t_list* tabla_segmentos, t_log* logger_cpu);
