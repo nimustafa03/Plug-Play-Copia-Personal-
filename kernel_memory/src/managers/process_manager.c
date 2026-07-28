@@ -171,7 +171,7 @@ void*manejar_proceso(void*arg){
   
   bool interrumpido_local = false;
 
-  while (!interrumpido_local && !proceso->contexto->proximo_a_detener){
+  while (!interrumpido_local && existe_proceso(pid_local)){
     t_proceso_memoria*proceso_actual = obtener_proceso(pid_local);
     if (proceso_actual == NULL || proceso_actual->contexto == NULL || proceso_actual->contexto->proximo_a_detener){
       break;
@@ -202,7 +202,9 @@ void*manejar_proceso(void*arg){
         enviar_confirmacion_a_CPU(fd_cpu,true);
         enviar_proxima_instruccion_a_cpu(fd_cpu,proxima_instruccion);
 
-        if (proceso_actual->contexto != NULL) {notificar_segmentos_a_cpu(proceso->contexto);}
+        proceso_actual = obtener_proceso(pid_local);
+
+        if (proceso_actual->contexto != NULL) {notificar_segmentos_a_cpu(proceso_actual->contexto);}
         free(proxima_instruccion);
       } 
     }
