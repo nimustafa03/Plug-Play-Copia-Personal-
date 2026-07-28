@@ -183,7 +183,7 @@ int main(int argc, char* argv[]) {
             log_error(logger_cpu, "No se pudo recibir el mapa de Memory Sticks");
             exit(EXIT_FAILURE);
         }
-        if (conectar_memory_sticks_faltantes(mapa, logger_cpu) == -1) {
+        if (conectar_memory_sticks_faltantes(mapa, logger_cpu, id) == -1) {
             log_error(logger_cpu, "Error al conectar los Memory Sticks faltantes");
             exit(EXIT_FAILURE);
             break;
