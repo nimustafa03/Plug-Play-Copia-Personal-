@@ -256,6 +256,7 @@ void* atender_km(void* arg) {
         }
         free(orden);
     }
+    close(fd_km);
     return NULL;
 }
 
@@ -294,7 +295,8 @@ int main(int argc, char* argv[]) {
     }
     char *config_path = argv[1]; 
     char *char_size = argv[2]; 
-    int size = atoi(char_size);
+    tamanio_memoria = atoi(char_size); 
+    int size = tamanio_memoria;
 
     if (size <= 0) {
         printf("Error: el tamaño debe ser mayor a 0\n");
