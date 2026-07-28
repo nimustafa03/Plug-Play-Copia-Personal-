@@ -850,9 +850,9 @@ int hay_mensaje_completo(int fd, t_log* logger_cpu){
 
     void* buffer = malloc(tamanio_total);
 
-    if (buffer == NULL)
+    if (buffer == NULL){
         log_info(logger_cpu, "buffer null");
-        return -1;
+        return -1;}
 
     bytes = recv(fd,buffer,tamanio_total,MSG_PEEK | MSG_DONTWAIT);
 
