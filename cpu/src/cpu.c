@@ -141,26 +141,26 @@ int main(int argc, char* argv[]) {
     // Crear .config
     t_config* config = config_create(argv[1]);
     if (config == NULL) {
-        log_info(logger_cpu, "Error al leer .config");
+        log_error(logger_cpu, "Error al leer .config");
         exit(EXIT_FAILURE);
     } else log_info(logger_cpu,"CONFIG CREADO");
 
     // INICIAR CONEXIONES CON SERVIDORES
     int fd_km = conexionCPUKernelMemory(config,id);
     if (fd_km == -1) {
-        log_info(logger_cpu, "Error al conectar con Kernel Memory");
+        log_error(logger_cpu, "Error al conectar con Kernel Memory");
         exit(EXIT_FAILURE);
         } else log_info(logger_cpu, "Conexion exitosa con Kernel Memory");
         
     int fd_ks = conexionCPUKernelScheduler(config);
     if (fd_ks == -1) {
-        log_info(logger_cpu, "Error al conectar con Kernel Scheduler");
+        log_error(logger_cpu, "Error al conectar con Kernel Scheduler");
         exit(EXIT_FAILURE);
         } else log_info(logger_cpu, "Conexion exitosa con Kernel Scheduler");
     
     int fd_ms = conexionCPUMemoryStick(config, id);
     if (fd_ms == -1) {
-        log_info(logger_cpu, "Error al conectar con Memory Stick");
+        log_error(logger_cpu, "Error al conectar con Memory Stick");
         exit(EXIT_FAILURE);
         } else log_info(logger_cpu, "Conexion exitosa con Memory Stick");
 
@@ -169,7 +169,7 @@ int main(int argc, char* argv[]) {
         // CPU espera la llegada de un pid por parte del KS
         int pid = esperar_pid(fd_ks, logger_cpu);
         if (pid == -1) {
-            log_info(logger_cpu, "Error al recibir pid");
+            log_error(logger_cpu, "Error al recibir pid");
             exit(EXIT_FAILURE);
         } else log_info(logger_cpu, "Recibido PID: %d", pid);
         
@@ -180,11 +180,11 @@ int main(int argc, char* argv[]) {
         // Recibe status de los diferentes ms
         t_mapa_memory_sticks_cpu* mapa = recibir_mapa(fd_km, logger_cpu);
         if (mapa == NULL) {
-            log_info(logger_cpu, "No se pudo recibir el mapa de Memory Sticks");
+            log_error(logger_cpu, "No se pudo recibir el mapa de Memory Sticks");
             exit(EXIT_FAILURE);
         }
         if (conectar_memory_sticks_faltantes(mapa, logger_cpu) == -1) {
-            log_info(logger_cpu, "Error al conectar los Memory Sticks faltantes");
+            log_error(logger_cpu, "Error al conectar los Memory Sticks faltantes");
             exit(EXIT_FAILURE);
             break;
         }
@@ -202,7 +202,7 @@ int main(int argc, char* argv[]) {
             }
 
         t_contexto* contexto = deserializar_contexto(buffer,size,logger_cpu);
-        if (contexto == NULL) {log_info(logger_cpu, "Error al recibir contexto");
+        if (contexto == NULL) {log_error(logger_cpu, "Error al recibir contexto");
             exit(EXIT_FAILURE);
         }
         /*printf("AX %d",contexto->registros.ax);
@@ -228,17 +228,17 @@ int main(int argc, char* argv[]) {
             log_info(logger_cpu, "## PID: %u - FETCH - Program Counter: %d", pid, contexto->registros.pc);
             char* instruccion = fetch(fd_km, pid, &contexto->registros, logger_cpu);
             if (instruccion == NULL) {
-                log_info(logger_cpu, "Error en FETCH");
+                log_error(logger_cpu, "Error en FETCH");
                 exit(EXIT_FAILURE);
             }
-            log_info(logger_cpu, "recibiendo segmentos");
+            log_debug(logger_cpu, "recibiendo segmentos");
             
             actualizar_tabla_segmentos(contexto,fd_km,logger_cpu);
 
             // DECODE
             operacion codigo = decode(instruccion);
             if (codigo == OP_INVALID) {
-                log_info(logger_cpu,"PID %u - Instrucción INVALIDA: %s",pid,instruccion);
+                log_error(logger_cpu,"PID %u - Instrucción INVALIDA: %s",pid,instruccion);
                 exit(EXIT_FAILURE);
             }
 

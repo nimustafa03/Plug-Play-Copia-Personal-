@@ -132,11 +132,11 @@ void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint
     op_code* respuesta = recibir_mensaje(fd_ks, &size);
 
     if (respuesta == NULL) {
-        log_info(logger_cpu, "Error al recibir respuesta en INIT PROC");
+        log_error(logger_cpu, "Error al recibir respuesta en INIT PROC");
         exit(EXIT_FAILURE);
     }
     if (*respuesta != MSG_OK) {
-        log_info(logger_cpu, "En INIT PROC se recibio una respuesta distinta a la esperada: %d", *respuesta);
+        log_error(logger_cpu, "En INIT PROC se recibio una respuesta distinta a la esperada: %d", *respuesta);
         free(respuesta);
         exit(EXIT_FAILURE);
     }
@@ -155,7 +155,7 @@ int mov_in(char* instruccion, t_registros* registros, t_mapa_memory_sticks_cpu* 
     uint32_t tamanio = tamanio_registro(registro_destino);
 
     if (tamanio == 0) {
-        log_info(logger_cpu, "Error de tamanio en MOV IN");
+        log_error(logger_cpu, "Error de tamanio en MOV IN");
         exit(EXIT_FAILURE);
     }
     int direccion_fisica = memory_management_unit(direccion_logica, tamanio, tabla_segmentos, logger_cpu);
@@ -164,7 +164,7 @@ int mov_in(char* instruccion, t_registros* registros, t_mapa_memory_sticks_cpu* 
 
     void* datos = lectura_ms(direccion_fisica, tamanio, mapa, fd_ms, fd_ms_agregados, logger_cpu);
     if (datos == NULL) {
-        log_info(logger_cpu, "LECTURA devolvio NULL");
+        log_error(logger_cpu, "LECTURA devolvio NULL");
         exit(EXIT_FAILURE);
     }
     uint32_t valor = 0;
@@ -187,7 +187,7 @@ int mov_out(char* instruccion, t_registros* registros, t_list* tabla_segmentos, 
     uint32_t tamanio = tamanio_registro(registro_origen);
 
     if (tamanio == 0) {
-        log_info(logger_cpu, "Error de tamanio en MOV OUT");
+        log_error(logger_cpu, "Error de tamanio en MOV OUT");
         exit(EXIT_FAILURE);
     }
     int direccion_fisica = memory_management_unit(direccion_logica, tamanio, tabla_segmentos, logger_cpu);
@@ -223,7 +223,7 @@ int copy_mem(char* instruccion, t_registros* registros, t_list* tabla_segmentos,
 
     void* buffer = lectura_ms(direccion_fisica_origen, tamanio, mapa_ms, fd_ms, fd_ms_agregados, logger_cpu);
     if (buffer == NULL) {
-        log_info(logger_cpu, "LECTURA devolvio NULL");
+        log_error(logger_cpu, "LECTURA devolvio NULL");
         exit(EXIT_FAILURE);
     }
 
@@ -298,7 +298,7 @@ void syscall_mem_alloc(char* instruccion, t_registros* registros, int fd_ks, uin
     op_code* respuesta = recibir_mensaje(fd_ks, &size);
 
     if (respuesta == NULL) {
-        log_info(logger_cpu, "En MEM ALLOC se recibio NULL");
+        log_error(logger_cpu, "En MEM ALLOC se recibio NULL");
         exit(EXIT_FAILURE);
     }
     if (*respuesta == MSG_INTERRUPT) {
@@ -326,7 +326,7 @@ void syscall_mem_alloc(char* instruccion, t_registros* registros, int fd_ks, uin
         if (*nueva_respuesta == MSG_OK) {
             registros->pc++;
         } else {
-            log_info(logger_cpu, "En MEM FREE se recibio respuesta inesperada: %d.", *nueva_respuesta);
+            log_error(logger_cpu, "En MEM ALLOC se recibio respuesta inesperada: %d.", *nueva_respuesta);
             exit(EXIT_FAILURE);
         }
         free(nueva_respuesta);
@@ -334,7 +334,7 @@ void syscall_mem_alloc(char* instruccion, t_registros* registros, int fd_ks, uin
     if (*respuesta == MSG_OK) {
         registros->pc++;
     } else {
-        log_info(logger_cpu, "En MEM FREE se recibio respuesta inesperada: %d.", *respuesta);
+        log_error(logger_cpu, "En MEM ALLOC se recibio respuesta inesperada: %d.", *respuesta);
         exit(EXIT_FAILURE);
     }
     free(respuesta);
@@ -359,7 +359,7 @@ void syscall_mem_free(char* instruccion, t_registros* registros, int fd_ks, uint
     op_code* respuesta = recibir_mensaje(fd_ks, &size);
 
     if (respuesta == NULL) {
-        log_info(logger_cpu, "En MEM FREE se recibio NULL");
+        log_error(logger_cpu, "En MEM FREE se recibio NULL");
         exit(EXIT_FAILURE);
     }
     if (*respuesta == MSG_INTERRUPT) {
@@ -387,7 +387,7 @@ void syscall_mem_free(char* instruccion, t_registros* registros, int fd_ks, uint
         if (*nueva_respuesta == MSG_OK) {
             registros->pc++;
         } else {
-            log_info(logger_cpu, "En MEM FREE se recibio respuesta inesperada: %d.", *nueva_respuesta);
+            log_error(logger_cpu, "En MEM FREE se recibio respuesta inesperada: %d.", *nueva_respuesta);
             exit(EXIT_FAILURE);
         }
         free(nueva_respuesta);
@@ -395,7 +395,7 @@ void syscall_mem_free(char* instruccion, t_registros* registros, int fd_ks, uint
     if (*respuesta == MSG_OK) {
         registros->pc++;
     } else {
-        log_info(logger_cpu, "En MEM FREE se recibio respuesta inesperada: %d.", *respuesta);
+        log_error(logger_cpu, "En MEM FREE se recibio respuesta inesperada: %d.", *respuesta);
         exit(EXIT_FAILURE);
     }
     free(respuesta);
@@ -405,7 +405,7 @@ void syscall_mem_free(char* instruccion, t_registros* registros, int fd_ks, uint
 // EXIT
 void syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log* logger_cpu) {
     if (contexto == NULL) {
-        log_info(logger_cpu, "Error al utilizar contexto en instruccion: EXIT");
+        log_error(logger_cpu, "Error al utilizar contexto en instruccion: EXIT");
         exit(EXIT_FAILURE);
     }
 
@@ -426,18 +426,18 @@ void syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_lo
     int size;
     void* buffer = serializar_contexto(contexto, &size, logger_cpu);
     if (buffer == NULL) {
-        log_info(logger_cpu, "Error al serializar el contexto");
+        log_error(logger_cpu, "Error al serializar el contexto");
         exit(EXIT_FAILURE);
     }
 
     enviar_mensaje(fd_km, buffer, size);
     op_code* ok = recibir_mensaje(fd_km, &size);
     if (ok == NULL) {
-        log_info(logger_cpu, "Se recibio NULL en instruccion EXIT");
+        log_error(logger_cpu, "Se recibio NULL en instruccion EXIT");
         exit(EXIT_FAILURE);
     }
     if (*ok != MSG_OK) {
-        log_info(logger_cpu, "Se recibio un mensaje distinto al esperado: %d", *ok);
+        log_error(logger_cpu, "Se recibio un mensaje distinto al esperado: %d", *ok);
         free(ok);
         free(buffer);
         exit(EXIT_FAILURE);
