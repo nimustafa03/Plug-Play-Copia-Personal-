@@ -681,47 +681,6 @@ void escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio
     return;
 }
 
-void* serializar_contexto_inicial(t_contexto* contexto, int* tamanio_buffer, t_log* logger_cpu){
-    if(contexto == NULL) {
-        log_info(
-            logger_cpu,
-            "Contexto vacío al momento de serializar contexto inicial."
-        );
-        return NULL;
-    }
-
-    int cantidad_segmentos = 0;
-
-    *tamanio_buffer =
-        sizeof(t_registros) + sizeof(int);
-
-    void* buffer = malloc(*tamanio_buffer);
-
-    if (buffer == NULL) {
-        return NULL;
-    }
-
-    uint32_t desplazamiento = 0;
-
-    escribir_en_buffer(
-        buffer,
-        &desplazamiento,
-        &contexto->registros,
-        sizeof(t_registros)
-    );
-    log_info(logger_cpu, "Registros guardados: %d", contexto->registros.pc);
-
-    escribir_en_buffer(
-        buffer,
-        &desplazamiento,
-        &cantidad_segmentos,
-        sizeof(int)
-    );
-    log_info(logger_cpu, "Segmentos guardados: %d", cantidad_segmentos);
-
-    return buffer;
-}
-
 void guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* logger_cpu) {
 
     op_code cod = MSG_INTERRUPT;
@@ -872,13 +831,16 @@ int hay_mensaje_completo(int fd){
 
     if (bytes == -1) {if (errno == EAGAIN || errno == EWOULDBLOCK)
             return 0;
+        log_info(logger_cpu, "error bytes");
         return -1;
     }
     if (bytes == 0)
+        log_info(logger_cpu, "error ==0");
         return -1;
     if (bytes < (ssize_t)sizeof(int))
         return 0;
     if (size <= 0)
+        log_info(logger_cpu, "error tamanio");
         return -1;
 
     /*
@@ -889,6 +851,7 @@ int hay_mensaje_completo(int fd){
     void* buffer = malloc(tamanio_total);
 
     if (buffer == NULL)
+        log_info(logger_cpu, "buffer null");
         return -1;
 
     bytes = recv(fd,buffer,tamanio_total,MSG_PEEK | MSG_DONTWAIT);
@@ -898,6 +861,7 @@ int hay_mensaje_completo(int fd){
     if (bytes == -1) {
         if (errno == EAGAIN || errno == EWOULDBLOCK)
             return 0;
+        log_info(logger_cpu, "error segundo bytes");
         return -1;
     }
 
