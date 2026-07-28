@@ -16,13 +16,18 @@
 t_log*    logger;
 t_config* config;
 void* espacio_memoria;
+int tamanio_memoria; 
 int   memory_delay;
+
+// mutex para evitar race condition en lecturas/escrituras concurrentes
+pthread_mutex_t mutex_memoria = PTHREAD_MUTEX_INITIALIZER;
 
 void atender_cpu(int fd_cpu) {
     int size_id;
     int* id_cpu_ptr = recibir_mensaje(fd_cpu, &size_id);
     if (id_cpu_ptr == NULL) {
         log_error(logger, "[DBG][atender_cpu] No se pudo recibir ID de la CPU. Cerrando socket FD: %d", fd_cpu);
+        close(fd_cpu);
         return;
     }
     int id_cpu = *id_cpu_ptr;
@@ -78,14 +83,24 @@ void atender_cpu(int fd_cpu) {
                     break;
                 }
 
+                // proteccion de limites de memoria
+                if (direccion_fisica + bytes_a_escribir > tamanio_memoria) {
+                    log_error(logger, "##ERROR: CPU %d intentó escribir fuera de limites (%d > %d)", id_cpu, direccion_fisica + bytes_a_escribir, tamanio_memoria);
+                    free(datos);
+                    break;
+                }
+
                 log_debug(logger, "[DBG][atender_cpu] CPU %d -> Datos recibidos correctamente (size_datos: %d)", id_cpu, size_datos);
 
+                pthread_mutex_lock(&mutex_memoria);
                 memcpy(espacio_memoria + direccion_fisica, datos, bytes_a_escribir);
+                pthread_mutex_unlock(&mutex_memoria);
 
                 log_info(logger, "## Escritura de %d bytes", bytes_a_escribir);
                 
                 op_code done = MSG_DONE;
                 enviar_mensaje(fd_cpu, &done, sizeof(op_code));
+
                 log_debug(logger, "[DBG][atender_cpu] CPU %d -> Enviado MSG_DONE a CPU", id_cpu);
                 
                 free(datos);
@@ -104,11 +119,21 @@ void atender_cpu(int fd_cpu) {
 
                 log_debug(logger, "[DBG][atender_cpu] CPU %d -> Tamaño a leer: %d bytes", id_cpu, tamanio_a_leer);
 
+                // proteccion de limites de memoria
+                if (direccion_fisica + tamanio_a_leer > tamanio_memoria) {
+                    log_error(logger, "##ERROR: CPU %d intentó leer fuera de limites (%d > %d)", id_cpu, direccion_fisica + tamanio_a_leer, tamanio_memoria);
+                    break;
+                }
+
                 void* buffer = malloc(tamanio_a_leer);
+
+                pthread_mutex_lock(&mutex_memoria);
                 memcpy(buffer, espacio_memoria + direccion_fisica, tamanio_a_leer);
+                pthread_mutex_unlock(&mutex_memoria);
 
                 log_info(logger, "## Lectura de %d bytes", tamanio_a_leer);
                 enviar_mensaje(fd_cpu, buffer, tamanio_a_leer);
+
                 log_debug(logger, "[DBG][atender_cpu] CPU %d -> Enviados %d bytes leídos a CPU", id_cpu, tamanio_a_leer);
 
                 free(buffer);
@@ -172,7 +197,17 @@ void* atender_km(void* arg) {
                     break;
                 }
 
+                // proteccion de memoria
+                if (direccion_fisica + bytes_a_escribir > tamanio_memoria) {
+                    log_error(logger, "## ERROR: KM intentó escribir fuera de limites (%d > %d)", direccion_fisica + bytes_a_escribir, tamanio_memoria);
+                    free(datos);
+                    break;
+                }
+
+                pthread_mutex_lock(&mutex_memoria);
                 memcpy(espacio_memoria + direccion_fisica, datos, bytes_a_escribir);
+                pthread_mutex_unlock(&mutex_memoria);
+
                 log_info(logger, "## Escritura de %d bytes", bytes_a_escribir);
 
                 op_code done = MSG_DONE;
@@ -194,11 +229,21 @@ void* atender_km(void* arg) {
 
                 log_debug(logger, "[DBG][atender_km] KM -> Tamaño a leer: %d bytes", tamanio_a_leer);
 
+                if (direccion_fisica + tamanio_a_leer > tamanio_memoria) {
+                    log_error(logger, "## ERROR: KM intentó leer fuera de limites (%d > %d)", direccion_fisica + tamanio_a_leer, tamanio_memoria);
+                    break;
+                }
+
                 void* buffer = malloc(tamanio_a_leer);
+
+                pthread_mutex_lock(&mutex_memoria);
                 memcpy(buffer, espacio_memoria + direccion_fisica, tamanio_a_leer);
+                pthread_mutex_unlock(&mutex_memoria);
+
                 log_info(logger, "## Lectura de %d bytes", tamanio_a_leer);
 
                 enviar_mensaje(fd_km, buffer, tamanio_a_leer);
+
                 log_debug(logger, "[DBG][atender_km] KM -> Enviados %d bytes leídos a KM", tamanio_a_leer);
 
                 free(buffer);
@@ -223,6 +268,7 @@ void* esperar_cpu(void * arg) {
 
     if (codigo == NULL) {
         log_warning(logger, "[DBG][esperar_cpu] Conexión cliente cerrada antes del handshake. FD: %d", fd_cliente);
+        close(fd_cliente);
         return NULL;
     }
 
@@ -234,6 +280,7 @@ void* esperar_cpu(void * arg) {
             break;
         default:
             log_warning(logger, "## CONEXION NO CORRESPONDE AL CPU. \n## FD RECIBIDA: %d \n## CODIGO DE OPERACION RECIBIDO: %d", fd_cliente, *codigo);
+            close(fd_cliente);
             break;
     }
     free(codigo);
@@ -270,6 +317,8 @@ int main(int argc, char* argv[]) {
     espacio_memoria = malloc(size);
     if (espacio_memoria == NULL) {
         log_error(logger, "[DBG][main] No se pudo reservar espacio_memoria de %d bytes", size);
+        config_destroy(config);
+        log_destroy(logger);
         return EXIT_FAILURE;
     }
  
@@ -279,6 +328,9 @@ int main(int argc, char* argv[]) {
     
     if (fd_km == -1) {
         log_error(logger, "No se pudo conectar a Kernel Memory en %s:%s", KM_IP, KM_PORT);
+        free(espacio_memoria);
+        config_destroy(config);
+        log_destroy(logger);
         return EXIT_FAILURE;
     }
     
@@ -300,6 +352,10 @@ int main(int argc, char* argv[]) {
     } else {
         log_warning(logger, "## ATENCION. NO FUE POSIBLE CONECTARSE A KERNEL MEMORY.");
         if (respuesta) free(respuesta);
+        close(fd_km);
+        free(espacio_memoria);
+        config_destroy(config);
+        log_destroy(logger);
         return EXIT_FAILURE;
     }
 
@@ -325,6 +381,11 @@ int main(int argc, char* argv[]) {
         pthread_create(&hilo, NULL, esperar_cpu, fd_cliente);
         pthread_detach(hilo);
     }
+
+    pthread_mutex_destroy(&mutex_memoria);
+    free(espacio_memoria);
+    config_destroy(config);
+    log_destroy(logger);
 
     return 0;
 }
