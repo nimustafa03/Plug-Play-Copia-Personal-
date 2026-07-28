@@ -834,15 +834,15 @@ int hay_mensaje_completo(int fd, t_log* logger_cpu){
         log_info(logger_cpu, "error bytes");
         return -1;
     }
-    if (bytes == 0)
+    if (bytes == 0){
         log_info(logger_cpu, "error ==0");
-        return -1;
+        return -1;}
     if (bytes < (ssize_t)sizeof(int))
         return 0;
-    if (size <= 0)
+    if (size <= 0){
         log_info(logger_cpu, "error tamanio");
         return -1;
-
+    }
     /*
      * Segundo PEEK: verificar encabezado más payload.
      */
@@ -859,10 +859,10 @@ int hay_mensaje_completo(int fd, t_log* logger_cpu){
     free(buffer);
 
     if (bytes == -1) {
-        if (errno == EAGAIN || errno == EWOULDBLOCK)
+        if (errno == EAGAIN || errno == EWOULDBLOCK){
             return 0;
         log_info(logger_cpu, "error segundo bytes");
-        return -1;
+        return -1;}
     }
 
     if ((size_t)bytes < tamanio_total)
