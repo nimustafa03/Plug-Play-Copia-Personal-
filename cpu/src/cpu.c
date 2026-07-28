@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <commons/log.h>
 #include <commons/string.h>
 #include <commons/config.h>
@@ -108,6 +109,8 @@ int ms_conectados = 1;
 int fd_ms_agregados[3] = {-1, -1, -1};
 bool romper_ciclo = false;
 uint32_t segment_max_size;
+t_interrupcion* interrupcion_entrante = NULL;
+bool interrupcion_en_espera = false;
 
 /*----------------------------- MAIN -----------------------------*/
 
@@ -217,6 +220,8 @@ int main(int argc, char* argv[]) {
         log_info(logger_cpu, "Inicia ejecucion de proceso: %d", pid);
 
         // WHILE CICLO DE INSTRUCCION
+        interrupcion_entrante = NULL;
+        interrupcion_en_espera = false;
         romper_ciclo = false;
         while (romper_ciclo != true) {
             // FETCH
@@ -260,23 +265,31 @@ int main(int argc, char* argv[]) {
             }
 
             // INTERRUPCIONES
-            int resultado_interrupcion = atender_interrupcion(fd_ks,fd_km,contexto,pid,logger_cpu);
+            if (interrupcion_en_espera == true){
+                atender_interrupcion_en_espera(interrupcion_entrante, pid, fd_ks, fd_km, contexto, logger_cpu);
+            } else if (interrupcion_en_espera == false && romper_ciclo != true) {
+                    int resultado_interrupcion = atender_interrupcion(fd_ks, fd_km, contexto, pid, logger_cpu);
 
-            if (resultado_interrupcion == -1) {
-                log_error(logger_cpu,"Error al atender una interrupción del PID %u",pid);
-                exit(EXIT_FAILURE);
-            }
+                    if (resultado_interrupcion == -1) {
+                        log_error(logger_cpu, "Error al atender una interrupción del PID %u", pid);
+                        free(instruccion);
+                        exit(EXIT_FAILURE);
+                    }
 
-            if (resultado_interrupcion == 0) {
-                log_info(logger_cpu,"El PID %u fue desalojado por una interrupción",pid);
-                free(instruccion);
-                break;
-            }
+                    if (resultado_interrupcion == 0) {
+                        log_info(logger_cpu, "El PID %u fue desalojado por una interrupción", pid);
+                        free(instruccion);
+                        destruir_contexto(contexto);
+                        break;
+                    }
+                }  
+            free(interrupcion_entrante);
 
             log_info(logger_cpu, "evalua EXIT");
-            if (romper_ciclo == true){
+            if (romper_ciclo == true) {
                 log_info(logger_cpu, "Concluyo proceso %d con EXIT", pid);
-                free(contexto);
+                free(instruccion);
+                destruir_contexto(contexto);
                 break;
             }
         }

@@ -960,6 +960,35 @@ int atender_interrupcion(int fd_ks, int fd_km, t_contexto* contexto,uint32_t pid
     return 0;
 }
 
+void atender_interrupcion_en_espera (t_interrupcion* interrupcion_entrante, uint32_t pid,int fd_ks,int fd_km,t_contexto* contexto,t_log* logger_cpu){
+
+    uint32_t pid_int = interrupcion_entrante->pid;
+    int motivo = interrupcion_entrante->motivo;
+
+
+    if (pid_int != pid) {
+        log_info(logger_cpu,
+            "Se descarto interrupcion por no corresponder "
+            "al proceso actual. PID INTERRUPCION: %u, "
+            "PID ACTUAL: %u",
+            pid_int,
+            pid
+        );
+        return;
+    }
+
+    log_info(logger_cpu,"Se recibio una interrupcion para el PID %u. Motivo: %d",pid_int,motivo);
+
+    guardar_contexto_km(fd_km, contexto, pid, logger_cpu);
+
+    // avisar al KS que se interrumpió
+    
+    op_code atendido = MSG_INTERRUPCION_ATENDIDA;
+    enviar_mensaje(fd_ks, &atendido, sizeof(op_code));
+    enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
+    enviar_mensaje(fd_ks, &motivo, sizeof(int));
+}
+
 void destruir_contexto(t_contexto* contexto) {
     if (contexto == NULL) {
         return;

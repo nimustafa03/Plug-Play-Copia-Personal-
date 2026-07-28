@@ -51,6 +51,7 @@ uint32_t tamanio_registro(char* nombre_registro) {
     return 0;
 }
 
+
 /*------------------------ INSTRUCCIONES ------------------------*/
 
 // SUMA
@@ -300,14 +301,44 @@ void syscall_mem_alloc(char* instruccion, t_registros* registros, int fd_ks, uin
         log_info(logger_cpu, "En MEM ALLOC se recibio NULL");
         exit(EXIT_FAILURE);
     }
+    if (*respuesta == MSG_INTERRUPT) {
+        free(respuesta);
+        int size_interrupcion = 0;
+        interrupcion_entrante = recibir_mensaje(fd_ks, &size_interrupcion);
+
+        if (interrupcion_entrante == NULL) {
+            log_error(logger_cpu,"Se recibió MSG_INTERRUPT pero no llegó la estructura t_interrupt");
+            exit(EXIT_FAILURE);
+        }
+        if (size_interrupcion != sizeof(t_interrupcion)) {
+            log_error(logger_cpu,"Tamaño inválido para t_interrupt. Recibido: %d - Esperado: %zu",size_interrupcion,sizeof(t_interrupcion));
+            free(interrupcion_entrante);
+            exit(EXIT_FAILURE);
+        }
+
+        log_warning(logger_cpu,"===== INTERRUPCIÓN RECIBIDA DURANTE MEM_ALLOC =====");
+        log_warning(logger_cpu,"PID de la interrupción: %u",interrupcion_entrante->pid);
+        log_warning(logger_cpu,"Motivo de la interrupción: %d",interrupcion_entrante->motivo);
+        log_warning(logger_cpu,"===============================================");
+        interrupcion_en_espera = true;
+
+        op_code* nueva_respuesta = recibir_mensaje(fd_ks, &size);
+        if (*nueva_respuesta == MSG_OK) {
+            registros->pc++;
+        } else {
+            log_info(logger_cpu, "En MEM FREE se recibio respuesta inesperada: %d.", *nueva_respuesta);
+            exit(EXIT_FAILURE);
+        }
+        free(nueva_respuesta);
+
     if (*respuesta == MSG_OK) {
         registros->pc++;
     } else {
-        log_info(logger_cpu, "En MEM ALLOC se recibio respuesta inesperada: %d.", *respuesta);
-        free(respuesta);
+        log_info(logger_cpu, "En MEM FREE se recibio respuesta inesperada: %d.", *respuesta);
         exit(EXIT_FAILURE);
     }
     free(respuesta);
+    }
 }
 
 // MEM_FREE
@@ -331,14 +362,44 @@ void syscall_mem_free(char* instruccion, t_registros* registros, int fd_ks, uint
         log_info(logger_cpu, "En MEM FREE se recibio NULL");
         exit(EXIT_FAILURE);
     }
+    if (*respuesta == MSG_INTERRUPT) {
+        free(respuesta);
+        int size_interrupcion = 0;
+        interrupcion_entrante = recibir_mensaje(fd_ks, &size_interrupcion);
+
+        if (interrupcion_entrante == NULL) {
+            log_error(logger_cpu,"Se recibió MSG_INTERRUPT pero no llegó la estructura t_interrupt");
+            exit(EXIT_FAILURE);
+        }
+        if (size_interrupcion != sizeof(t_interrupcion)) {
+            log_error(logger_cpu,"Tamaño inválido para t_interrupt. Recibido: %d - Esperado: %zu",size_interrupcion,sizeof(t_interrupcion));
+            free(interrupcion_entrante);
+            exit(EXIT_FAILURE);
+        }
+
+        log_warning(logger_cpu,"===== INTERRUPCIÓN RECIBIDA DURANTE MEM_ALLOC =====");
+        log_warning(logger_cpu,"PID de la interrupción: %u",interrupcion_entrante->pid);
+        log_warning(logger_cpu,"Motivo de la interrupción: %d",interrupcion_entrante->motivo);
+        log_warning(logger_cpu,"===============================================");
+        interrupcion_en_espera = true;
+
+        op_code* nueva_respuesta = recibir_mensaje(fd_ks, &size);
+        if (*nueva_respuesta == MSG_OK) {
+            registros->pc++;
+        } else {
+            log_info(logger_cpu, "En MEM FREE se recibio respuesta inesperada: %d.", *nueva_respuesta);
+            exit(EXIT_FAILURE);
+        }
+        free(nueva_respuesta);
+
     if (*respuesta == MSG_OK) {
         registros->pc++;
     } else {
         log_info(logger_cpu, "En MEM FREE se recibio respuesta inesperada: %d.", *respuesta);
-        free(respuesta);
         exit(EXIT_FAILURE);
     }
     free(respuesta);
+    }
 }
 
 // EXIT
