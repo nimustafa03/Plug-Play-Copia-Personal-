@@ -913,10 +913,46 @@ void atender_cpu_ks(int fd_cpu) {
                 // CP2/CP3: la CPU atendió una interrupción. motivo: 0=fin de quantum,
                 // 1=cola más prioritaria, 2=desalojo por compactación (CP3).
                 uint32_t* pid_ptr = recibir_mensaje(fd_cpu, &size);
+                if (pid_ptr == NULL || size != sizeof(uint32_t)) {
+                    log_error(
+                        logger_ks,
+                        "Interrupcion atendida: PID invalido. ptr=%p size=%d",
+                        (void*)pid_ptr,
+                        size
+                    );
+                    free(pid_ptr);
+                    break;
+                }
+
                 int* motivo_ptr = recibir_mensaje(fd_cpu, &size);
+                if (motivo_ptr == NULL || size != sizeof(int)) {
+                    log_error(
+                        logger_ks,
+                        "Interrupcion atendida: motivo invalido. ptr=%p size=%d",
+                        (void*)motivo_ptr,
+                        size
+                    );
+
+                    free(pid_ptr);
+                    free(motivo_ptr);
+                    break;
+                }
+
                 // DEBUG: deserializacion - CUALQUIERA de los dos en NULL segfaultea abajo
                 log_debug(logger_ks, "[DBG][atender_cpu_ks:INT_ATENDIDA] fd=%d - pid_ptr=%p (pid=%d), motivo_ptr=%p (motivo=%d)", fd_cpu, (void*)pid_ptr, pid_ptr ? (int)*pid_ptr : -1, (void*)motivo_ptr, motivo_ptr ? *motivo_ptr : -1);
                 Proceso* proceso = buscar_proceso_por_pid(*pid_ptr);
+                if (proceso == NULL) {
+                    log_warning(
+                        logger_ks,
+                        "Se recibio interrupcion atendida para PID "
+                        "pero el proceso ya no existe o no fue encontrado"
+                    );
+
+                    /*
+                    * No volver a liberar la CPU sin comprobar si ya fue liberada.
+                    */
+                    break;
+                }
                 // DEBUG: SI proceso=(nil) ACA, EL actualizarEstadoProceso/proceso->id_proceso
                 // DE MAS ABAJO ES EL SEGFAULT (interrupcion atendida de un proceso que ya
                 // termino por MSG_DONE - carrera clasica del timer RR con el fin del proceso)
