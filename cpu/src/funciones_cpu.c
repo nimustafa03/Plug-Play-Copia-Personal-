@@ -821,7 +821,7 @@ void manejar_seg_fault(int fd_ks, uint32_t pid, t_log* logger_cpu, int fd_km) {
     enviar_mensaje(fd_km,&seg_fault, sizeof(uint32_t));
 }
 
-int hay_mensaje_completo(int fd){
+int hay_mensaje_completo(int fd, t_log* logger_cpu){
     int size = 0;
 
     /*
@@ -872,7 +872,7 @@ int hay_mensaje_completo(int fd){
 }
 
 int atender_interrupcion(int fd_ks, int fd_km, t_contexto* contexto,uint32_t pid,t_log* logger_cpu){
-    int estado = hay_mensaje_completo(fd_ks);
+    int estado = hay_mensaje_completo(fd_ks, logger_cpu);
 
     if (estado == 0) {
         // No hay interrupción pendiente.
