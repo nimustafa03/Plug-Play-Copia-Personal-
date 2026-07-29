@@ -253,66 +253,80 @@ static t_memory_stick* stick_de_direccion(uint32_t dir_global) {
 // CP3: escribe `tamanio` bytes desde `datos` a partir de la dir global, partiendo
 // el pedido entre los Memory Sticks involucrados (cada stick direcciona desde 0).
 bool escribir_memoria_fisica(uint32_t dir_global, uint32_t tamanio, void* datos) {
-  /*
+  //  if (datos == NULL || tamanio == 0) return false;
+
+  //   // 1. Buscar a qué Memory Stick le corresponde la dirección global
+  //   t_memory_stick* ms = stick_de_direccion(dir_global);
+  //   if (ms == NULL || ms->socket < 0) {
+  //       log_error(logger, "Error: No se encontró MS para la dirección %u", dir_global);
+  //       return false;
+  //   }
+
+  //   uint32_t dir_local = dir_global - ms->base_global;
+
+  //   // 2. ENVIAR CABECERA Y DATOS AL MEMORY STICK
+  //   op_code cod = MSG_WRITE;
+  //   enviar_mensaje(ms->socket, &cod, sizeof(op_code));
+  //   enviar_mensaje(ms->socket, &dir_local, sizeof(uint32_t));
+  //   enviar_mensaje(ms->socket, &tamanio, sizeof(uint32_t));
+  //   enviar_mensaje(ms->socket, datos, tamanio);
+
+  //   // 3. ESPERAR CONFIRMACIÓN DEL MEMORY STICK
+  //   int size;
+  //   op_code* resp = recibir_mensaje(ms->socket, &size);
+  //   if (resp == NULL) {
+  //       log_error(logger, "Memory Stick se desconectó durante la escritura");
+  //       return false;
+  //   }
+
+  //   bool exito = (*resp == MSG_DONE || *resp == MSG_OK);
+  //   free(resp);
+
+  //   return exito;
+  if (datos == NULL || tamanio == 0) return false;
+
   uint32_t restante = tamanio;
   uint32_t cursor = dir_global;
-  uint8_t* origen = datos;
+  uint8_t* origen = (uint8_t*) datos;
 
   while (restante > 0) {
-    t_memory_stick* s = stick_de_direccion(cursor);
-    if (s == NULL) return false;
+    t_memory_stick* ms = stick_de_direccion(cursor);
+    if (ms == NULL || ms->socket < 0) {
+      log_error(logger, "## ERROR: No se encontró Memory Stick para la dirección física %u", cursor);
+      return false;
+    }
 
-    uint32_t offset_local = cursor - s->base_global;
-    uint32_t espacio_en_stick = s->tamanio - offset_local;
-    uint32_t a_escribir = restante < espacio_en_stick ? restante : espacio_en_stick;
+    uint32_t offset_local = cursor - ms->base_global;
+    uint32_t espacio_en_stick = ms->tamanio - offset_local;
+    
+    // Escribimos solo hasta donde entra en el Memory Stick actual
+    uint32_t a_escribir = (restante < espacio_en_stick) ? restante : espacio_en_stick;
 
     op_code orden = MSG_WRITE;
-    enviar_mensaje(s->socket, &orden, sizeof(op_code));
+    enviar_mensaje(ms->socket, &orden, sizeof(op_code));
+    
     int dir_fisica = (int) offset_local;
-    enviar_mensaje(s->socket, &dir_fisica, sizeof(int));
-    enviar_mensaje(s->socket, origen, (int) a_escribir);
+    enviar_mensaje(ms->socket, &dir_fisica, sizeof(int));
+    
+    int cant_bytes = (int) a_escribir;
+    enviar_mensaje(ms->socket, &cant_bytes, sizeof(int));
+    enviar_mensaje(ms->socket, origen, cant_bytes);
 
     int size;
-    op_code* done = recibir_mensaje(s->socket, &size);
-    if (done == NULL || *done != MSG_DONE) { free(done); return false; }
-    free(done);
+    op_code* resp = recibir_mensaje(ms->socket, &size);
+    if (resp == NULL || (*resp != MSG_DONE && *resp != MSG_OK)) {
+      if (resp) free(resp);
+      log_error(logger, "## ERROR: El Memory Stick rechazó o falló la escritura.");
+      return false;
+    }
+    free(resp);
 
     cursor += a_escribir;
     origen += a_escribir;
     restante -= a_escribir;
   }
+
   return true;
-  */
-   if (datos == NULL || tamanio == 0) return false;
-
-    // 1. Buscar a qué Memory Stick le corresponde la dirección global
-    t_memory_stick* ms = stick_de_direccion(dir_global);
-    if (ms == NULL || ms->socket < 0) {
-        log_error(logger, "Error: No se encontró MS para la dirección %u", dir_global);
-        return false;
-    }
-
-    uint32_t dir_local = dir_global - ms->base_global;
-
-    // 2. ENVIAR CABECERA Y DATOS AL MEMORY STICK
-    op_code cod = MSG_WRITE;
-    enviar_mensaje(ms->socket, &cod, sizeof(op_code));
-    enviar_mensaje(ms->socket, &dir_local, sizeof(uint32_t));
-    enviar_mensaje(ms->socket, &tamanio, sizeof(uint32_t));
-    enviar_mensaje(ms->socket, datos, tamanio);
-
-    // 3. ESPERAR CONFIRMACIÓN DEL MEMORY STICK
-    int size;
-    op_code* resp = recibir_mensaje(ms->socket, &size);
-    if (resp == NULL) {
-        log_error(logger, "Memory Stick se desconectó durante la escritura");
-        return false;
-    }
-
-    bool exito = (*resp == MSG_DONE || *resp == MSG_OK);
-    free(resp);
-
-    return exito;
 
 }
 
