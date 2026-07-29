@@ -62,7 +62,8 @@ int main(int argc, char* argv[]) {
     char* puerto = config_get_string_value(config, "PORT");
     iniciar_servidor_kernel_memory(puerto);
 
-    char* segment_max_size = config_get_string_value(config, "SEGMENT_MAX_SIZE");
+    // se elimino una lectura muerta de SEGMENT_MAX_SIZE (ya se valida arriba
+    // y process_manager.c lo lee cuando lo necesita).
 
     destruir_administrador_procesos();
     destruir_administrador_memoria();
