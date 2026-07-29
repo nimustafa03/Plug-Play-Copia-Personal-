@@ -103,23 +103,38 @@ static void insertar_hueco_ordenado(t_hueco* nuevo_hueco) {
   list_add_in_index(administrador.huecos_libres, posicion, nuevo_hueco);
 }
 
+// static void consolidar_huecos_contiguos(void) {
+//   int i = 0;
+
+//   while (i < list_size(administrador.huecos_libres) - 1) {
+//       t_hueco* actual = list_get(administrador.huecos_libres, i);
+//       t_hueco* siguiente = list_get(administrador.huecos_libres, i + 1);
+
+//       uint32_t fin_actual = actual->base + actual->tamanio;
+
+//       if (fin_actual == siguiente->base) {
+//           actual->tamanio += siguiente->tamanio;
+
+//           t_hueco* eliminado = list_remove(administrador.huecos_libres, i + 1);
+//           free(eliminado);
+//       } else {
+//           i++;
+//       }
+//   }
+// }
 static void consolidar_huecos_contiguos(void) {
-  int i = 0;
+  if (list_size(administrador.huecos_libres) < 2) return;
 
-  while (i < list_size(administrador.huecos_libres) - 1) {
-      t_hueco* actual = list_get(administrador.huecos_libres, i);
-      t_hueco* siguiente = list_get(administrador.huecos_libres, i + 1);
+  for (int i = 0; i < list_size(administrador.huecos_libres) - 1; i++) {
+    t_hueco* actual = list_get(administrador.huecos_libres, i);
+    t_hueco* siguiente = list_get(administrador.huecos_libres, i + 1);
 
-      uint32_t fin_actual = actual->base + actual->tamanio;
-
-      if (fin_actual == siguiente->base) {
-          actual->tamanio += siguiente->tamanio;
-
-          t_hueco* eliminado = list_remove(administrador.huecos_libres, i + 1);
-          free(eliminado);
-      } else {
-          i++;
-      }
+    if (actual->base + actual->tamanio == siguiente->base) {
+      actual->tamanio += siguiente->tamanio;
+      list_remove_element(administrador.huecos_libres, siguiente);
+      free(siguiente);
+      i--; // recomprobar el nuevo hueco unificado con el que le sigue
+    }
   }
 }
 
@@ -175,7 +190,8 @@ uint32_t reservar_espacio(uint32_t tamanio) {
   t_hueco* hueco = buscar_hueco_candidato(tamanio);
 
   if (hueco == NULL) {
-      return UINT32_MAX;
+    log_warning(logger, "## RESERVA FALLIDA: No hay hueco contiguo de %u bytes. Memoria libre total: %u bytes", tamanio, obtener_memoria_libre_total());
+    return UINT32_MAX;
   }
 
   uint32_t base_asignada = hueco->base;
