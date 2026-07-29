@@ -41,6 +41,7 @@ bool desuspender_proceso(uint32_t pid)
   log_debug(logger, "Buscando proceso por pid...");
   t_proceso_memoria*proceso = obtener_proceso(pid);
   log_debug(logger, "Hay elementos en el espacio del diccionario consultado.");
+
   if (proceso == NULL || proceso->contexto == NULL) {
     log_error(logger,"## ERROR: El proceso no existe. PID: %d", pid);
     return false;
@@ -53,6 +54,7 @@ bool desuspender_proceso(uint32_t pid)
 
       if (seg_swap->pid == pid){
 
+        // reservar espacio en memoria fisica (RAM)
         uint32_t nueva_base = reservar_espacio(seg_swap->tamanio);
         if (nueva_base == UINT32_MAX)
         {
@@ -60,13 +62,14 @@ bool desuspender_proceso(uint32_t pid)
           return false;
         }
 
-
+        //traer bloque desde swap
         int tamanio_bloque = swap_get_block_size();
         void*buffer_segmento = malloc(tamanio_bloque);
 
         if (!swap_leer_bloque(seg_swap->nro_bloque,buffer_segmento))
         {
           log_error(logger, "## ERROR: No se ha podido leer el bloque %d de SWAP", seg_swap->nro_bloque);
+          liberar_espacio(nueva_base, seg_swap->tamanio); // rollback
           free(buffer_segmento);
           return false;
         }
@@ -88,6 +91,7 @@ bool desuspender_proceso(uint32_t pid)
 
         liberar_bloque_swap(seg_swap->nro_bloque);
         list_remove(administrador.segmentos_guardados_en_swap,i);
+        
         free(seg_swap);
         free(buffer_segmento);
 
