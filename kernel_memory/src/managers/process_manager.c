@@ -9,6 +9,7 @@
 #include <commons/string.h>
 #include <commons/collections/list.h>
 #include "../handlers/handler_cpu.h"
+#include "../handlers/handler_swap.h"
 #include "../../utils/src/utils/tipos.h"
 #include "memory_manager.h"
 
@@ -30,6 +31,65 @@ extern bool listo_para_recibir;
 
 static char* pid_to_key(uint32_t pid) {
   return string_itoa(pid);
+}
+
+int encontrar_bloque_libre()
+{
+  int contador = 0;
+  while(dictionary_get(administrador.procesos_guardados_en_swap_por_pid,string_itoa(contador)))
+  {
+    contador++;
+  }
+  return contador;
+}
+
+bool desuspender_proceso(uint32_t pid)
+{
+  char*key = pid_to_key(pid);
+  // conseguir el bloque de swap asociado al pid
+  int nro_bloque = dictionary_get(administrador.procesos_guardados_en_swap_por_pid,key);
+
+  // leer el bloque de swap
+  
+  // registrar el proceso en el diccionario el proceso nuevamente
+  // realojar la memoria. hacer una vez por cada segmento
+  // devolver true si el proceso está registrado en memoria
+}
+
+bool suspender_proceso(uint32_t pid)
+{
+  char*key = pid_to_key(pid);
+  t_proceso_memoria*proceso = dictionary_get(administrador.procesos_por_pid,key);
+  t_list*lista_segmentos =proceso->contexto->tabla_segmentos;
+  for (int i = 0; i < list_size(lista_segmentos); i++)
+  {
+    t_segmento*segmento = list_get(lista_segmentos,i);
+
+    int nro_bloque = encontrar_bloque_libre();
+
+    uint32_t*pid_dicc = malloc(sizeof(int));
+    *pid_dicc = nro_bloque;
+    dictionary_put(administrador.procesos_guardados_en_swap_por_pid,key,pid_dicc);
+    free(key);
+    void*buffer = malloc(segmento->tamanio);
+    if(!leer_memoria_fisica(segmento->base,segmento->tamanio,buffer)){
+      free(buffer);
+      log_error(logger, "## ERROR: Ocurrió un error al leer memeoria fisica para el segmento.");
+      return false;
+    }
+
+    if(!swap_escribir_bloque(nro_bloque,buffer))
+    {
+      free(buffer);
+      log_error(logger, "## ERROR: Ocurrió un error al escribir al bloque.");
+      return false;
+    }
+    liberar_espacio(segmento->base,segmento->tamanio);
+    free(buffer);
+    
+  }
+  return true;
+  
 }
 
 void imprimir_lista_segmentos(uint32_t pid){
@@ -93,6 +153,7 @@ int traducir_direccion(uint32_t pid, uint32_t dir_logica, uint32_t tamanio, uint
 
 void inicializar_administrador_procesos(void) {
   administrador.procesos_por_pid = dictionary_create();
+  administrador.procesos_guardados_en_swap_por_pid = dictionary_create();
 }
 
 
