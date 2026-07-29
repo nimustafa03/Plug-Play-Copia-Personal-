@@ -326,16 +326,16 @@ void syscall_mem_alloc(char* instruccion, t_registros* registros, int fd_ks, uin
         if (*nueva_respuesta == MSG_OK) {
             registros->pc++;
         } else {
-            log_error(logger_cpu, "En MEM ALLOC se recibio respuesta inesperada: %d.", *nueva_respuesta);
-            exit(EXIT_FAILURE);
+            log_warning(logger_cpu, "MEM ALLOC recibio error. Hubo deficit de memoria");
+            registros->pc++;
         }
         free(nueva_respuesta);
     }
     if (*respuesta == MSG_OK) {
         registros->pc++;
     } else {
-        log_error(logger_cpu, "En MEM ALLOC se recibio respuesta inesperada: %d.", *respuesta);
-        exit(EXIT_FAILURE);
+        log_warning(logger_cpu, "MEM ALLOC recibio error. Hubo deficit de memoria");
+        registros->pc++;
     }
     free(respuesta);
 }
