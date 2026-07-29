@@ -146,7 +146,7 @@ void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint
 }
 
 // MOV_IN
-int mov_in(char* instruccion, t_registros* registros, t_mapa_memory_sticks_cpu* mapa, int fd_ms, int fd_ms_agregados[3], t_list* tabla_segmentos, t_log* logger_cpu) {
+int mov_in(char* instruccion, t_registros* registros, t_mapa_memory_sticks_cpu* mapa, int fd_ms, int fd_ms_agregados[3], t_list* tabla_segmentos, t_log* logger_cpu, uint32_t pid) {
     char registro_destino[8];
 
     sscanf(instruccion, "%*s %7s", registro_destino);
@@ -172,13 +172,15 @@ int mov_in(char* instruccion, t_registros* registros, t_mapa_memory_sticks_cpu* 
     memcpy(&valor, datos, tamanio);
     free(datos);
 
+    log_info(logger_cpu, "## PID: %u - LEER - Direccion Fisica: %d - Valor: %u", pid, direccion_fisica, valor);
+
     escribir_registro(registro_destino, registros, valor);
     registros->pc++;
     return 0;
 }
 
 // MOV_OUT
-int mov_out(char* instruccion, t_registros* registros, t_list* tabla_segmentos, t_mapa_memory_sticks_cpu* mapa, int fd_ms, int fd_ms_agregados[3], t_log* logger_cpu) {
+int mov_out(char* instruccion, t_registros* registros, t_list* tabla_segmentos, t_mapa_memory_sticks_cpu* mapa, int fd_ms, int fd_ms_agregados[3], t_log* logger_cpu, uint32_t pid) {
     char registro_origen[8];
 
     sscanf(instruccion, "%*s %7s", registro_origen);
@@ -197,6 +199,8 @@ int mov_out(char* instruccion, t_registros* registros, t_list* tabla_segmentos, 
     uint32_t valor = obtener_valor(registro_origen, registros);
 
     escritura_ms((uint32_t)direccion_fisica, &valor, tamanio, mapa, fd_ms, fd_ms_agregados, logger_cpu);
+
+    log_info(logger_cpu, "## PID: %u - ESCRIBIR - Direccion Fisica: %d - Valor: %u", pid, direccion_fisica, valor);
 
     registros->pc++;
     return 0;
@@ -226,8 +230,12 @@ int copy_mem(char* instruccion, t_registros* registros, t_list* tabla_segmentos,
         log_error(logger_cpu, "LECTURA devolvio NULL");
         exit(EXIT_FAILURE);
     }
+    uint8_t valor_leido = *(uint8_t*)buffer;
+    log_info(logger_cpu, "## PID: %u - LEER - Direccion Fisica: %d - Valor: %u", pid, direccion_fisica_origen, valor_leido);
 
     escritura_ms(direccion_fisica_destino, buffer, tamanio, mapa_ms, fd_ms, fd_ms_agregados, logger_cpu);
+
+    log_info(logger_cpu, "## PID: %u - ESCRIBIR - Direccion Fisica: %d - Valor: %u", pid, direccion_fisica_destino, valor_leido);
 
     free(buffer);
     registros->pc++;
@@ -302,7 +310,7 @@ void syscall_mem_alloc(char* instruccion, t_registros* registros, int fd_ks, uin
         exit(EXIT_FAILURE);
     }
     if (*respuesta == MSG_INTERRUPT) {
-
+        log_info(logger_cpu,"## Interrupcion recibida");
         int size_interrupcion = 0;
         interrupcion_entrante = recibir_mensaje(fd_ks, &size_interrupcion);
 
@@ -329,6 +337,7 @@ void syscall_mem_alloc(char* instruccion, t_registros* registros, int fd_ks, uin
             log_warning(logger_cpu, "MEM ALLOC recibio error. Hubo deficit de memoria");
         }
     free(nueva_respuesta);
+    free(respuesta);
     return;
     }
     if (*respuesta == MSG_OK) {
@@ -362,6 +371,7 @@ void syscall_mem_free(char* instruccion, t_registros* registros, int fd_ks, uint
     }
     if (*respuesta == MSG_INTERRUPT) {
         free(respuesta);
+        log_info(logger_cpu,"## Interrupcion recibida");
         int size_interrupcion = 0;
         interrupcion_entrante = recibir_mensaje(fd_ks, &size_interrupcion);
 
