@@ -173,6 +173,7 @@ void atender_kernel_scheduler(int fd) {
       switch (*codigo_recibido) {
         case MSG_DESUSPENDER_PROCESO:
           uint32_t* pid_ptr = recibir_mensaje(fd_kernel_scheduler, &size);
+          log_debug(logger, "Se ha recibido la orden de desuspender un proceso. PID: %d", *pid_ptr);
           bool ok = desuspender_proceso(*pid_ptr);
 
           if(ok) resp = MSG_OK;
@@ -184,6 +185,7 @@ void atender_kernel_scheduler(int fd) {
 
         case MSG_SUSPENDER_PROCESO:
           pid_ptr = recibir_mensaje(fd_kernel_scheduler, &size);
+          log_debug(logger, "Se ha recibido la orden de suspender un proceso. PID. %d", *pid_ptr);
           ok = suspender_proceso(*pid_ptr);
 
           if(ok) resp = MSG_OK;
