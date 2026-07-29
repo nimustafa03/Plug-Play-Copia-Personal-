@@ -167,33 +167,45 @@ void atender_kernel_scheduler(int fd) {
         free(codigo_recibido);
         continue;
       }
-      uint32_t* pid_ptr = NULL;
-      bool ok;
-      op_code resp;
       switch (*codigo_recibido) {
-        case MSG_DESUSPENDER_PROCESO:
+        // cada case con su propio bloque y sus propias variables. Antes habia
+        // un pid_ptr/ok/resp declarados afuera del switch que quedaban shadowed
+        // (y sin usar) por los declarados dentro del case.
+        case MSG_DESUSPENDER_PROCESO: {
           uint32_t* pid_ptr = recibir_mensaje(fd_kernel_scheduler, &size);
+          if (pid_ptr == NULL) {
+            log_error(logger, "## Error al recibir el PID a desuspender desde el Scheduler");
+            op_code resp = MSG_ERROR;
+            enviar_mensaje(fd_kernel_scheduler, &resp, sizeof(op_code));
+            break;
+          }
           log_debug(logger, "Se ha recibido la orden de desuspender un proceso. PID: %d", *pid_ptr);
           bool ok = desuspender_proceso(*pid_ptr);
 
-          if(ok) resp = MSG_OK;
-          else resp = MSG_ERROR;
+          op_code resp = ok ? MSG_OK : MSG_ERROR;
 
           enviar_mensaje(fd_kernel_scheduler, &resp, sizeof(op_code));
           free(pid_ptr);
           break;
+        }
 
-        case MSG_SUSPENDER_PROCESO:
-          pid_ptr = recibir_mensaje(fd_kernel_scheduler, &size);
+        case MSG_SUSPENDER_PROCESO: {
+          uint32_t* pid_ptr = recibir_mensaje(fd_kernel_scheduler, &size);
+          if (pid_ptr == NULL) {
+            log_error(logger, "## Error al recibir el PID a suspender desde el Scheduler");
+            op_code resp = MSG_ERROR;
+            enviar_mensaje(fd_kernel_scheduler, &resp, sizeof(op_code));
+            break;
+          }
           log_debug(logger, "Se ha recibido la orden de suspender un proceso. PID. %d", *pid_ptr);
-          ok = suspender_proceso(*pid_ptr);
+          bool ok = suspender_proceso(*pid_ptr);
 
-          if(ok) resp = MSG_OK;
-          else resp = MSG_ERROR;
+          op_code resp = ok ? MSG_OK : MSG_ERROR;
 
           enviar_mensaje(fd_kernel_scheduler, &resp, sizeof(op_code));
           free(pid_ptr);
           break;
+        }
           
         case MSG_DONE:
           respuesta = MSG_ERROR;
@@ -274,7 +286,11 @@ void atender_kernel_scheduler(int fd) {
               log_error(logger, "## Error al recibir datos de STDIN desde el Scheduler");
               respuesta = MSG_ERROR;
               enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
-              if (pid) free(pid); if (dir) free(dir); if (tam) free(tam); if (texto) free(texto);
+              // un free por linea (antes -Wmisleading-indentation)
+              if (pid) free(pid);
+              if (dir) free(dir);
+              if (tam) free(tam);
+              if (texto) free(texto);
               break;
           }
 

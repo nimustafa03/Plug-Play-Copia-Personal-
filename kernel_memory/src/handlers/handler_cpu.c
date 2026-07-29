@@ -342,7 +342,9 @@ bool notificar_segmentos_a_cpu(t_contexto*proceso){
         return false;
     }
     op_code codigo;
-    uint32_t tamanio_buffer = 0;
+    // serializar_segmentos() espera int* (ver utils/serializacion.h); usar
+    // uint32_t* rompia -Wpointer-sign.
+    int tamanio_buffer = 0;
 
     if (list_size(proceso->tabla_segmentos) == 0)
     {

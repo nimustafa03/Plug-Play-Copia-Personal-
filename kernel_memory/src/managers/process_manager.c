@@ -123,7 +123,7 @@ bool suspender_proceso(uint32_t pid)
   t_list*lista_segmentos =proceso->contexto->tabla_segmentos;
   int cantidad_segmentos = list_size(lista_segmentos);
 
-  if (list_size(lista_segmentos) == 0)
+  if (cantidad_segmentos == 0)
   {
     log_debug(logger, "El proceso no tiene segmentos asignados. No se requiere enviar nada a SWAP.");
     return true;
@@ -274,8 +274,10 @@ bool crear_proceso(uint32_t pid, char*path){
   char* key = pid_to_key(pid);
 
   if (dictionary_has_key(administrador.procesos_por_pid, key)) {
+    // se logueaba *key DESPUES del free(key) (-Wuse-after-free) y encima
+    // con %d sobre un char*. Logueamos el pid y liberamos despues.
+    log_warning(logger, "## ERROR: LA PID %u CORRESPONDE A UN PROCESO YA EXISTENTE.", pid);
     free(key);
-    log_warning(logger, "## ERROR: LA PID %d CORRESPONDE A UN PROCESO YA EXISTENTE.", *key);
     return false;
   }
 
