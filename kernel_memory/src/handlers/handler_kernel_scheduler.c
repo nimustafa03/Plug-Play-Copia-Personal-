@@ -101,10 +101,18 @@ static t_resultado_solicitud_desalojo solicitar_desalojo_por_compactacion(void)
 }
 
 static t_resultado_crear_segmento atender_creacion_segmento () {
-  uint32_t*pid, *id_segmento, *tamanio; int size;
+  uint32_t*pid, *id_segmento, *tamanio = NULL; int size;
+
+  
   pid = recibir_mensaje(fd_kernel_scheduler, &size);
   id_segmento = recibir_mensaje(fd_kernel_scheduler, &size);
   tamanio = recibir_mensaje(fd_kernel_scheduler, &size);
+  if (pid == NULL || id_segmento == NULL || tamanio == NULL){
+    if (pid == NULL) free(pid);
+    if (id_segmento == NULL) free(id_segmento);
+    if (tamanio == NULL) free(tamanio);
+    return CREAR_SEGMENTO_ERROR;
+  }
 
   t_resultado_crear_segmento resultado = crear_segmento(*pid, *id_segmento, *tamanio);
 
@@ -113,14 +121,16 @@ static t_resultado_crear_segmento atender_creacion_segmento () {
     t_resultado_solicitud_desalojo resultado_desalojo = solicitar_desalojo_por_compactacion();
     if (resultado_desalojo == DESALOJO_OK){
       ejecutar_compactacion();
-      resultado = crear_segmento(*pid, *id_segmento, *tamanio); // Recursividad. Es improbable, pero si llegó a no realizarse correctamente la compactación se detectaría de nuevo y se intenta hacerla nuevamente.
+      resultado = crear_segmento(*pid, *id_segmento, *tamanio);
     }
     else {
       log_error(logger, "## ERROR: OCURRIÓ UN ERROR EN EL DESALOJO.");
+      free(pid);free(id_segmento);free(tamanio);
       return CREAR_SEGMENTO_REQUIERE_COMPACTACION_DESALOJO_FALLO;
     }
   }
   log_info(logger, "El resultado de la operacion es %d", resultado);
+  free(pid);free(id_segmento);free(tamanio);
   return resultado;
 }
 
@@ -171,8 +181,13 @@ void atender_kernel_scheduler(int fd) {
 
         case MSG_MEM_ALLOC:
           respuesta = MSG_OK;
-          if (atender_creacion_segmento() != CREAR_SEGMENTO_OK){
+          t_resultado_crear_segmento resultado = atender_creacion_segmento();
+          if (resultado != CREAR_SEGMENTO_OK && resultado != CREAR_SEGMENTO_SIN_MEMORIA){
             respuesta = MSG_ERROR;
+          }
+          if (resultado != CREAR_SEGMENTO_SIN_MEMORIA)
+          {
+            respuesta = MSG_MEM_ALLOC_SIN_MEMORIA;
           }
           log_info(logger, "Se le envía a KS el siguiente resultado de respuesta a MEM_ALLOC: %d", respuesta);
           enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
