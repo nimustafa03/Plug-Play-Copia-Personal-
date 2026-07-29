@@ -36,6 +36,12 @@ static char* pid_to_key(uint32_t pid) {
 int encontrar_bloque_libre()
 {
   int contador = 0;
+
+  if (list_size(administrador.segmentos_guardados_en_swap) == 0)
+  {
+    return contador;
+  }
+
   while(list_get(administrador.segmentos_guardados_en_swap,contador))
   {
     contador++;
@@ -47,7 +53,7 @@ bool desuspender_proceso(uint32_t pid)
 {
   t_proceso_memoria*proceso = obtener_proceso(pid);
 
-  log_info(logger, "Se procederá a desuspender el proceso de PID. %d - Restaurando segmentos desde SWAP.");
+  log_info(logger, "Se procederá a desuspender el proceso de PID. %d - Restaurando segmentos desde SWAP.", pid);
   
   for (int i = 0; i < list_size(administrador.segmentos_guardados_en_swap); i++){
       t_segmento_swap*seg_swap = list_get(administrador.segmentos_guardados_en_swap,i);
@@ -100,25 +106,38 @@ bool suspender_proceso(uint32_t pid)
 {
   t_proceso_memoria*proceso = obtener_proceso(pid);
 
+  log_debug(logger, "Proceso obtenido. Verificando existencia y existencia de contexto.");
   if(proceso == NULL || proceso->contexto == NULL)
   {
     log_error(logger, "## ERROR: El proceso que se pretende suspender no existe.");
     return false;
   }
 
+  log_debug(logger, "El proceso existe, revisando su lista de segmentos.");
   t_list*lista_segmentos =proceso->contexto->tabla_segmentos;
   int cantidad_segmentos = list_size(lista_segmentos);
 
+  if (list_size(lista_segmentos) == 0)
+  {
+    log_debug(logger, "El proceso no tiene segmentos asignados. No se requiere enviar nada a SWAP.");
+    return true;
+  }
+
   while (list_size(lista_segmentos)>0)
   {
+    log_debug(logger,"Extrayendo segmento de la tabla...");
     t_segmento*segmento = list_remove(lista_segmentos,0);
 
+    log_debug(logger, "Encontrando bloque libre para guardar...");
     int nro_bloque = encontrar_bloque_libre();
-    
+
+    log_debug(logger,"Consiguiendo tamaño de bloque de swap...");
     int tamanio_bloque = swap_get_block_size();
+
+    log_debug(logger, "Alojando memoria...");
     void*buffer_segmento = calloc(1,tamanio_bloque);
 
-
+    log_debug(logger, "Intentando leer a memoria física...");
     if(!leer_memoria_fisica(segmento->base,segmento->tamanio,buffer_segmento)){
       free(buffer_segmento);
       log_error(logger, "## ERROR: Ocurrió un error al leer memoria fisica para el segmento.");
@@ -126,6 +145,8 @@ bool suspender_proceso(uint32_t pid)
       return false;
     }
 
+
+    log_debug(logger, "Intentando escribir bloque en swap...");
     if(!swap_escribir_bloque(nro_bloque,buffer_segmento))
     {
       free(buffer_segmento);
@@ -134,6 +155,7 @@ bool suspender_proceso(uint32_t pid)
       return false;
     }
 
+    log_debug(logger, "Indexando el segmento en la lista de segmentos en swap...");
     t_segmento_swap*seg_swap = malloc(sizeof(t_segmento_swap));
     seg_swap->pid = pid;
     seg_swap->nro_bloque = nro_bloque;
