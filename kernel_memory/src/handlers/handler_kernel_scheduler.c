@@ -218,24 +218,40 @@ void atender_kernel_scheduler(int fd) {
           break;
 
         case MSG_MEM_ALLOC:
-          respuesta = MSG_OK;
+          // respuesta = MSG_OK;
+          // t_resultado_crear_segmento resultado = atender_creacion_segmento();
+          // if (resultado != CREAR_SEGMENTO_OK && resultado != CREAR_SEGMENTO_SIN_MEMORIA){
+          //   respuesta = MSG_ERROR;
+          // }
+          // if (resultado == CREAR_SEGMENTO_SIN_MEMORIA)
+          // {
+          //   respuesta = MSG_MEM_ALLOC_SIN_MEMORIA;
+          // }
+          // log_info(logger, "Se le envía a KS el siguiente resultado de respuesta a MEM_ALLOC: %d", respuesta);
+          // enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
+          // // TODO:
+          // // 1. recibir PID
+          // // 2. recibir id_segmento
+          // // 3. recibir tamanio
+          // // 4. llamar a atender_creacion_segmento(pid, id_segmento, tamanio)
+          // // 5. responder resultado al Kernel Scheduler
+          // break;
+
           t_resultado_crear_segmento resultado = atender_creacion_segmento();
-          if (resultado != CREAR_SEGMENTO_OK && resultado != CREAR_SEGMENTO_SIN_MEMORIA){
+          
+          if (resultado == CREAR_SEGMENTO_OK) {
+            respuesta = MSG_OK;
+          } else if (resultado == CREAR_SEGMENTO_SIN_MEMORIA) {
+            respuesta = MSG_MEM_ALLOC_SIN_MEMORIA;
+          } else {
+            log_error(logger, "## ERROR en MEM_ALLOC: Código de fallo %d", resultado);
             respuesta = MSG_ERROR;
           }
-          if (resultado == CREAR_SEGMENTO_SIN_MEMORIA)
-          {
-            respuesta = MSG_MEM_ALLOC_SIN_MEMORIA;
-          }
-          log_info(logger, "Se le envía a KS el siguiente resultado de respuesta a MEM_ALLOC: %d", respuesta);
+          
+          log_info(logger, "Respuesta enviada a KS por MEM_ALLOC: %d", respuesta);
           enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
-          // TODO:
-          // 1. recibir PID
-          // 2. recibir id_segmento
-          // 3. recibir tamanio
-          // 4. llamar a atender_creacion_segmento(pid, id_segmento, tamanio)
-          // 5. responder resultado al Kernel Scheduler
           break;
+        }
 
         case MSG_MEM_FREE:
           respuesta = MSG_ERROR;
