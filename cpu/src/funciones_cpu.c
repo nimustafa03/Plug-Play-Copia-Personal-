@@ -89,12 +89,12 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             sub(instruccion, registros);
             break;
         case OP_MOV_IN:
-            int op_mov_in = mov_in(instruccion,registros,mapa,fd_ms,fd_ms_agregados,tabla_segmentos, logger_cpu);
+            int op_mov_in = mov_in(instruccion,registros,mapa,fd_ms,fd_ms_agregados,tabla_segmentos, logger_cpu, pid);
             if (op_mov_in == SEG_FAULT)
                 return SEG_FAULT;
             break;
         case OP_MOV_OUT:
-            int op_mov_out = mov_out(instruccion,registros,tabla_segmentos,mapa,fd_ms,fd_ms_agregados, logger_cpu);
+            int op_mov_out = mov_out(instruccion,registros,tabla_segmentos,mapa,fd_ms,fd_ms_agregados, logger_cpu, pid);
             if (op_mov_out == SEG_FAULT)
                 return SEG_FAULT;
             break;
@@ -820,12 +820,12 @@ int atender_interrupcion(int fd_ks, int fd_km, t_contexto* contexto,uint32_t pid
     }
 
     if (*codigo != MSG_INTERRUPT) {
-        log_error(logger_cpu,"Se recibió un mensaje inesperado desde KS: %d",*codigo);
+        log_error(logger_cpu,"En seccion Interrupciones, se recibió un mensaje inesperado desde KS: %d",*codigo);
 
         free(codigo);
         return -1;
     }
-
+    log_info(logger_cpu,"## Interrupcion recibida");
     free(codigo);
 
     /*
