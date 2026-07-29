@@ -8,6 +8,11 @@
 #include <utils/tipos.h>   
 
 
+// CP3 FIX: reintentos/espera para des-suspender un proceso antes de una IO que
+// toca memoria de usuario (ver asegurar_proceso_en_memoria).
+#define REINTENTOS_DESUSPENSION_IO 20
+#define ESPERA_DESUSPENSION_IO_US  50000 // 50ms -> hasta 1s de espera total
+
 // orden corregido para matchear el enum estado_proceso (estaba invertido SUSP_BLOCK/SUSP_READY)
 char const* estadosProcesos[] = {"NEW", "READY", "EXEC", "BLOCK", "EXIT", "SUSP_BLOCK", "SUSP_READY"};
 
@@ -1395,6 +1400,43 @@ void finalizar_io_y_desbloquear(Proceso* proceso) {
     }
 }
 
+// CP3 FIX: antes de que KM toque memoria de usuario (STDIN/STDOUT) el proceso TIENE
+// que estar en RAM. Si el SUSPENSION_TIMEOUT lo mando a SUSP_BLOCK mientras la IO
+// estaba en curso, sus segmentos estan en SWAP y KM no puede traducir la direccion
+// logica -> "Traduccion inexistente". Orden correcto: MSG_DESUSPENDER_PROCESO,
+// esperar MSG_OK, y recien despues mandar MSG_STDIN / MSG_STDOUT.
+// El proceso vuelve a BLOCK (sigue esperando el fin de su IO, no pasa a READY).
+// Devuelve true si el proceso quedo (o ya estaba) en memoria.
+static bool asegurar_proceso_en_memoria(Proceso* proceso) {
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][asegurar_proceso_en_memoria] ENTRADA - proceso=%p", (void*)proceso);
+
+    pthread_mutex_lock(&mutex_listas);
+    estado_proceso estado_actual = proceso->estado;
+    uint32_t pid = (uint32_t) proceso->id_proceso;
+    pthread_mutex_unlock(&mutex_listas);
+
+    if (estado_actual != SUSP_BLOCK && estado_actual != SUSP_READY) {
+        log_debug(logger_ks, "[DBG][asegurar_proceso_en_memoria] pid=%d ya esta en RAM (estado=%s)", pid, estadosProcesos[estado_actual]);
+        return true;
+    }
+
+    for (int intento = 1; intento <= REINTENTOS_DESUSPENSION_IO; intento++) {
+        if (km_desuspender_proceso(pid)) {
+            log_info(logger_ks, "## (%d) des-suspendido para completar su IO", pid);
+            actualizarEstadoProceso(proceso, BLOCK); // vuelve a RAM, sigue bloqueado por IO
+            return true;
+        }
+        log_warning(logger_ks, "## (%d) sin espacio en RAM para des-suspender antes de IO (intento %d/%d)", pid, intento, REINTENTOS_DESUSPENSION_IO);
+        usleep(ESPERA_DESUSPENSION_IO_US);
+    }
+
+    log_error(logger_ks, "## (%d) no se pudo des-suspender: KM sigue sin espacio", pid);
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][asegurar_proceso_en_memoria] SALIDA - pid=%d -> false", pid);
+    return false;
+}
+
 // Traduce un opcode de syscall a su nombre para el log obligatorio.
 const char* nombre_syscall(op_code cod) {
     switch (cod) {
@@ -1769,6 +1811,18 @@ void* atender_stdin_ks(void* arg) {
     log_debug(logger_ks, "[DBG][atender_stdin_ks] pid=%d - texto leido ptr=%p, size=%d", a->pid, (void*)texto, size);
     liberar_io(io);
 
+    // CP3 FIX: el proceso pudo haberse suspendido mientras esperabamos el teclado.
+    // Primero lo traemos de SWAP y despues mandamos MSG_STDIN (orden correcto).
+    if (!asegurar_proceso_en_memoria(proceso)) {
+        log_error(logger_ks, "## (%d) STDIN: no se pudo traer el proceso a memoria, se descarta la escritura", a->pid);
+        // DEBUG: heap
+        log_debug(logger_ks, "[DBG][atender_stdin_ks] pid=%d - free(texto=%p) por fallo de des-suspension", a->pid, (void*)texto);
+        if (texto != NULL) free(texto);
+        finalizar_io_y_desbloquear(proceso);
+        free(a);
+        return NULL;
+    }
+
     // CP3: pedirle a KM que escriba lo leído en memoria de usuario (a->dir_logica).
     // Serializado con mutex_km porque fd_km es un único socket compartido.
     pthread_mutex_lock(&mutex_km);
@@ -1823,6 +1877,16 @@ void* atender_stdout_ks(void* arg) {
     }
 
     actualizarEstadoProceso(proceso, BLOCK);
+
+    // CP3 FIX: mismo criterio que STDIN - KM solo puede leer memoria de usuario si el
+    // proceso esta en RAM. Normalmente lo esta (recien lo bloqueamos), pero si quedo
+    // suspendido lo des-suspendimos antes de mandar MSG_STDOUT.
+    if (!asegurar_proceso_en_memoria(proceso)) {
+        log_error(logger_ks, "## (%d) STDOUT: no se pudo traer el proceso a memoria, se descarta la lectura", a->pid);
+        finalizar_io_y_desbloquear(proceso);
+        free(a);
+        return NULL;
+    }
 
     // CP3: pedirle a KM los a->tamanio bytes en a->dir_logica (serializado con mutex_km).
     pthread_mutex_lock(&mutex_km);
