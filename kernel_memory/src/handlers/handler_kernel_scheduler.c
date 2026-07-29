@@ -281,6 +281,13 @@ void atender_kernel_scheduler(int fd) {
           uint32_t dir_global;
           int tr = traducir_direccion(*pid, *dir, *tam, &dir_global);
 
+          if (tr == TRADUCCION_INEXISTENTE) {
+            log_warning(logger, "PID %u - Intento de STDIN en proceso suspendido. Auto-desuspendiendo...", *pid);
+            if (desuspender_proceso(*pid)) {
+              tr = traducir_direccion(*pid, *dir, *tam, &dir_global); // Reintentamos la traducción
+            }
+          }
+
           if (tr == TRADUCCION_SEG_FAULT) {
               respuesta = MSG_SEG_FAULT;
           } else if (tr == TRADUCCION_INEXISTENTE) {
@@ -318,6 +325,13 @@ void atender_kernel_scheduler(int fd) {
 
           uint32_t dir_global;
           int tr = traducir_direccion(*pid, *dir, *tam, &dir_global);
+
+          if (tr == TRADUCCION_INEXISTENTE) {
+            log_warning(logger, "PID %u - Intento de STDIN en proceso suspendido. Auto-desuspendiendo...", *pid);
+            if (desuspender_proceso(*pid)) {
+              tr = traducir_direccion(*pid, *dir, *tam, &dir_global); // Reintentamos la traducción
+            }
+          }
 
           if (tr == TRADUCCION_SEG_FAULT) {
             respuesta = MSG_SEG_FAULT;
