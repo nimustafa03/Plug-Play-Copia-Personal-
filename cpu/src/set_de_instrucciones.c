@@ -329,7 +329,8 @@ void syscall_mem_alloc(char* instruccion, t_registros* registros, int fd_ks, uin
             log_warning(logger_cpu, "MEM ALLOC recibio error. Hubo deficit de memoria");
             registros->pc++;
         }
-        free(nueva_respuesta);
+    free(nueva_respuesta);
+    return;
     }
     if (*respuesta == MSG_OK) {
         registros->pc++;
