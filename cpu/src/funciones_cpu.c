@@ -35,9 +35,8 @@ char* fetch(int fd_km, u_int32_t pid, t_registros* cpu, t_log* logger_cpu){
         free(respuesta_km);
         return NULL;
     } else if (*respuesta_km == MSG_ERROR){
-            log_error(
-            logger_cpu,
-            "FETCH: KM respondio ERROR");
+            log_error(logger_cpu,"FETCH: KM respondio ERROR");
+            free(respuesta_km);
             return NULL;
             }
     log_debug(logger_cpu, "llego la respuesta");
@@ -626,7 +625,6 @@ void guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* l
 }
 
 void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km, t_log* logger_cpu){
-
     int size_respuesta;
     op_code* mensaje_km = recibir_mensaje(fd_km,&size_respuesta);
     if (*mensaje_km == MSG_TABLA_SEGMENTOS_NO_VACIA){
@@ -638,6 +636,7 @@ void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km, t_log* logger_cp
 
         if (buffer == NULL) {
             log_error(logger_cpu,"## ERROR: No se pudo recibir el buffer de segmentos.");
+            free(mensaje_km);
             return;
         }
 
@@ -646,8 +645,7 @@ void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km, t_log* logger_cp
         free(buffer);
 
         if (tabla_actualizada == NULL) {
-            log_error(logger_cpu,"## ERROR: No se pudo deserializar la tabla de segmentos."
-            );
+            log_error(logger_cpu,"## ERROR: No se pudo deserializar la tabla de segmentos.");
             return;
         }
 
@@ -656,10 +654,7 @@ void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km, t_log* logger_cp
         * los segmentos que contenía.
         */
         if (contexto->tabla_segmentos != NULL) {
-            list_destroy_and_destroy_elements(
-                contexto->tabla_segmentos,
-                free
-            );
+            list_destroy_and_destroy_elements(contexto->tabla_segmentos,free);
         }
 
         contexto->tabla_segmentos = tabla_actualizada;
@@ -677,8 +672,10 @@ void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km, t_log* logger_cp
             segmento->tamanio);
         }
     } else if (*mensaje_km == MSG_TABLA_SEGMENTOS_VACIA){
+        free(mensaje_km);
         return;
     } else {log_error(logger_cpu, "No llego el mensaje esperado al consultar por la tabla de segmentos. %d", *mensaje_km);
+        free(mensaje_km);
         return;
         }
 }
@@ -703,9 +700,10 @@ t_list* deserializar_tabla_segmentos(void* buffer, int tamanio_buffer){
 
         t_segmento* segmento = malloc(sizeof(t_segmento));
 
-        if (segmento == NULL)
+        if (segmento == NULL){
+            list_destroy_and_destroy_elements(segmentos, free);
             return NULL;
-
+        }
         memcpy(
             segmento,
             (char*)buffer + desplazamiento,

@@ -205,6 +205,7 @@ int main(int argc, char* argv[]) {
         if (contexto == NULL) {log_error(logger_cpu, "Error al recibir contexto");
             exit(EXIT_FAILURE);
         }
+        free(buffer);
         /*printf("AX %d",contexto->registros.ax);
         printf("BX %d",contexto->registros.bx);
         printf("CX %d",contexto->registros.cx);
@@ -217,7 +218,7 @@ int main(int argc, char* argv[]) {
         printf("PC %d",contexto->registros.pc);
         printf("SI %d",contexto->registros.si);*/
 
-        log_info(logger_cpu, "Inicia ejecucion de proceso: %d", pid);
+        log_debug(logger_cpu, "Inicia ejecucion de proceso: %d", pid);
 
         // WHILE CICLO DE INSTRUCCION
         interrupcion_entrante = NULL;
@@ -265,10 +266,12 @@ int main(int argc, char* argv[]) {
             }
 
             // INTERRUPCIONES
-            bool hubo_interrupcion = false;
             if (interrupcion_en_espera == true){
                 atender_interrupcion_en_espera(interrupcion_entrante, pid, fd_ks, fd_km, contexto, logger_cpu);
-                hubo_interrupcion = true;
+                free(interrupcion_entrante);
+                destruir_contexto(contexto);
+                free(instruccion);
+                break;
             } else if (interrupcion_en_espera == false && romper_ciclo != true) {
                     int resultado_interrupcion = atender_interrupcion(fd_ks, fd_km, contexto, pid, logger_cpu);
 
@@ -285,12 +288,6 @@ int main(int argc, char* argv[]) {
                         break;
                     }
                 }  
-            if (hubo_interrupcion == true){
-                free(interrupcion_entrante);
-                destruir_contexto(contexto);
-                free(instruccion);
-                break;
-            }
 
             log_debug(logger_cpu, "evalua EXIT");
             if (romper_ciclo == true) {
