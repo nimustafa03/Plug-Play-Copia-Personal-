@@ -185,7 +185,7 @@ void atender_kernel_scheduler(int fd) {
           if (resultado != CREAR_SEGMENTO_OK && resultado != CREAR_SEGMENTO_SIN_MEMORIA){
             respuesta = MSG_ERROR;
           }
-          if (resultado != CREAR_SEGMENTO_SIN_MEMORIA)
+          if (resultado == CREAR_SEGMENTO_SIN_MEMORIA)
           {
             respuesta = MSG_MEM_ALLOC_SIN_MEMORIA;
           }
