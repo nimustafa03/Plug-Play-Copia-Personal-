@@ -160,6 +160,7 @@ void crear_proceso(char* path, int prioridad) {
     p->prioridad_original = prioridad;
     p->fd_cpu = -1;  // sin CPU asignada todavía
     p->orden_suspension = 0;
+    p->en_swap = false; // todavia no fue suspendido
 
     // log obligatorio
     log_info(logger_ks, "## (%d) Se crea el proceso - Estado: NEW", p->id_proceso);
@@ -349,7 +350,25 @@ void* timer_suspension(void* arg) {
         pthread_mutex_unlock(&mutex_listas);
 
         if (estado_actual == BLOCK) {
+            // primero movemos el proceso de lista (para que si la IO termina
+            // justo ahora, finalizar_io_y_desbloquear lo mande a SUSP_READY y no a
+            // READY), y recien despues le pedimos a KM que lo baje a SWAP.
             actualizarEstadoProceso(proceso, SUSP_BLOCK);
+
+            if (km_suspender_proceso(args->pid)) {
+                pthread_mutex_lock(&mutex_listas);
+                proceso->en_swap = true;
+                estado_proceso estado_post = proceso->estado;
+                pthread_mutex_unlock(&mutex_listas);
+
+                // Si la IO termino mientras KM estaba bajando los segmentos a SWAP,
+                // el proceso ya paso a SUSP_READY y su intento de des-suspension se
+                // salteo (en_swap todavia era false). Lo reintentamos aca.
+                if (estado_post == SUSP_READY) intentar_desuspender_procesos();
+            } else {
+                // KM no pudo suspenderlo: la memoria del proceso sigue ocupada.
+                log_error(logger_ks, "## (%d) Kernel Memory no pudo suspender el proceso", args->pid);
+            }
         }
         // si ya no está en BLOCK (se desbloqueó antes de vencer el timeout), no hacemos nada
     }
@@ -1498,6 +1517,74 @@ bool km_mem_free(uint32_t pid, uint32_t id_segmento) {
     return ok;
 }
 
+// -------------------------- mediano plazo: suspensión --------------------------
+
+// le pide a KM que mueva TODOS los segmentos del proceso a
+// bloques del módulo SWAP y libere el espacio que ocupaban en los Memory Sticks.
+bool km_suspender_proceso(uint32_t pid) {
+
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][km_suspender_proceso] ENTRADA - pid=%d", pid);
+
+    pthread_mutex_lock(&mutex_km);
+    op_code cod = MSG_SUSPENDER_PROCESO;
+
+    // DEBUG: serializacion
+    log_debug(logger_ks, "[DBG][km_suspender_proceso] pid=%d - envío MSG_SUSPENDER_PROCESO + pid a KM fd=%d", pid, fd_km);
+
+    enviar_mensaje(fd_km, &cod, sizeof(op_code));
+    enviar_mensaje(fd_km, &pid, sizeof(uint32_t));
+
+    int size;
+    op_code* resp = recibir_mensaje(fd_km, &size);
+
+    // DEBUG: deserializacion
+    log_debug(logger_ks, "[DBG][km_suspender_proceso] pid=%d - respuesta KM ptr=%p, size=%d, opcode=%d", pid, (void*)resp, size, resp ? (int)*resp : -1);
+
+    bool ok = (resp != NULL && *resp == MSG_OK);
+    free(resp);
+    pthread_mutex_unlock(&mutex_km);
+
+    // DEBUG: frontera de funcion (valor devuelto)
+    log_debug(logger_ks, "[DBG][km_suspender_proceso] SALIDA - pid=%d -> %s", pid, ok ? "true" : "false");
+
+    return ok;
+}
+
+// mediano plazo) le pide a KM que vuelva a reservar espacio para todos los
+// segmentos del proceso y los traiga de SWAP. KM debe responder MSG_ERROR si no
+// entran TODOS sin disparar una compactación (así lo pide la consigna).
+bool km_desuspender_proceso(uint32_t pid) {
+    // DEBUG: frontera de funcion
+    log_debug(logger_ks, "[DBG][km_desuspender_proceso] ENTRADA - pid=%d", pid);
+
+    pthread_mutex_lock(&mutex_km);
+
+    op_code cod = MSG_DESUSPENDER_PROCESO;
+
+    // DEBUG: serializacion
+    log_debug(logger_ks, "[DBG][km_desuspender_proceso] pid=%d - envío MSG_DESUSPENDER_PROCESO + pid a KM fd=%d", pid, fd_km);
+
+    enviar_mensaje(fd_km, &cod, sizeof(op_code));
+    enviar_mensaje(fd_km, &pid, sizeof(uint32_t));
+
+    int size;
+    op_code* resp = recibir_mensaje(fd_km, &size);
+
+    // DEBUG: deserializacion
+    log_debug(logger_ks, "[DBG][km_desuspender_proceso] pid=%d - respuesta KM ptr=%p, size=%d, opcode=%d", pid, (void*)resp, size, resp ? (int)*resp : -1);
+
+    bool ok = (resp != NULL && *resp == MSG_OK);
+    free(resp);
+
+    pthread_mutex_unlock(&mutex_km);
+
+    // DEBUG: frontera de funcion (valor devuelto)
+    log_debug(logger_ks, "[DBG][km_desuspender_proceso] SALIDA - pid=%d -> %s", pid, ok ? "true" : "false");
+    
+    return ok;
+}
+
 // ---------------------- desalojo por compactación ----------------------
 
 // KM pidió compactar. Desalojamos todas las CPUs que estén ejecutando (menos la
@@ -1540,43 +1627,82 @@ void manejar_solicitud_desalojo(uint32_t pid_issuer) {
 
 // ---------------------- mediano plazo: des-suspensión ----------------------
 
+// orden de des-suspensión que pide la consigna: primero el más prioritario
+// (número de prioridad menor) y, a igual prioridad, el que lleve más tiempo
+// suspendido (orden_suspension menor).
+static bool desuspension_va_primero(void* a, void* b) {
+    Proceso* pa = (Proceso*) a;
+    Proceso* pb = (Proceso*) b;
+    if (pa->prioridad != pb->prioridad) return pa->prioridad < pb->prioridad;
+    return pa->orden_suspension < pb->orden_suspension;
+}
+
 // Recorre SUSP_READY por prioridad (menor número = más prioritario) y, a igual
-// prioridad, por antigüedad de suspensión, moviéndolos a READY.
-// NOTA(coordinación con KM): la consigna pide des-suspender sólo si hay espacio
-// para recrear los segmentos SIN compactar. Eso requiere un mensaje "¿hay espacio
-// para el PID X?" a KM que hoy no existe -> por ahora es best-effort (mueve todos).
+// prioridad, por antigüedad de suspensión. Por cada candidato le pide a KM que lo
+// des-suspenda; KM sólo acepta si puede recrear TODOS sus segmentos sin compactar.
+// Si KM rechaza, el proceso queda en SUSP_READY y se prueba con el siguiente.
 void intentar_desuspender_procesos() {
-    log_debug(logger_ks, "[DBG][intentar_desuspender] ENTRADA - SUSP_READY size=%d", list_size(listaProcesosSuspReady));
-    
+
+    //DEBUG: frontera de la funcion
+    log_debug(logger_ks, "[DBG][intentar_desuspender] ENTRADA");
+
+    // 1) candidatos. IMPORTANTE: no se puede hablar con KM teniendo
+    // mutex_listas tomado. km_mem_alloc toma mutex_km y después mutex_listas
+    // (desalojo por compactacion), asi que el orden inverso seria un deadlock.
     pthread_mutex_lock(&mutex_listas);
-    while (!list_is_empty(listaProcesosSuspReady)) {
-        int best = 0;
-        for (int i = 1; i < list_size(listaProcesosSuspReady); i++) {
-            Proceso* a = list_get(listaProcesosSuspReady, i);
-            Proceso* b = list_get(listaProcesosSuspReady, best);
-            if (a->prioridad < b->prioridad ||
-               (a->prioridad == b->prioridad && a->orden_suspension < b->orden_suspension)) {
-                best = i;
-            }
+
+    t_list* candidatos = list_create();
+    for (int i = 0; i < list_size(listaProcesosSuspReady); i++) {
+        Proceso* p = list_get(listaProcesosSuspReady, i);
+        // en_swap == false => KM todavia no termino de bajarlo a SWAP.
+        // timer_suspension reintenta la des-suspension cuando KM le confirma.
+        if (p->en_swap) list_add(candidatos, p);
+    }
+
+    pthread_mutex_unlock(&mutex_listas);
+
+    list_sort(candidatos, desuspension_va_primero);
+
+    //DEBUG: Cantidad de candidatos
+    log_debug(logger_ks, "[DBG][intentar_desuspender] candidatos=%d", list_size(candidatos));
+
+    // 2) Intentar des-suspender uno por uno, en orden.
+    for (int i = 0; i < list_size(candidatos); i++) {
+        Proceso* p = list_get(candidatos, i);
+
+        if (!km_desuspender_proceso(p->id_proceso)) {
+            log_debug(logger_ks, "[DBG][intentar_desuspender] pid=%d - KM lo rechazó (no entra sin compactar), sigue en SUSP_READY", p->id_proceso);
+            continue; // probamos con el siguiente candidato
         }
-        
-        Proceso* p = list_remove(listaProcesosSuspReady, best);
-        
+
+        pthread_mutex_lock(&mutex_listas);
+
+        // pudo haber cambiado de estado mientras hablábamos con KM
+        if (p->estado != SUSP_READY) {
+            pthread_mutex_unlock(&mutex_listas);
+            log_warning(logger_ks, "## (%d) cambió de estado durante la des-suspensión", p->id_proceso);
+            continue;
+        }
+
+        // DEBUG: candidato elegido
         log_debug(logger_ks, "[DBG][intentar_desuspender] elegido pid=%d ptr=%p (prio=%d) -> READY", p->id_proceso, (void*)p, p->prioridad);
-        
+
+        list_remove_element(listaProcesosSuspReady, p);
         p->estado = READY;
-        
-        procesoAReady(p); 
+        p->en_swap = false;
+        p->orden_suspension = 0; // se vuelve a sellar si se suspende de nuevo
+        procesoAReady(p);        // requiere mutex_listas tomado
 
         pthread_mutex_unlock(&mutex_listas);
 
+        // log obligatorio
         log_info(logger_ks, "## (%d) Pasa del estado SUSP. READY al estado READY", p->id_proceso);
         sem_post(&sem_hay_proceso_ready);
-
-        pthread_mutex_lock(&mutex_listas);
     }
-    pthread_mutex_unlock(&mutex_listas);
-    
+
+    list_destroy(candidatos); // sólo la lista; los Proceso* siguen vivos
+
+    // DEBUG: frontera de salida de la funcion
     log_debug(logger_ks, "[DBG][intentar_desuspender] SALIDA");
 }
 
