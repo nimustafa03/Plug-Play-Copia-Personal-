@@ -167,13 +167,14 @@ void atender_kernel_scheduler(int fd) {
         free(codigo_recibido);
         continue;
       }
-
+      uint32_t* pid_ptr = NULL;
+      bool ok;
+      op_code resp;
       switch (*codigo_recibido) {
         case MSG_DESUSPENDER_PROCESO:
           uint32_t* pid_ptr = recibir_mensaje(fd_kernel_scheduler, &size);
           bool ok = desuspender_proceso(*pid_ptr);
 
-          op_code resp;
           if(ok) resp = MSG_OK;
           else resp = MSG_ERROR;
 
@@ -182,10 +183,9 @@ void atender_kernel_scheduler(int fd) {
           break;
 
         case MSG_SUSPENDER_PROCESO:
-          uint32_t* pid_ptr = recibir_mensaje(fd_kernel_scheduler, &size);
-          bool ok = suspender_proceso(*pid_ptr);
+          pid_ptr = recibir_mensaje(fd_kernel_scheduler, &size);
+          ok = suspender_proceso(*pid_ptr);
 
-          op_code resp;
           if(ok) resp = MSG_OK;
           else resp = MSG_ERROR;
 

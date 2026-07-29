@@ -62,7 +62,7 @@ typedef struct {
 
 typedef struct {
     t_dictionary* procesos_por_pid;
-    t_dictionary* procesos_guardados_en_swap_por_pid;
+    t_list* segmentos_guardados_en_swap;
 } t_administrador_procesos;
 
 typedef enum {

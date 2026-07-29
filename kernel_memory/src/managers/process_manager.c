@@ -36,7 +36,7 @@ static char* pid_to_key(uint32_t pid) {
 int encontrar_bloque_libre()
 {
   int contador = 0;
-  while(dictionary_get(administrador.procesos_guardados_en_swap_por_pid,string_itoa(contador)))
+  while(list_get(administrador.segmentos_guardados_en_swap,contador))
   {
     contador++;
   }
@@ -45,51 +45,111 @@ int encontrar_bloque_libre()
 
 bool desuspender_proceso(uint32_t pid)
 {
-  char*key = pid_to_key(pid);
-  // conseguir el bloque de swap asociado al pid
-  int nro_bloque = dictionary_get(administrador.procesos_guardados_en_swap_por_pid,key);
+  t_proceso_memoria*proceso = obtener_proceso(pid);
 
-  // leer el bloque de swap
+  log_info(logger, "Se procederá a desuspender el proceso de PID. %d - Restaurando segmentos desde SWAP.");
   
-  // registrar el proceso en el diccionario el proceso nuevamente
-  // realojar la memoria. hacer una vez por cada segmento
-  // devolver true si el proceso está registrado en memoria
+  for (int i = 0; i < list_size(administrador.segmentos_guardados_en_swap); i++){
+      t_segmento_swap*seg_swap = list_get(administrador.segmentos_guardados_en_swap,i);
+
+      uint32_t nueva_base = reservar_espacio(seg_swap->tamanio);
+      if (nueva_base == UINT32_MAX)
+      {
+        log_error(logger, "## ERROR: Sin espacio en RAM para desuspender el proceso PID %u - El segmento %u tiene un tamaño mayor al permitido.", pid, seg_swap->id_segmento);
+        return false;
+      }
+
+      if (seg_swap->pid == pid){
+        
+        int tamanio_bloque = swap_get_block_size();
+        void*buffer_segmento = malloc(tamanio_bloque);
+
+        if (!swap_leer_bloque(seg_swap->nro_bloque,buffer_segmento))
+        {
+          log_error(logger, "## ERROR: No se ha podido leer el bloque %d de SWAP", seg_swap->nro_bloque);
+          free(buffer_segmento);
+          return false;
+        }
+
+        if (!escribir_memoria_fisica(nueva_base,seg_swap->tamanio,buffer_segmento))
+        {
+          log_error(logger, "## ERROR: No se ha podido escribir en memoria fisica para PID %u - Segmento %u", pid, seg_swap->id_segmento);
+          free(buffer_segmento);
+          return false;
+        }
+
+        t_resultado_crear_segmento res = crear_segmento(pid, seg_swap->id_segmento, seg_swap->tamanio);
+
+        list_remove(administrador.segmentos_guardados_en_swap,i);
+        free(seg_swap);
+        free(buffer_segmento);
+        i--; // Ajustamos el indice porque eliminamos un elemento.
+
+      }
+  }
+  log_info(logger, "## PID: %u desuspendido exitosamente.", pid);
+  return true;
+}
+
+static void destruir_segmento(void* elemento) {
+  t_segmento* segmento = elemento;
+  free(segmento);
 }
 
 bool suspender_proceso(uint32_t pid)
 {
-  char*key = pid_to_key(pid);
-  t_proceso_memoria*proceso = dictionary_get(administrador.procesos_por_pid,key);
-  t_list*lista_segmentos =proceso->contexto->tabla_segmentos;
-  for (int i = 0; i < list_size(lista_segmentos); i++)
+  t_proceso_memoria*proceso = obtener_proceso(pid);
+
+  if(proceso == NULL || proceso->contexto == NULL)
   {
-    t_segmento*segmento = list_get(lista_segmentos,i);
+    log_error(logger, "## ERROR: El proceso que se pretende suspender no existe.");
+    return false;
+  }
+
+  t_list*lista_segmentos =proceso->contexto->tabla_segmentos;
+  int cantidad_segmentos = list_size(lista_segmentos);
+
+  while (list_size(lista_segmentos)>0)
+  {
+    t_segmento*segmento = list_remove(lista_segmentos,0);
 
     int nro_bloque = encontrar_bloque_libre();
+    
+    int tamanio_bloque = swap_get_block_size();
+    void*buffer_segmento = calloc(1,tamanio_bloque);
 
-    uint32_t*pid_dicc = malloc(sizeof(int));
-    *pid_dicc = nro_bloque;
-    dictionary_put(administrador.procesos_guardados_en_swap_por_pid,key,pid_dicc);
-    free(key);
-    void*buffer = malloc(segmento->tamanio);
-    if(!leer_memoria_fisica(segmento->base,segmento->tamanio,buffer)){
-      free(buffer);
-      log_error(logger, "## ERROR: Ocurrió un error al leer memeoria fisica para el segmento.");
+
+    if(!leer_memoria_fisica(segmento->base,segmento->tamanio,buffer_segmento)){
+      free(buffer_segmento);
+      log_error(logger, "## ERROR: Ocurrió un error al leer memoria fisica para el segmento.");
+      free(segmento);
       return false;
     }
 
-    if(!swap_escribir_bloque(nro_bloque,buffer))
+    if(!swap_escribir_bloque(nro_bloque,buffer_segmento))
     {
-      free(buffer);
+      free(buffer_segmento);
+      free(segmento);
       log_error(logger, "## ERROR: Ocurrió un error al escribir al bloque.");
       return false;
     }
+
+    t_segmento_swap*seg_swap = malloc(sizeof(t_segmento_swap));
+    seg_swap->pid = pid;
+    seg_swap->nro_bloque = nro_bloque;
+    seg_swap->id_segmento = segmento->id_segmento;
+    seg_swap->tamanio = segmento->tamanio;
+
+    list_add(administrador.segmentos_guardados_en_swap,seg_swap);
+
+    log_info(logger, "Se ha guardado un segmento en la swap. ID: %d, BLOQUE EN SWAP: %d.", segmento->id_segmento, nro_bloque);
     liberar_espacio(segmento->base,segmento->tamanio);
-    free(buffer);
+    destruir_segmento(segmento);
+    log_info(logger, "Se ha eliminado el segmento de la RAM.");
+    free(buffer_segmento);
     
   }
   return true;
-  
 }
 
 void imprimir_lista_segmentos(uint32_t pid){
@@ -153,7 +213,7 @@ int traducir_direccion(uint32_t pid, uint32_t dir_logica, uint32_t tamanio, uint
 
 void inicializar_administrador_procesos(void) {
   administrador.procesos_por_pid = dictionary_create();
-  administrador.procesos_guardados_en_swap_por_pid = dictionary_create();
+  administrador.segmentos_guardados_en_swap = list_create();
 }
 
 
@@ -439,6 +499,8 @@ t_resultado_crear_segmento crear_segmento(uint32_t pid, uint32_t id_segmento, ui
   return CREAR_SEGMENTO_OK;
 }
 
+
+
 t_list* obtener_todos_los_segmentos(void) {
   t_list* segmentos_ocupados = list_create();
   t_list* pids = dictionary_keys(administrador.procesos_por_pid); // Obtenemos una lista de los pids de los procesos.
@@ -462,10 +524,6 @@ t_list* obtener_todos_los_segmentos(void) {
   return segmentos_ocupados; // Devolvemos la lista de cada segmento ocupado en memoria.
 }
 
-static void destruir_segmento(void* elemento) {
-  t_segmento* segmento = elemento;
-  free(segmento);
-}
 
 static void destruir_contexto(t_contexto* contexto) {
   free(contexto);
@@ -476,12 +534,15 @@ static void destruir_proceso_memoria(void* elemento) {
 
   free(proceso->lista_instrucciones);
 
-  list_destroy_and_destroy_elements(proceso->contexto->tabla_segmentos, destruir_segmento);
-
+  if (proceso->contexto->tabla_segmentos){
+    list_destroy_and_destroy_elements(proceso->contexto->tabla_segmentos, destruir_segmento);
+  }
   destruir_contexto(proceso->contexto);
 
   free(proceso);
 }
+
+
 
 bool destruir_proceso(uint32_t pid) {
   /*char* key = pid_to_key(pid);

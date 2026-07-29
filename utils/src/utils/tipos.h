@@ -3,6 +3,13 @@
 
 #include <stdint.h>
 #include <commons/collections/list.h>
+typedef struct
+{
+    uint32_t pid;
+    int nro_bloque;
+    uint32_t id_segmento;
+    uint32_t tamanio;
+}t_segmento_swap;
 
 typedef struct {
     uint32_t id_segmento;
