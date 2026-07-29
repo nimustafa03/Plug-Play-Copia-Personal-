@@ -170,9 +170,29 @@ void atender_kernel_scheduler(int fd) {
 
       switch (*codigo_recibido) {
         case MSG_DESUSPENDER_PROCESO:
+          uint32_t* pid_ptr = recibir_mensaje(fd_kernel_scheduler, &size);
+          bool ok = desuspender_proceso(*pid_ptr);
+
+          op_code resp;
+          if(ok) resp = MSG_OK;
+          else resp = MSG_ERROR;
+
+          enviar_mensaje(fd_kernel_scheduler, &resp, sizeof(op_code));
+          free(pid_ptr);
           break;
+
         case MSG_SUSPENDER_PROCESO:
+          uint32_t* pid_ptr = recibir_mensaje(fd_kernel_scheduler, &size);
+          bool ok = suspender_proceso(*pid_ptr);
+
+          op_code resp;
+          if(ok) resp = MSG_OK;
+          else resp = MSG_ERROR;
+
+          enviar_mensaje(fd_kernel_scheduler, &resp, sizeof(op_code));
+          free(pid_ptr);
           break;
+          
         case MSG_DONE:
           respuesta = MSG_ERROR;
           if (atender_destruccion_proceso()){
