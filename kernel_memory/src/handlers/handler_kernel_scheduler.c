@@ -217,7 +217,7 @@ void atender_kernel_scheduler(int fd) {
           // TODO: recibir PID y llamar a destruir_proceso(pid)
           break;
 
-        case MSG_MEM_ALLOC:
+        case MSG_MEM_ALLOC:{
           // respuesta = MSG_OK;
           // t_resultado_crear_segmento resultado = atender_creacion_segmento();
           // if (resultado != CREAR_SEGMENTO_OK && resultado != CREAR_SEGMENTO_SIN_MEMORIA){
@@ -250,8 +250,8 @@ void atender_kernel_scheduler(int fd) {
           
           log_info(logger, "Respuesta enviada a KS por MEM_ALLOC: %d", respuesta);
           enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
-          break;
-        }
+          break;}
+      
 
         case MSG_MEM_FREE:
           respuesta = MSG_ERROR;
