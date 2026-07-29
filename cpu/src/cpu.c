@@ -285,7 +285,7 @@ int main(int argc, char* argv[]) {
                 }  
             free(interrupcion_entrante);
 
-            log_info(logger_cpu, "evalua EXIT");
+            log_debug(logger_cpu, "evalua EXIT");
             if (romper_ciclo == true) {
                 log_info(logger_cpu, "Concluyo proceso %d con EXIT", pid);
                 free(instruccion);
