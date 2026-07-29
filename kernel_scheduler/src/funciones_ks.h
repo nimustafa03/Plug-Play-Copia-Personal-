@@ -55,6 +55,7 @@ typedef struct{
     int prioridad_original; // prioridad base, para restaurar tras herencia
     int fd_cpu; //FD de la CPU que lo está ejecutando (-1 si ninguna)
     long orden_suspension; // orden en que se suspendio (desempate de mediano plazo: menor = mas viejo)
+    bool en_swap; // true si KM ya confirmo que sus segmentos estan en SWAP
 } Proceso;
 
 // representa una IO conectada y libre, con su tipo (STDIN/STDOUT/SLEEP)
@@ -162,6 +163,9 @@ void finalizar_proceso(Proceso* proceso, char* motivo);
 // Comunicacion con Kernel Memory (todo serializado con mutex_km)
 bool km_mem_alloc(uint32_t pid, uint32_t id_segmento, uint32_t tamanio);
 bool km_mem_free(uint32_t pid, uint32_t id_segmento);
+// mediano plazo: mover los segmentos del proceso a SWAP y traerlos de vuelta
+bool km_suspender_proceso(uint32_t pid);
+bool km_desuspender_proceso(uint32_t pid);
 void km_notificar_exit(uint32_t pid);
 void manejar_solicitud_desalojo(uint32_t pid_issuer); // desalojo por compactacion (inline en MEM_ALLOC)
 
