@@ -327,7 +327,6 @@ void syscall_mem_alloc(char* instruccion, t_registros* registros, int fd_ks, uin
             registros->pc++;
         } else {
             log_warning(logger_cpu, "MEM ALLOC recibio error. Hubo deficit de memoria");
-            registros->pc++;
         }
     free(nueva_respuesta);
     return;
@@ -336,7 +335,6 @@ void syscall_mem_alloc(char* instruccion, t_registros* registros, int fd_ks, uin
         registros->pc++;
     } else {
         log_warning(logger_cpu, "MEM ALLOC recibio error. Hubo deficit de memoria");
-        registros->pc++;
     }
     free(respuesta);
 }
@@ -387,16 +385,15 @@ void syscall_mem_free(char* instruccion, t_registros* registros, int fd_ks, uint
         if (*nueva_respuesta == MSG_OK) {
             registros->pc++;
         } else {
-            log_error(logger_cpu, "En MEM FREE se recibio respuesta inesperada: %d.", *nueva_respuesta);
-            exit(EXIT_FAILURE);
+            log_error(logger_cpu, "En MEM FREE recibio un error desde KS. Posible error al liberar memoria");
         }
-        free(nueva_respuesta);
+    free(nueva_respuesta);
+    return;
     }
     if (*respuesta == MSG_OK) {
         registros->pc++;
     } else {
-        log_error(logger_cpu, "En MEM FREE se recibio respuesta inesperada: %d.", *respuesta);
-        exit(EXIT_FAILURE);
+        log_error(logger_cpu, "En MEM FREE recibio un error desde KS. Posible error al liberar memoria");
     }
     free(respuesta);
 }
