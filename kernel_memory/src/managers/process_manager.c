@@ -38,8 +38,13 @@ static char* pid_to_key(uint32_t pid) {
 
 bool desuspender_proceso(uint32_t pid)
 {
+  log_debug(logger, "Buscando proceso por pid...");
   t_proceso_memoria*proceso = obtener_proceso(pid);
-  if (proceso == NULL || proceso->contexto == NULL) log_error(logger,"## ERROR: El proceso no existe. PID: %d", pid);return false;
+  log_debug(logger, "Hay elementos en el espacio del diccionario consultado.");
+  if (proceso == NULL || proceso->contexto == NULL) {
+    log_error(logger,"## ERROR: El proceso no existe. PID: %d", pid);
+    return false;
+  }
 
   log_info(logger, "Se procederá a desuspender el proceso de PID. %d - Restaurando segmentos desde SWAP.", pid);
   
