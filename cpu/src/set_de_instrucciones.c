@@ -302,7 +302,7 @@ void syscall_mem_alloc(char* instruccion, t_registros* registros, int fd_ks, uin
         exit(EXIT_FAILURE);
     }
     if (*respuesta == MSG_INTERRUPT) {
-        free(respuesta);
+
         int size_interrupcion = 0;
         interrupcion_entrante = recibir_mensaje(fd_ks, &size_interrupcion);
 
@@ -339,7 +339,6 @@ void syscall_mem_alloc(char* instruccion, t_registros* registros, int fd_ks, uin
     }
     free(respuesta);
 }
-
 
 // MEM_FREE
 void syscall_mem_free(char* instruccion, t_registros* registros, int fd_ks, uint32_t pid, t_log* logger_cpu) {
@@ -400,7 +399,6 @@ void syscall_mem_free(char* instruccion, t_registros* registros, int fd_ks, uint
     }
     free(respuesta);
 }
-
 
 // EXIT
 void syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log* logger_cpu) {

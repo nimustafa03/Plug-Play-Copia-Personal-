@@ -38,17 +38,7 @@ typedef enum {
 } operacion;
 
 // STRUCTS
-typedef struct {
-    uint32_t pid;
-    uint32_t id_segmento;
-    uint32_t tamanio;
-} t_mem_alloc;
-typedef struct {
-    uint32_t pid;
-    uint32_t id_segmento;
-} t_mem_free;
 
-// REQUEST FETCH
 typedef struct {
     uint32_t pid;
     uint32_t pc;
@@ -96,12 +86,14 @@ int obtener_fd_ms(uint32_t indice_ms,int fd_ms,int fd_ms_agregados[3]);
 void escribir_en_buffer(void* buffer,uint32_t* desplazamiento,const void* dato,uint32_t tamanio);
 t_list* deserializar_tabla_segmentos(void* buffer, int tamanio_buffer);
 
+void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km,t_log* logger_cpu);
+void manejar_seg_fault(int fd_ks, uint32_t pid, t_log* logger_cpu, int fd_km);
+
+// CONTEXTOS
 void enviar_contexto(t_contexto* contexto, int fd_km, t_log* logger_cpu);
 void destruir_contexto(t_contexto* contexto);
 void guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* logger_cpu); 
 
-void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km,t_log* logger_cpu);
-void manejar_seg_fault(int fd_ks, uint32_t pid, t_log* logger_cpu, int fd_km);
 
 // OPERACIONES CON REGISTROS
 uint32_t obtener_valor(char* posicion, t_registros* registro);
