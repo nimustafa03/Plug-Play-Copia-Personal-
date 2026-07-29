@@ -12,6 +12,7 @@
 #include <commons/config.h>
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
+#include <errno.h>
 
 t_log*    logger;
 t_config* config;
@@ -119,7 +120,7 @@ int main(int argc, char* argv[]) {
         log_debug(logger, "[DBG][loop] Bloque objetivo: %d | Offset calculado: %ld bytes", nro_bloque, (long)offset);
 
         // validacion limites de archivo
-        if (offset + block_size > swap_size){
+        if (nro_bloque < 0 || offset + block_size > swap_size){
             log_error(logger, "## ERROR: Solicitud de bloque fuera de rango. Bloque %d excede el tamaño total (%d)", nro_bloque, swap_size);
             free(orden);
             break;
@@ -130,6 +131,8 @@ int main(int argc, char* argv[]) {
                 void* datos = recibir_mensaje(fd_km, &size_datos);
                 if (datos == NULL) {
                     log_error(logger, "[DBG][WRITE] Error al recibir datos para escribir en bloque %d", nro_bloque);
+                    op_code err = MSG_ERROR;
+                    enviar_mensaje(fd_km, &err, sizeof(op_code));
                     break;
                 }
 
@@ -138,13 +141,16 @@ int main(int argc, char* argv[]) {
                 ssize_t bytes_escritos = pwrite(swap_fd, datos, block_size, offset);
 
                 if (bytes_escritos < block_size) {
-                    log_error(logger, "[DBG][WRITE] Error o escritura incompleta en pwrite: %ld bytes", (long)bytes_escritos);
+                    log_error(logger, "[DBG][WRITE] Error en pwrite: %s (errno: %d) | bytes: %ld", 
+                              strerror(errno), errno, (long)bytes_escritos);
+                    op_code err = MSG_ERROR;
+                    enviar_mensaje(fd_km, &err, sizeof(op_code));
                 } else {
                     log_info(logger, "## Escritura del bloque: %d", nro_bloque);
-                }                
-                
-                op_code ok = MSG_OK;
-                enviar_mensaje(fd_km, &ok, sizeof(op_code));
+                    op_code ok = MSG_OK;
+                    enviar_mensaje(fd_km, &ok, sizeof(op_code));
+                }       
+
                 free(datos);
                 break;
             }
