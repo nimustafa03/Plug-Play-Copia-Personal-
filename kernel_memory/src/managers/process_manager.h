@@ -11,8 +11,8 @@ void inicializar_administrador_procesos(void);
 void destruir_administrador_procesos(void);
 
 char*generar_lista_instrucciones(char*path);
-
-
+bool suspender_proceso(uint32_t pid);
+bool desuspender_proceso(uint32_t pid);
 bool crear_proceso(uint32_t pid, char*path);
 bool inicializar_proceso(uint32_t pid,int fd_cpu);
 bool destruir_proceso(uint32_t pid);

@@ -169,6 +169,10 @@ void atender_kernel_scheduler(int fd) {
       }
 
       switch (*codigo_recibido) {
+        case MSG_DESUSPENDER_PROCESO:
+          break;
+        case MSG_SUSPENDER_PROCESO:
+          break;
         case MSG_DONE:
           respuesta = MSG_ERROR;
           if (atender_destruccion_proceso()){
