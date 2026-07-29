@@ -74,7 +74,10 @@ typedef enum {
     MSG_TABLA_SEGMENTOS_VACIA = 41, // KM avisa a CPU que la tabla de segmentos está vacía y no va a enviar nada.
     MSG_TABLA_SEGMENTOS_NO_VACIA = 42, // Opuesto a arriba
     MSG_SOLICITAR_PID = 43, // o el proximo libre
-    MSG_MEM_ALLOC_SIN_MEMORIA = 44 // Un mem alloc falló por falta de memoria
+    MSG_MEM_ALLOC_SIN_MEMORIA = 44, // Un mem alloc falló por falta de memoria
+    MSG_SUSPENDER_PROCESO = 45, // Suspender proceso a disco (bajar todos los segmentos del PID a SWAP y liberar memoria fisica)
+    MSG_DESUSPENDER_PROCESO = 46, // Des-suspender proceso a RAM (recrear los segmentos del PID en memoria y traerlos del SWAP)
+
 } op_code;
 
 #endif // MENSAJES_H
