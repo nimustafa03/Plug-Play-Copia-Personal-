@@ -109,27 +109,19 @@ static t_resultado_crear_segmento atender_creacion_segmento () {
   t_resultado_crear_segmento resultado = crear_segmento(*pid, *id_segmento, *tamanio);
 
   if (resultado == CREAR_SEGMENTO_REQUIERE_COMPACTACION) {
+    log_warning(logger, "Se requiere compactación para crear el segmento.");
     t_resultado_solicitud_desalojo resultado_desalojo = solicitar_desalojo_por_compactacion();
     if (resultado_desalojo == DESALOJO_OK){
       ejecutar_compactacion();
       resultado = crear_segmento(*pid, *id_segmento, *tamanio); // Recursividad. Es improbable, pero si llegó a no realizarse correctamente la compactación se detectaría de nuevo y se intenta hacerla nuevamente.
     }
     else {
+      log_error(logger, "## ERROR: OCURRIÓ UN ERROR EN EL DESALOJO.");
       return CREAR_SEGMENTO_REQUIERE_COMPACTACION_DESALOJO_FALLO;
     }
   }
+  log_info(logger, "El resultado de la operacion es %d", resultado);
   return resultado;
-    /*
-     * TODO:
-     * Cuando esté implementado el protocolo de compactación:
-     *
-     * 1. Solicitar desalojo.
-     * 2. Esperar confirmación.
-     * 3. Ejecutar compactación.
-     * 4. Reintentar crear el segmento.
-     */
-    // CREO que está hecho. Pero dejo la instrucciones acá por si hice algo mal.
-
 }
 
 bool atender_destruccion_proceso(){
@@ -182,6 +174,7 @@ void atender_kernel_scheduler(int fd) {
           if (atender_creacion_segmento() != CREAR_SEGMENTO_OK){
             respuesta = MSG_ERROR;
           }
+          log_info(logger, "Se le envía a KS el siguiente resultado de respuesta a MEM_ALLOC: %d", respuesta);
           enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
           // TODO:
           // 1. recibir PID

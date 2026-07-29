@@ -28,6 +28,27 @@ extern bool listo_para_recibir;
 //                     desplazamiento = dir_logica % SEGMENT_MAX_SIZE;
 //                     fisica = base_del_segmento + desplazamiento.
 
+static char* pid_to_key(uint32_t pid) {
+  return string_itoa(pid);
+}
+
+void imprimir_lista_segmentos(uint32_t pid){
+  char*key = pid_to_key(pid);
+  t_proceso_memoria*proceso = dictionary_get(administrador.procesos_por_pid, key);
+  free(key);
+
+  t_list*lista_segmentos = proceso->contexto->tabla_segmentos;
+  log_info(logger, "El tamaño de la lista de segmentos es el siguiente: %d", list_size(lista_segmentos));
+  for (int i = 0; i < list_size(lista_segmentos); i++)
+  {
+    t_segmento*segmento = list_get(lista_segmentos, i);
+    log_info(logger, "ID DEL SEGMENTO: %d", segmento->id_segmento);
+    log_info(logger, "BASE DEL SEGMENTO: %d", segmento->base);
+    log_info(logger, "TAMAÑO DEL SEGMENTO: %d", segmento->tamanio);
+  }
+
+  return;
+}
 
 char*generar_lista_instrucciones(char*path){
   log_info(logger, "Abriendo el archivo...");
@@ -74,9 +95,6 @@ void inicializar_administrador_procesos(void) {
   administrador.procesos_por_pid = dictionary_create();
 }
 
-static char* pid_to_key(uint32_t pid) {
-  return string_itoa(pid);
-}
 
 static t_contexto* crear_contexto_inicial(void) {
   t_contexto* contexto = malloc(sizeof(t_contexto));
@@ -214,6 +232,8 @@ void*manejar_proceso(void*arg){
       interrumpido_local = true;
       }
     free(codigo);
+    log_info(logger, "La tabla de segmentos del proceso PID %d es la siguiente.", pid_local);
+    imprimir_lista_segmentos(pid_local);
   }
 
   log_info(logger, "## PID: %d - Saliendo del ciclo de FETCH", pid_local);
@@ -311,30 +331,38 @@ t_segmento* obtener_segmento(uint32_t pid, uint32_t id_segmento) {
 }
 
 t_resultado_crear_segmento crear_segmento(uint32_t pid, uint32_t id_segmento, uint32_t tamanio) {
+  log_info(logger,"La memoria total disponible es: %u", obtener_memoria_libre_total());
+
   if (tamanio == 0) {
+    log_error(logger, "## ERROR: El tamaño es inválido.");
     return CREAR_SEGMENTO_TAMANIO_INVALIDO;
   }
 
   t_proceso_memoria* proceso = obtener_proceso(pid);
 
   if (proceso == NULL) {
+    log_error(logger, "## ERROR: Se intentó crear un segmento para un proceso inexistente.");
     return CREAR_SEGMENTO_PROCESO_INEXISTENTE;
   }
 
   if (obtener_segmento(pid, id_segmento) != NULL) {
+    log_error(logger, "## ERROR: Se intentó crear un segmento con el mismo id que otro segmento.");
     return CREAR_SEGMENTO_ID_REPETIDO;
   }
 
   if (!hay_hueco_contiguo(tamanio)) {
     if (requiere_compactacion(tamanio)) {
+      log_warning(logger, "El segmento requiere una compactación de memory stick para crearse.");
       return CREAR_SEGMENTO_REQUIERE_COMPACTACION;
     }
+    log_error(logger, "## ERROR: No se requiere compactación, pero no hay suficiente memoria para crear el segmento.");
     return CREAR_SEGMENTO_SIN_MEMORIA;
   }
 
   uint32_t base = reservar_espacio(tamanio);
 
   if (base == UINT32_MAX) {
+    log_error(logger, "## ERROR: el tamaño pedido es mayor al maximo permitido para un uint32_t. No existe suficiente memoria para alojarlo.");
     return CREAR_SEGMENTO_SIN_MEMORIA;
   }
 
@@ -344,6 +372,7 @@ t_resultado_crear_segmento crear_segmento(uint32_t pid, uint32_t id_segmento, ui
   segmento->base = base;
   segmento->tamanio = tamanio;
 
+  log_info(logger, "El segmento se ha creado satisfactoriamente y ha sido agregado a la tabla de segmentos.");
   list_add(proceso->contexto->tabla_segmentos, segmento);
 
   return CREAR_SEGMENTO_OK;

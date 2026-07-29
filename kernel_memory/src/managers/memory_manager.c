@@ -19,6 +19,7 @@ static void insertar_hueco_ordenado(t_hueco* nuevo_hueco);
 static void consolidar_huecos_contiguos(void);
 static void destruir_hueco(void* elemento);
 
+
 void inicializar_administrador_memoria(t_estrategia_asignacion estrategia) {
   administrador.memory_sticks = list_create();
   administrador.huecos_libres = list_create();
@@ -212,6 +213,7 @@ uint32_t obtener_memoria_libre_total(void) {
 
   for (int i = 0; i < list_size(administrador.huecos_libres); i++) {
     t_hueco* hueco = list_get(administrador.huecos_libres, i);
+    log_info(logger, "hueco de tamaño de base %u : %u", hueco->base, hueco->tamanio);
     total_libre += hueco->tamanio;
   }
 
