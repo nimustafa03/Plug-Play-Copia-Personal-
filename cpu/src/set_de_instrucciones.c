@@ -116,7 +116,7 @@ void noop(t_registros* registros) {
 }
 
 // INIT_PROC
-void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid, t_log* logger_cpu) {
+void syscall_init_proc(char* instruccion, t_registros* registros, int fd_ks, uint32_t pid, t_log* logger_cpu) {
     char archivo[256];
     int prioridad;
     sscanf(instruccion, "%*s %255s %d", archivo, &prioridad);
@@ -135,14 +135,44 @@ void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint
         log_error(logger_cpu, "Error al recibir respuesta en INIT PROC");
         exit(EXIT_FAILURE);
     }
-    if (*respuesta != MSG_OK) {
-        log_error(logger_cpu, "En INIT PROC se recibio una respuesta distinta a la esperada: %d", *respuesta);
-        free(respuesta);
-        exit(EXIT_FAILURE);
-    }
 
+    if (*respuesta == MSG_INTERRUPT) {
+        log_info(logger_cpu,"## Interrupcion recibida");
+        int size_interrupcion = 0;
+        interrupcion_entrante = recibir_mensaje(fd_ks, &size_interrupcion);
+
+        if (interrupcion_entrante == NULL) {
+            log_error(logger_cpu,"Se recibió MSG_INTERRUPT pero no llegó la estructura t_interrupt");
+            exit(EXIT_FAILURE);
+        }
+        if (size_interrupcion != sizeof(t_interrupcion)) {
+            log_error(logger_cpu,"Tamaño inválido para t_interrupt. Recibido: %d - Esperado: %zu",size_interrupcion,sizeof(t_interrupcion));
+            free(interrupcion_entrante);
+            exit(EXIT_FAILURE);
+        }
+
+        log_warning(logger_cpu,"===== INTERRUPCIÓN RECIBIDA DURANTE INIT_PROC =====");
+        log_warning(logger_cpu,"PID de la interrupción: %u",interrupcion_entrante->pid);
+        log_warning(logger_cpu,"Motivo de la interrupción: %d",interrupcion_entrante->motivo);
+        log_warning(logger_cpu,"===============================================");
+        interrupcion_en_espera = true;
+
+        op_code* nueva_respuesta = recibir_mensaje(fd_ks, &size);
+        if (*nueva_respuesta == MSG_OK) {
+            registros->pc++;
+        } else {
+            log_warning(logger_cpu, "INIT_PROC recibio error. Hubo deficit de memoria");
+        }
+    free(nueva_respuesta);
     free(respuesta);
-    registro->pc++;
+    return;
+    }
+    if (*respuesta == MSG_OK) {
+        registros->pc++;
+    } else {
+        log_warning(logger_cpu, "INIT_PROC recibio error. Hubo deficit de memoria");
+    }
+    free(respuesta);
 }
 
 // MOV_IN
