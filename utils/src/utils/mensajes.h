@@ -77,6 +77,7 @@ typedef enum {
     MSG_MEM_ALLOC_SIN_MEMORIA = 44, // Un mem alloc falló por falta de memoria
     MSG_SUSPENDER_PROCESO = 45, // Suspender proceso a disco (bajar todos los segmentos del PID a SWAP y liberar memoria fisica)
     MSG_DESUSPENDER_PROCESO = 46, // Des-suspender proceso a RAM (recrear los segmentos del PID en memoria y traerlos del SWAP)
+    MSG_BLOQUEADO = 47, // FIX: KS -> CPU, el MUTEX_LOCK no se pudo tomar y el proceso queda BLOCK
 
 } op_code;
 

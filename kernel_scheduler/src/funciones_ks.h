@@ -131,7 +131,9 @@ void* timer_rr(void* arg);
 void* timer_suspension(void* arg);
 t_mutex_ks* buscar_mutex(char* nombre);
 void mutex_create(char* nombre);
-void mutex_lock(char* nombre, Proceso* proceso);
+// FIX: devuelve 1 si el proceso quedo BLOCK esperando el mutex (la CPU se debe
+// liberar), 0 si lo tomo o si hubo error. Antes era void y nadie liberaba la CPU.
+int mutex_lock(char* nombre, Proceso* proceso);
 void mutex_unlock(char* nombre, Proceso* proceso);
 void atender_cpu_ks(int fd_cpu);
 Proceso* buscar_proceso_por_pid(uint32_t pid);

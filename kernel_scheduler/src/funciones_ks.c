@@ -720,7 +720,7 @@ void cambiar_prioridad(Proceso* proceso, int nueva_prioridad) {
   proceso->prioridad = nueva_prioridad;
 }
 
-void mutex_lock(char* nombre, Proceso* proceso) {
+int mutex_lock(char* nombre, Proceso* proceso) {
   // DEBUG: frontera de funcion - PUNTERO CRUDO antes de desreferenciar.
   // Si proceso=(nil) aca, el proceso->id_proceso de abajo segfaultea (llega NULL
   // desde MSG_MUTEX_LOCK cuando buscar_proceso_por_pid no lo encontro).
@@ -730,7 +730,9 @@ void mutex_lock(char* nombre, Proceso* proceso) {
   if (m == NULL) {
       log_error(logger_ks, "## MUTEX_LOCK: mutex '%s' no existe", nombre);
       pthread_mutex_unlock(&mutex_listas);
-      return;
+      // FIX: hay que destrabar la CPU igual, sino queda colgada en el recv.
+      enviar_ok_cpu(proceso->fd_cpu, MSG_ERROR);
+      return 0;
   }
 
   if (m->pid_tomador == -1) {
@@ -757,10 +759,20 @@ void mutex_lock(char* nombre, Proceso* proceso) {
       }
 
       pthread_mutex_unlock(&mutex_listas);
+
+      // FIX: destrabar la CPU. syscall_mutex_lock se quedaba colgado para siempre
+      // en el recv porque en este camino no se le contestaba nada. Con MSG_BLOQUEADO
+      // la CPU avanza el PC, guarda contexto en KM y corta el ciclo de instruccion.
+      enviar_ok_cpu(proceso->fd_cpu, MSG_BLOQUEADO);
+
       actualizarEstadoProceso(proceso, BLOCK);
+      // DEBUG: frontera de funcion
+      log_debug(logger_ks, "[DBG][mutex_lock] SALIDA (bloqueado) - nombre='%s'", nombre);
+      return 1; // el llamador tiene que hacer liberar_cpu()
   }
   // DEBUG: frontera de funcion
   log_debug(logger_ks, "[DBG][mutex_lock] SALIDA - nombre='%s'", nombre);
+  return 0;
 }
 
 void mutex_unlock(char* nombre, Proceso* proceso) {
@@ -798,11 +810,18 @@ void mutex_unlock(char* nombre, Proceso* proceso) {
       pthread_mutex_unlock(&mutex_listas);
       
       log_info(logger_ks, "## (%d) Toma el Mutex %s", siguiente->id_proceso, nombre);
+      // FIX: el desbloqueado solo pasa a READY. NO se le manda nada por fd_cpu:
+      // ese fd es el de la CPU donde ejecutaba ANTES de bloquearse y hoy puede
+      // estar corriendo otro proceso (mensaje espurio / framing corrupto).
+      // Su PC ya quedo apuntando a la instruccion siguiente al MUTEX_LOCK, asi
+      // que cuando se lo re-despache arranca ya siendo dueño del mutex.
+      //
+      // OJO: actualizarEstadoProceso(..., READY) dispara desalojar_por_prioridad,
+      // que le manda MSG_INTERRUPT a la CPU de la victima. Si la victima es el
+      // proceso que acaba de hacer el UNLOCK, esa CPU todavia esta esperando el
+      // MSG_OK de la syscall -> por eso el handler responde ANTES de llamar aca.
       actualizarEstadoProceso(siguiente, READY);
       sem_post(&sem_hay_proceso_ready);
-      // DEBUG: serializacion
-      log_debug(logger_ks, "[DBG][mutex_unlock] pid=%d - envío MSG_OK a fd_cpu=%d del desbloqueado", siguiente->id_proceso, siguiente->fd_cpu);
-      enviar_ok_cpu(siguiente->fd_cpu, MSG_OK); // CP3: envío atómico
   }
   // DEBUG: frontera de funcion
   log_debug(logger_ks, "[DBG][mutex_unlock] SALIDA - nombre='%s'", nombre);
@@ -1064,9 +1083,14 @@ void atender_cpu_ks(int fd_cpu) {
                 // DEBUG: si proceso=(nil), mutex_lock lo desreferencia y segfaultea
                 log_debug(logger_ks, "[DBG][atender_cpu_ks:MUTEX_LOCK] pid=%d - buscar_proceso -> ptr=%p", *pid_ptr, (void*)proceso);
                 free(pid_ptr);
-                mutex_lock(nombre, proceso);
-                // no respondemos acá — mutex_lock responde cuando corresponde
+                // FIX: mutex_lock siempre le contesta algo a la CPU. Si devolvio 1
+                // el proceso quedo BLOCK, entonces esta CPU queda libre (mismo
+                // patron que MSG_SLEEP).
+                int bloqueo_por_mutex = mutex_lock(nombre, proceso);
                 free(nombre);
+                if (bloqueo_por_mutex) {
+                    liberar_cpu(fd_cpu); // FIX: sin esto el planificador se cuelga
+                }
                 break;
             }
             case MSG_MUTEX_UNLOCK: {
@@ -1078,10 +1102,18 @@ void atender_cpu_ks(int fd_cpu) {
                 Proceso* proceso = buscar_proceso_por_pid(*pid_ptr);
                 // DEBUG: si proceso=(nil), mutex_unlock lo desreferencia y segfaultea
                 log_debug(logger_ks, "[DBG][atender_cpu_ks:MUTEX_UNLOCK] pid=%d - buscar_proceso -> ptr=%p", *pid_ptr, (void*)proceso);
-                mutex_unlock(nombre, proceso);
+                // FIX: contestar el MSG_OK ANTES de mutex_unlock. Adentro,
+                // actualizarEstadoProceso(siguiente, READY) -> procesoAReady ->
+                // desalojar_por_prioridad puede mandarle un MSG_INTERRUPT a ESTA
+                // misma CPU (el que libera el mutex revierte su prioridad heredada
+                // y pasa a ser la victima del que acaba de despertar). La CPU esta
+                // clavada en el recv de syscall_mutex_unlock esperando el MSG_OK,
+                // leia el 16 del MSG_INTERRUPT como respuesta y hacia exit(1).
                 // DEBUG: serializacion
                 log_debug(logger_ks, "[DBG][atender_cpu_ks:MUTEX_UNLOCK] envío MSG_OK a fd=%d", fd_cpu);
                 enviar_ok_cpu(fd_cpu, MSG_OK); // CP3: envío atómico
+
+                mutex_unlock(nombre, proceso);
                 free(nombre);
                 free(pid_ptr);
                 break;

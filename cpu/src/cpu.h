@@ -113,7 +113,9 @@ void noop(t_registros* registro);
 // SYSCALLS
 void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid, t_log* logger_cpu);
 int syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
-int syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu, t_log* logger_cpu);
+// FIX: ahora puede terminar en bloqueo (devuelve 2), por eso necesita fd_km y
+// contexto para poder guardar el contexto en KM antes de soltar la CPU.
+int syscall_mutex_lock(char* instruccion, int fd_ks, int fd_km, uint32_t pid, t_registros* cpu, t_contexto* contexto, t_log* logger_cpu);
 int syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu, t_log* logger_cpu);
 int syscall_sleep(char* instruccion, int fd_ks, int fd_km, uint32_t pid, t_registros* cpu, t_contexto* contexto, t_log* logger_cpu);
 int syscall_stdin(char* instruccion, t_registros* registros, int fd_ks, int fd_km, uint32_t pid, t_contexto* contexto, t_log* logger_cpu);
