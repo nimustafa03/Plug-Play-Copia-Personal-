@@ -95,9 +95,10 @@ void atender_cpu(int fd_cpu) {
                 pthread_mutex_lock(&mutex_memoria);
                 memcpy(espacio_memoria + direccion_fisica, datos, bytes_a_escribir);
                 pthread_mutex_unlock(&mutex_memoria);
-
-                log_info(logger, "## Escritura de %d bytes", bytes_a_escribir);
                 
+                int espacio_restante = tamanio_memoria - (direccion_fisica + bytes_a_escribir);
+                log_info(logger, "## Escritura de %d bytes. Tamaño total MS: %d bytes. Espacio restante libre: %d bytes", bytes_a_escribir, tamanio_memoria, espacio_restante);   
+
                 op_code done = MSG_DONE;
                 enviar_mensaje(fd_cpu, &done, sizeof(op_code));
 
@@ -208,7 +209,9 @@ void* atender_km(void* arg) {
                 memcpy(espacio_memoria + direccion_fisica, datos, bytes_a_escribir);
                 pthread_mutex_unlock(&mutex_memoria);
 
-                log_info(logger, "## Escritura de %d bytes", bytes_a_escribir);
+                int espacio_restante = tamanio_memoria - (direccion_fisica + bytes_a_escribir);
+                log_info(logger, "## Escritura de %d bytes. Tamaño total MS: %d bytes. Espacio restante libre: %d bytes", 
+                         bytes_a_escribir, tamanio_memoria, espacio_restante);
 
                 op_code done = MSG_DONE;
                 enviar_mensaje(fd_km, &done, sizeof(op_code));
