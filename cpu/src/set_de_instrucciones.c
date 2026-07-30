@@ -518,7 +518,9 @@ int syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* 
 
     int size; 
     op_code* ok = recibir_mensaje(fd_ks, &size);
-    if (ok == NULL)
+    log_warning(logger_cpu, "LA RESPUESTA QUE LLEGO ES: %d", *ok);
+    if (ok == NULL){
+        log_warning(logger_cpu, "MUTEX LOCK devolvio NULL.");
         return -1;
     if (*ok != MSG_OK) {
         log_warning(logger_cpu, "MUTEX LOCK recibio un %d durante la ejecucion.", *ok);
