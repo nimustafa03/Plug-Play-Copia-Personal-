@@ -4279,6 +4279,442 @@ void* recibir_mensaje(int fd, int* size);
 #endif // CONEXIONES_H
 </file>
 
+<file path="utils/src/utils/serializacion.c">
+#include "serializacion.h"
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+#include "../../utils/src/utils/mensajes.h"
+
+void escribir_en_buffer(
+    void* buffer,
+    uint32_t* desplazamiento,
+    const void* dato,
+    uint32_t tamanio
+) {
+    memcpy(
+        (uint8_t*) buffer + *desplazamiento,
+        dato,
+        tamanio
+    );
+
+    *desplazamiento += tamanio;
+}
+
+void* serializar_contexto(t_contexto* contexto,int* tamanio_buffer,t_log* logger){
+    if (contexto == NULL || tamanio_buffer == NULL) {
+        log_error(
+            logger,
+            "Contexto o puntero de tamaño NULL al serializar."
+        );
+        return NULL;
+    }
+    if (contexto->tabla_segmentos == NULL) {
+        log_error(
+            logger,
+            "La tabla de segmentos es NULL."
+        );
+        return NULL;
+    }
+
+    int cantidad_segmentos =
+        list_size(contexto->tabla_segmentos);
+
+    /*
+     * Estructura del buffer:
+     *
+     * t_registros
+     * int cantidad_segmentos
+     * t_segmento segmento_0
+     * t_segmento segmento_1
+     * ...
+     * bool proximo_a_detener
+     */
+    *tamanio_buffer =
+        sizeof(t_registros)
+        + sizeof(int)
+        + cantidad_segmentos * sizeof(t_segmento)
+        + sizeof(bool);
+
+    void* buffer = malloc(*tamanio_buffer);
+
+    if (buffer == NULL) {
+        log_error(
+            logger,
+            "## ERROR: No se pudo reservar memoria para serializar el contexto."
+        );
+        return NULL;
+    }
+
+    uint32_t desplazamiento = 0;
+
+    /* Registros */
+    escribir_en_buffer(
+        buffer,
+        &desplazamiento,
+        &contexto->registros,
+        sizeof(t_registros)
+    );
+
+    /* Cantidad de segmentos */
+    escribir_en_buffer(
+        buffer,
+        &desplazamiento,
+        &cantidad_segmentos,
+        sizeof(int)
+    );
+
+    /* Segmentos */
+    for (int i = 0; i < cantidad_segmentos; i++) {
+        t_segmento* segmento =
+            list_get(contexto->tabla_segmentos, i);
+
+        if (segmento == NULL) {
+            log_error(logger,
+            "## ERROR: El segmento de la posición %d es NULL.",
+            i);
+            free(buffer);
+            return NULL;
+        }
+
+        escribir_en_buffer(
+            buffer,
+            &desplazamiento,
+            segmento,
+            sizeof(t_segmento)
+        );
+    }
+    /* Estado del contexto */
+    escribir_en_buffer(
+        buffer,
+        &desplazamiento,
+        &contexto->proximo_a_detener,
+        sizeof(bool)
+    );
+
+    /*
+     * Validación final:
+     * el desplazamiento debe coincidir con el tamaño calculado.
+     */
+    if (desplazamiento != (uint32_t)*tamanio_buffer) {
+        log_error(
+            logger,
+            "## ERROR: Falla de serialización: desplazamiento=%u, tamaño=%d",
+            desplazamiento,
+            *tamanio_buffer
+        );
+
+        free(buffer);
+        return NULL;
+    }
+
+    log_info(logger, "===== CONTEXTO SERIALIZADO =====");
+    log_info(logger,"Registros:");
+    log_info(
+        logger,
+        "AX=%u BX=%u CX=%u DX=%u",
+        contexto->registros.ax,
+        contexto->registros.bx,
+        contexto->registros.cx,
+        contexto->registros.dx);
+    log_info(
+        logger,
+        "EAX=%u EBX=%u ECX=%u EDX=%u",
+        contexto->registros.eax,
+        contexto->registros.ebx,
+        contexto->registros.ecx,
+        contexto->registros.edx);
+    log_info(
+        logger,
+        "SI=%u DI=%u PC=%u",
+        contexto->registros.si,
+        contexto->registros.di,
+        contexto->registros.pc);
+    log_info(
+        logger,
+        "Cantidad de segmentos: %d",
+        cantidad_segmentos);
+
+    for (int i = 0; i < cantidad_segmentos; i++) {
+            t_segmento* segmento = list_get(
+            contexto->tabla_segmentos,
+            i);
+        log_info(
+            logger,
+            "Segmento[%d] -> ID=%u BASE=%u TAMANIO=%u",
+            i,
+            segmento->id_segmento,
+            segmento->base,
+            segmento->tamanio);
+    }
+    log_info(
+        logger,
+        "Proximo a detener: %s",
+        contexto->proximo_a_detener ? "true" : "false");
+    log_info(
+        logger,
+        "Tamaño buffer serializado: %d bytes",
+        *tamanio_buffer);
+    log_info(logger, "===== FIN CONTEXTO =====");
+    return buffer;
+}
+
+t_contexto* deserializar_contexto(void* buffer,int tamanio_buffer,t_log* logger){
+    if (buffer == NULL) {
+        log_error(logger, "# ERROR: No se puede deserializar: buffer NULL.");
+        return NULL;
+    }
+    if (tamanio_buffer < (int)(
+        sizeof(t_registros) +
+        sizeof(int) +
+        sizeof(bool))) {
+        log_error(logger,"## ERROR: Buffer demasiado pequeño: %d bytes.",tamanio_buffer);
+        return NULL;
+        }
+    uint32_t desplazamiento = 0;
+
+    t_contexto* contexto = calloc(1, sizeof(t_contexto));
+
+    if (contexto == NULL) {
+        log_error(logger,"## ERROR: No se pudo reservar memoria para t_contexto.");
+        return NULL;
+    }
+
+    // 1. Deserializar registros.
+
+    memcpy(
+        &contexto->registros,
+        (uint8_t*)buffer + desplazamiento,
+        sizeof(t_registros)
+    );
+
+    desplazamiento += sizeof(t_registros);
+
+    // 2. Deserializar cantidad de segmentos.
+
+    int cantidad_segmentos = 0;
+
+    memcpy(
+        &cantidad_segmentos,
+        (uint8_t*)buffer + desplazamiento,
+        sizeof(int)
+    );
+
+    desplazamiento += sizeof(int);
+
+    if (cantidad_segmentos < 0) {
+        log_error(logger,"## ERROR: Cantidad de segmentos inválida: %d.",cantidad_segmentos);
+        free(contexto);
+        return NULL;
+    }
+
+    /*
+     * Antes de continuar, calculamos el tamaño que debería tener
+     * el buffer según la cantidad de segmentos recibida.
+     */
+    size_t tamanio_esperado =
+        sizeof(t_registros)
+        + sizeof(int)
+        + ((size_t)cantidad_segmentos * sizeof(t_segmento))
+        + sizeof(bool);
+
+    if ((size_t)tamanio_buffer != tamanio_esperado) {
+        log_error(logger,
+            "## ERROR: Tamaño de contexto incorrecto. Recibido: %d - Esperado: %zu",
+            tamanio_buffer,
+            tamanio_esperado);
+
+        free(contexto);
+        return NULL;
+    }
+
+     // 3. Crear la lista de segmentos.
+    contexto->tabla_segmentos = list_create();
+
+    if (contexto->tabla_segmentos == NULL) {
+        log_error(logger,"## ERROR: No se pudo crear la tabla de segmentos.");
+        free(contexto);
+        return NULL;
+    }
+
+    // 4. Deserializar cada segmento.
+
+    for (int i = 0; i < cantidad_segmentos; i++) {
+        t_segmento* segmento = malloc(sizeof(t_segmento));
+
+        if (segmento == NULL) {
+            log_error(logger,"## ERROR: No se pudo reservar memoria para el segmento %d.",i);
+            list_destroy_and_destroy_elements(
+                contexto->tabla_segmentos,
+                free);
+            free(contexto);
+            return NULL;
+        }
+
+        memcpy(
+            segmento,
+            (uint8_t*)buffer + desplazamiento,
+            sizeof(t_segmento)
+        );
+
+        desplazamiento += sizeof(t_segmento);
+
+        list_add(
+            contexto->tabla_segmentos,
+            segmento
+        );
+    }
+
+    //5. Deserializar proximo_a_detener.
+
+    memcpy(
+        &contexto->proximo_a_detener,
+        (uint8_t*)buffer + desplazamiento,
+        sizeof(bool)
+    );
+    desplazamiento += sizeof(bool);
+
+    // 6. Validación final.
+    if (desplazamiento != (uint32_t)tamanio_buffer) {
+        log_error(
+            logger,
+            "## ERROR: Deserialización inconsistente. Leídos: %u - Buffer: %d",
+            desplazamiento,
+            tamanio_buffer
+        );
+
+        list_destroy_and_destroy_elements(
+            contexto->tabla_segmentos,
+            free
+        );
+        free(contexto);
+        return NULL;
+    }
+
+    //7. Mostrar el contexto reconstruido.
+
+    log_info(logger, "===== CONTEXTO DESERIALIZADO =====");
+    log_info(
+        logger,
+        "AX=%u BX=%u CX=%u DX=%u",
+        contexto->registros.ax,
+        contexto->registros.bx,
+        contexto->registros.cx,
+        contexto->registros.dx);
+    log_info(logger,
+        "EAX=%u EBX=%u ECX=%u EDX=%u",
+        contexto->registros.eax,
+        contexto->registros.ebx,
+        contexto->registros.ecx,
+        contexto->registros.edx);
+    log_info(logger,
+        "SI=%u DI=%u PC=%u",
+        contexto->registros.si,
+        contexto->registros.di,
+        contexto->registros.pc);
+    log_info(logger,"Cantidad de segmentos: %d",cantidad_segmentos);
+
+    for (int i = 0; i < cantidad_segmentos; i++) {
+        t_segmento* segmento = list_get(
+            contexto->tabla_segmentos,
+            i
+        );
+        log_info(logger,
+            "Segmento[%d] -> ID=%u BASE=%u TAMANIO=%u",
+            i,
+            segmento->id_segmento,
+            segmento->base,
+            segmento->tamanio);
+    }
+    log_info(logger,"Proximo a detener: %s",
+        contexto->proximo_a_detener
+            ? "true"
+            : "false");
+    log_info(logger,"Bytes deserializados: %u",desplazamiento);
+    log_info(logger, "===== FIN CONTEXTO =====");
+    return contexto;
+}
+
+void*serializar_segmentos(t_list*segmentos, int*tamanio_buffer, t_log*logger){
+    if ( segmentos == NULL || tamanio_buffer == NULL)
+    {
+        log_error(
+            logger,
+            "## ERROR: Segmentos o tamaño NULL."
+        );
+        return NULL;
+    }
+    int cantidad_segmentos = list_size(segmentos);
+
+    *tamanio_buffer = 
+    sizeof(t_segmento)*cantidad_segmentos;
+
+    void*buffer = malloc(*tamanio_buffer);
+
+    if (buffer == NULL) {
+        log_error(
+            logger,
+            "## ERROR: No se pudo reservar memoria para serializar el contexto."
+        );
+        return NULL;
+    }
+
+    uint32_t desplazamiento = 0;
+
+    for (int i = 0; i < cantidad_segmentos; i++)
+    {
+        t_segmento*segmento = list_get(segmentos,i);
+
+        if (segmento == NULL) {
+            log_error(logger,
+            "## ERROR: El segmento de la posición %d es NULL.",
+            i);
+            free(buffer);
+            return NULL;
+        }
+        escribir_en_buffer(
+            buffer,
+            &desplazamiento,
+            segmento,
+            sizeof(t_segmento)
+        );
+    }
+
+    if (desplazamiento != (uint32_t)*tamanio_buffer) {
+        log_error(
+            logger,
+            "## ERROR: Falla de serialización: desplazamiento=%u, tamaño=%d",
+            desplazamiento,
+            *tamanio_buffer
+        );
+
+        free(buffer);
+        return NULL;
+    }
+
+    log_info(
+        logger,
+        "Cantidad de segmentos: %d",
+        cantidad_segmentos);
+
+    for (int i = 0; i < cantidad_segmentos; i++) {
+            t_segmento* segmento = list_get(
+            segmentos,
+            i);
+        log_info(
+            logger,
+            "Segmento[%d] -> ID=%u BASE=%u TAMANIO=%u",
+            i,
+            segmento->id_segmento,
+            segmento->base,
+            segmento->tamanio);
+    }
+
+    return buffer;
+}
+</file>
+
 <file path="utils/.gitignore">
 # Generated files
 lib/
@@ -5272,440 +5708,22 @@ const char* nombre_syscall(op_code cod);
 #endif // FUNCIONES_KS_H
 </file>
 
-<file path="utils/src/utils/serializacion.c">
-#include "serializacion.h"
+<file path="utils/src/utils/serializacion.h">
+#ifndef SERIALIZACION_H_
+#define SERIALIZACION_H_
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
-#include "../../utils/src/utils/mensajes.h"
+#include <commons/log.h>
+#include "../../utils/src/utils/tipos.h"
 
-void escribir_en_buffer(
-    void* buffer,
-    uint32_t* desplazamiento,
-    const void* dato,
-    uint32_t tamanio
-) {
-    memcpy(
-        (uint8_t*) buffer + *desplazamiento,
-        dato,
-        tamanio
-    );
+void escribir_en_buffer(void*buffer, uint32_t*desplazamiento, const void*dato,uint32_t tamanio);
 
-    *desplazamiento += tamanio;
-}
+void*serializar_contexto(t_contexto*contexto,int*tamanio_buffer,t_log*logger);
+t_contexto*deserializar_contexto(void*buffer,int tamanio_buffer,t_log*logger);
 
-void* serializar_contexto(t_contexto* contexto,int* tamanio_buffer,t_log* logger){
-    if (contexto == NULL || tamanio_buffer == NULL) {
-        log_error(
-            logger,
-            "Contexto o puntero de tamaño NULL al serializar."
-        );
-        return NULL;
-    }
-    if (contexto->tabla_segmentos == NULL) {
-        log_error(
-            logger,
-            "La tabla de segmentos es NULL."
-        );
-        return NULL;
-    }
+void*serializar_segmentos(t_list*segmento,int*tamanio_buffer,t_log*logger);
+t_list*deserializar_segmentos(void*buffer,int tamanio_buffer,t_log*logger);
 
-    int cantidad_segmentos =
-        list_size(contexto->tabla_segmentos);
-
-    /*
-     * Estructura del buffer:
-     *
-     * t_registros
-     * int cantidad_segmentos
-     * t_segmento segmento_0
-     * t_segmento segmento_1
-     * ...
-     * bool proximo_a_detener
-     */
-    *tamanio_buffer =
-        sizeof(t_registros)
-        + sizeof(int)
-        + cantidad_segmentos * sizeof(t_segmento)
-        + sizeof(bool);
-
-    void* buffer = malloc(*tamanio_buffer);
-
-    if (buffer == NULL) {
-        log_error(
-            logger,
-            "## ERROR: No se pudo reservar memoria para serializar el contexto."
-        );
-        return NULL;
-    }
-
-    uint32_t desplazamiento = 0;
-
-    /* Registros */
-    escribir_en_buffer(
-        buffer,
-        &desplazamiento,
-        &contexto->registros,
-        sizeof(t_registros)
-    );
-
-    /* Cantidad de segmentos */
-    escribir_en_buffer(
-        buffer,
-        &desplazamiento,
-        &cantidad_segmentos,
-        sizeof(int)
-    );
-
-    /* Segmentos */
-    for (int i = 0; i < cantidad_segmentos; i++) {
-        t_segmento* segmento =
-            list_get(contexto->tabla_segmentos, i);
-
-        if (segmento == NULL) {
-            log_error(logger,
-            "## ERROR: El segmento de la posición %d es NULL.",
-            i);
-            free(buffer);
-            return NULL;
-        }
-
-        escribir_en_buffer(
-            buffer,
-            &desplazamiento,
-            segmento,
-            sizeof(t_segmento)
-        );
-    }
-    /* Estado del contexto */
-    escribir_en_buffer(
-        buffer,
-        &desplazamiento,
-        &contexto->proximo_a_detener,
-        sizeof(bool)
-    );
-
-    /*
-     * Validación final:
-     * el desplazamiento debe coincidir con el tamaño calculado.
-     */
-    if (desplazamiento != (uint32_t)*tamanio_buffer) {
-        log_error(
-            logger,
-            "## ERROR: Falla de serialización: desplazamiento=%u, tamaño=%d",
-            desplazamiento,
-            *tamanio_buffer
-        );
-
-        free(buffer);
-        return NULL;
-    }
-
-    log_info(logger, "===== CONTEXTO SERIALIZADO =====");
-    log_info(logger,"Registros:");
-    log_info(
-        logger,
-        "AX=%u BX=%u CX=%u DX=%u",
-        contexto->registros.ax,
-        contexto->registros.bx,
-        contexto->registros.cx,
-        contexto->registros.dx);
-    log_info(
-        logger,
-        "EAX=%u EBX=%u ECX=%u EDX=%u",
-        contexto->registros.eax,
-        contexto->registros.ebx,
-        contexto->registros.ecx,
-        contexto->registros.edx);
-    log_info(
-        logger,
-        "SI=%u DI=%u PC=%u",
-        contexto->registros.si,
-        contexto->registros.di,
-        contexto->registros.pc);
-    log_info(
-        logger,
-        "Cantidad de segmentos: %d",
-        cantidad_segmentos);
-
-    for (int i = 0; i < cantidad_segmentos; i++) {
-            t_segmento* segmento = list_get(
-            contexto->tabla_segmentos,
-            i);
-        log_info(
-            logger,
-            "Segmento[%d] -> ID=%u BASE=%u TAMANIO=%u",
-            i,
-            segmento->id_segmento,
-            segmento->base,
-            segmento->tamanio);
-    }
-    log_info(
-        logger,
-        "Proximo a detener: %s",
-        contexto->proximo_a_detener ? "true" : "false");
-    log_info(
-        logger,
-        "Tamaño buffer serializado: %d bytes",
-        *tamanio_buffer);
-    log_info(logger, "===== FIN CONTEXTO =====");
-    return buffer;
-}
-
-t_contexto* deserializar_contexto(void* buffer,int tamanio_buffer,t_log* logger){
-    if (buffer == NULL) {
-        log_error(logger, "# ERROR: No se puede deserializar: buffer NULL.");
-        return NULL;
-    }
-    if (tamanio_buffer < (int)(
-        sizeof(t_registros) +
-        sizeof(int) +
-        sizeof(bool))) {
-        log_error(logger,"## ERROR: Buffer demasiado pequeño: %d bytes.",tamanio_buffer);
-        return NULL;
-        }
-    uint32_t desplazamiento = 0;
-
-    t_contexto* contexto = calloc(1, sizeof(t_contexto));
-
-    if (contexto == NULL) {
-        log_error(logger,"## ERROR: No se pudo reservar memoria para t_contexto.");
-        return NULL;
-    }
-
-    // 1. Deserializar registros.
-
-    memcpy(
-        &contexto->registros,
-        (uint8_t*)buffer + desplazamiento,
-        sizeof(t_registros)
-    );
-
-    desplazamiento += sizeof(t_registros);
-
-    // 2. Deserializar cantidad de segmentos.
-
-    int cantidad_segmentos = 0;
-
-    memcpy(
-        &cantidad_segmentos,
-        (uint8_t*)buffer + desplazamiento,
-        sizeof(int)
-    );
-
-    desplazamiento += sizeof(int);
-
-    if (cantidad_segmentos < 0) {
-        log_error(logger,"## ERROR: Cantidad de segmentos inválida: %d.",cantidad_segmentos);
-        free(contexto);
-        return NULL;
-    }
-
-    /*
-     * Antes de continuar, calculamos el tamaño que debería tener
-     * el buffer según la cantidad de segmentos recibida.
-     */
-    size_t tamanio_esperado =
-        sizeof(t_registros)
-        + sizeof(int)
-        + ((size_t)cantidad_segmentos * sizeof(t_segmento))
-        + sizeof(bool);
-
-    if ((size_t)tamanio_buffer != tamanio_esperado) {
-        log_error(logger,
-            "## ERROR: Tamaño de contexto incorrecto. Recibido: %d - Esperado: %zu",
-            tamanio_buffer,
-            tamanio_esperado);
-
-        free(contexto);
-        return NULL;
-    }
-
-     // 3. Crear la lista de segmentos.
-    contexto->tabla_segmentos = list_create();
-
-    if (contexto->tabla_segmentos == NULL) {
-        log_error(logger,"## ERROR: No se pudo crear la tabla de segmentos.");
-        free(contexto);
-        return NULL;
-    }
-
-    // 4. Deserializar cada segmento.
-
-    for (int i = 0; i < cantidad_segmentos; i++) {
-        t_segmento* segmento = malloc(sizeof(t_segmento));
-
-        if (segmento == NULL) {
-            log_error(logger,"## ERROR: No se pudo reservar memoria para el segmento %d.",i);
-            list_destroy_and_destroy_elements(
-                contexto->tabla_segmentos,
-                free);
-            free(contexto);
-            return NULL;
-        }
-
-        memcpy(
-            segmento,
-            (uint8_t*)buffer + desplazamiento,
-            sizeof(t_segmento)
-        );
-
-        desplazamiento += sizeof(t_segmento);
-
-        list_add(
-            contexto->tabla_segmentos,
-            segmento
-        );
-    }
-
-    //5. Deserializar proximo_a_detener.
-
-    memcpy(
-        &contexto->proximo_a_detener,
-        (uint8_t*)buffer + desplazamiento,
-        sizeof(bool)
-    );
-    desplazamiento += sizeof(bool);
-
-    // 6. Validación final.
-    if (desplazamiento != (uint32_t)tamanio_buffer) {
-        log_error(
-            logger,
-            "## ERROR: Deserialización inconsistente. Leídos: %u - Buffer: %d",
-            desplazamiento,
-            tamanio_buffer
-        );
-
-        list_destroy_and_destroy_elements(
-            contexto->tabla_segmentos,
-            free
-        );
-        free(contexto);
-        return NULL;
-    }
-
-    //7. Mostrar el contexto reconstruido.
-
-    log_info(logger, "===== CONTEXTO DESERIALIZADO =====");
-    log_info(
-        logger,
-        "AX=%u BX=%u CX=%u DX=%u",
-        contexto->registros.ax,
-        contexto->registros.bx,
-        contexto->registros.cx,
-        contexto->registros.dx);
-    log_info(logger,
-        "EAX=%u EBX=%u ECX=%u EDX=%u",
-        contexto->registros.eax,
-        contexto->registros.ebx,
-        contexto->registros.ecx,
-        contexto->registros.edx);
-    log_info(logger,
-        "SI=%u DI=%u PC=%u",
-        contexto->registros.si,
-        contexto->registros.di,
-        contexto->registros.pc);
-    log_info(logger,"Cantidad de segmentos: %d",cantidad_segmentos);
-
-    for (int i = 0; i < cantidad_segmentos; i++) {
-        t_segmento* segmento = list_get(
-            contexto->tabla_segmentos,
-            i
-        );
-        log_info(logger,
-            "Segmento[%d] -> ID=%u BASE=%u TAMANIO=%u",
-            i,
-            segmento->id_segmento,
-            segmento->base,
-            segmento->tamanio);
-    }
-    log_info(logger,"Proximo a detener: %s",
-        contexto->proximo_a_detener
-            ? "true"
-            : "false");
-    log_info(logger,"Bytes deserializados: %u",desplazamiento);
-    log_info(logger, "===== FIN CONTEXTO =====");
-    return contexto;
-}
-
-void*serializar_segmentos(t_list*segmentos, int*tamanio_buffer, t_log*logger){
-    if ( segmentos == NULL || tamanio_buffer == NULL)
-    {
-        log_error(
-            logger,
-            "## ERROR: Segmentos o tamaño NULL."
-        );
-        return NULL;
-    }
-    int cantidad_segmentos = list_size(segmentos);
-
-    *tamanio_buffer = 
-    sizeof(t_segmento)*cantidad_segmentos;
-
-    void*buffer = malloc(*tamanio_buffer);
-
-    if (buffer == NULL) {
-        log_error(
-            logger,
-            "## ERROR: No se pudo reservar memoria para serializar el contexto."
-        );
-        return NULL;
-    }
-
-    uint32_t desplazamiento = 0;
-
-    for (int i = 0; i < cantidad_segmentos; i++)
-    {
-        t_segmento*segmento = list_get(segmentos,i);
-
-        if (segmento == NULL) {
-            log_error(logger,
-            "## ERROR: El segmento de la posición %d es NULL.",
-            i);
-            free(buffer);
-            return NULL;
-        }
-        escribir_en_buffer(
-            buffer,
-            &desplazamiento,
-            segmento,
-            sizeof(t_segmento)
-        );
-    }
-
-    if (desplazamiento != (uint32_t)*tamanio_buffer) {
-        log_error(
-            logger,
-            "## ERROR: Falla de serialización: desplazamiento=%u, tamaño=%d",
-            desplazamiento,
-            *tamanio_buffer
-        );
-
-        free(buffer);
-        return NULL;
-    }
-
-    log_info(
-        logger,
-        "Cantidad de segmentos: %d",
-        cantidad_segmentos);
-
-    for (int i = 0; i < cantidad_segmentos; i++) {
-            t_segmento* segmento = list_get(
-            segmentos,
-            i);
-        log_info(
-            logger,
-            "Segmento[%d] -> ID=%u BASE=%u TAMANIO=%u",
-            i,
-            segmento->id_segmento,
-            segmento->base,
-            segmento->tamanio);
-    }
-
-    return buffer;
-}
+#endif
 </file>
 
 <file path="utils/src/utils/tipos.h">
@@ -5979,24 +5997,6 @@ int main(int argc, char* argv[]) {
 }
 </file>
 
-<file path="utils/src/utils/serializacion.h">
-#ifndef SERIALIZACION_H_
-#define SERIALIZACION_H_
-
-#include <commons/log.h>
-#include "../../utils/src/utils/tipos.h"
-
-void escribir_en_buffer(void*buffer, uint32_t*desplazamiento, const void*dato,uint32_t tamanio);
-
-void*serializar_contexto(t_contexto*contexto,int*tamanio_buffer,t_log*logger);
-t_contexto*deserializar_contexto(void*buffer,int tamanio_buffer,t_log*logger);
-
-void*serializar_segmentos(t_list*segmento,int*tamanio_buffer,t_log*logger);
-t_list*deserializar_segmentos(void*buffer,int tamanio_buffer,t_log*logger);
-
-#endif
-</file>
-
 <file path="config/prueba_memoria/KernelMemory.config">
 SEGMENT_MAX_SIZE=128
 ALLOCATION_STRATEGY=WORST
@@ -6237,401 +6237,6 @@ int main(int argc, char* argv[]) {
     config_destroy(config);
     log_destroy(logger);
     return EXIT_SUCCESS;
-}
-</file>
-
-<file path="kernel_memory/src/managers/memory_manager.c">
-#include "memory_manager.h"
-
-#include <stdlib.h>
-#include <commons/collections/list.h>
-#include <commons/log.h>
-#include "../estructuras.h"
-#include <string.h>
-#include <stdint.h>
-#include <utils/conexiones.h> // CP3: R/W físico a los Memory Sticks
-#include <utils/mensajes.h>
-#include "../../utils/src/utils/tipos.h"
-
-extern t_log*logger;
-static t_administrador_memoria administrador;
-
-// forward declarations de funciones static (se usan antes de definirse)
-static void registrar_hueco(uint32_t base, uint32_t tamanio);
-static void insertar_hueco_ordenado(t_hueco* nuevo_hueco);
-static void consolidar_huecos_contiguos(void);
-static void destruir_hueco(void* elemento);
-
-
-void inicializar_administrador_memoria(t_estrategia_asignacion estrategia) {
-  administrador.memory_sticks = list_create();
-  administrador.huecos_libres = list_create();
-  administrador.memoria_total = 0;
-  administrador.proximo_id_stick = 0;
-  administrador.estrategia = estrategia;
-}
-
-void conectar_memory_stick(
-    const char* ip,
-    const char* puerto,
-    uint32_t tamanio,
-    int socket
-) 
-{
-  uint32_t base = administrador.memoria_total;
-
-  t_memory_stick* stick = malloc(sizeof(t_memory_stick));
-
-  stick->id = administrador.proximo_id_stick++;
-  stick->ip = strdup(ip);
-  stick->puerto = strdup(puerto);
-  stick->base_global = base;
-  stick->tamanio = tamanio;
-  stick->socket = socket;
-
-  list_add(administrador.memory_sticks, stick);
-
-  administrador.memoria_total += tamanio;
-
-  registrar_hueco(base, tamanio);
-}
-
-bool obtener_info_memory_stick(
-    uint32_t indice,
-    t_info_memory_stick* info
-) {
-  if (info == NULL) {
-      return false;
-  }
-
-  if (indice >= (uint32_t) list_size(administrador.memory_sticks)) {
-      return false;
-  }
-
-  t_memory_stick* stick =
-      list_get(administrador.memory_sticks, indice);
-
-  info->ip = stick->ip;
-  info->puerto = stick->puerto;
-  info->base_global = stick->base_global;
-  info->tamanio = stick->tamanio;
-
-  return true;
-}
-
-static void registrar_hueco(uint32_t base, uint32_t tamanio) {
-  if (tamanio == 0) return;
-
-  t_hueco* nuevo_hueco = malloc(sizeof(t_hueco));
-  nuevo_hueco->base = base;
-  nuevo_hueco->tamanio = tamanio;
-
-  insertar_hueco_ordenado(nuevo_hueco);
-  consolidar_huecos_contiguos();
-}
-
-static void insertar_hueco_ordenado(t_hueco* nuevo_hueco) {
-  int posicion = 0;
-
-  while (posicion < list_size(administrador.huecos_libres)) {
-      t_hueco* hueco_actual = list_get(administrador.huecos_libres, posicion);
-
-      if (nuevo_hueco->base < hueco_actual->base) {
-          break;
-      }
-
-      posicion++;
-  }
-
-  list_add_in_index(administrador.huecos_libres, posicion, nuevo_hueco);
-}
-
-static void consolidar_huecos_contiguos(void) {
-  int i = 0;
-
-  while (i < list_size(administrador.huecos_libres) - 1) {
-      t_hueco* actual = list_get(administrador.huecos_libres, i);
-      t_hueco* siguiente = list_get(administrador.huecos_libres, i + 1);
-
-      uint32_t fin_actual = actual->base + actual->tamanio;
-
-      if (fin_actual == siguiente->base) {
-          actual->tamanio += siguiente->tamanio;
-
-          t_hueco* eliminado = list_remove(administrador.huecos_libres, i + 1);
-          free(eliminado);
-      } else {
-          i++;
-      }
-  }
-}
-
-static t_hueco* buscar_best_fit(uint32_t tamanio) {
-  t_hueco* mejor_hueco = NULL;
-
-  for (int i = 0; i < list_size(administrador.huecos_libres); i++) {
-      t_hueco* hueco = list_get(administrador.huecos_libres, i);
-
-      if (hueco->tamanio >= tamanio) {
-          if (mejor_hueco == NULL || hueco->tamanio < mejor_hueco->tamanio) {
-              mejor_hueco = hueco;
-          }
-      }
-  }
-
-  return mejor_hueco;
-}
-
-static t_hueco* buscar_worst_fit(uint32_t tamanio){
-  t_hueco* peor_hueco = NULL;
-
-  for (int i = 0; i < list_size(administrador.huecos_libres); i++) {
-    t_hueco* hueco = list_get(administrador.huecos_libres, i);
-
-    if (hueco->tamanio >= tamanio) {
-      if (peor_hueco == NULL || hueco->tamanio > peor_hueco->tamanio) {
-        peor_hueco = hueco;
-      }
-    }
-  }
-  return peor_hueco;
-}
-
-static t_hueco* buscar_hueco_candidato(uint32_t tamanio) {
-  switch (administrador.estrategia) {
-    case BEST_FIT:
-      return buscar_best_fit(tamanio);
-
-    case WORST_FIT:
-      return buscar_worst_fit(tamanio);
-
-    default:
-      return NULL;
-  }
-}
-
-uint32_t reservar_espacio(uint32_t tamanio) {
-  if (tamanio == 0) {
-    return UINT32_MAX;
-  }
-
-  t_hueco* hueco = buscar_hueco_candidato(tamanio);
-
-  if (hueco == NULL) {
-      return UINT32_MAX;
-  }
-
-  uint32_t base_asignada = hueco->base;
-
-  hueco->base += tamanio;
-  hueco->tamanio -= tamanio;
-
-  if (hueco->tamanio == 0) {
-    list_remove_element(administrador.huecos_libres, hueco);
-    free(hueco);
-  }
-
-  return base_asignada;
-}
-
-bool hay_espacio_total(uint32_t tamanio)
-{
-  return obtener_memoria_libre_total() >= tamanio;
-}
-
-bool hay_hueco_contiguo(uint32_t tamanio) {
-  return buscar_hueco_candidato(tamanio) != NULL;
-}
-
-bool requiere_compactacion(uint32_t tamanio) {
-  return hay_espacio_total(tamanio) && !hay_hueco_contiguo(tamanio);
-}
-
-uint32_t obtener_memoria_total(void) {
-  return administrador.memoria_total;
-}
-
-uint32_t obtener_memoria_libre_total(void) {
-  uint32_t total_libre = 0;
-
-  for (int i = 0; i < list_size(administrador.huecos_libres); i++) {
-    t_hueco* hueco = list_get(administrador.huecos_libres, i);
-    log_info(logger, "hueco de tamaño de base %u : %u", hueco->base, hueco->tamanio);
-    total_libre += hueco->tamanio;
-  }
-
-  return total_libre;
-}
-
-void liberar_espacio(uint32_t base, uint32_t tamanio) {
-  registrar_hueco(base, tamanio);
-}
-
-static void limpiar_huecos(void) {
-  list_clean_and_destroy_elements(administrador.huecos_libres, destruir_hueco);
-}
-
-void reconstruir_huecos_desde(uint32_t base) {
-  limpiar_huecos();
-
-  if (base >= administrador.memoria_total) {
-    return;
-  }
-
-  uint32_t tamanio_libre = administrador.memoria_total - base;
-
-  registrar_hueco(base, tamanio_libre);
-}
-
-// CP3: devuelve el Memory Stick que contiene la dirección global dada (o NULL).
-static t_memory_stick* stick_de_direccion(uint32_t dir_global) {
-  for (int i = 0; i < list_size(administrador.memory_sticks); i++) {
-    t_memory_stick* s = list_get(administrador.memory_sticks, i);
-    if (dir_global >= s->base_global && dir_global < s->base_global + s->tamanio)
-      return s;
-  }
-  return NULL;
-}
-
-// CP3: escribe `tamanio` bytes desde `datos` a partir de la dir global, partiendo
-// el pedido entre los Memory Sticks involucrados (cada stick direcciona desde 0).
-bool escribir_memoria_fisica(uint32_t dir_global, uint32_t tamanio, void* datos) {
-  //  if (datos == NULL || tamanio == 0) return false;
-
-  //   // 1. Buscar a qué Memory Stick le corresponde la dirección global
-  //   t_memory_stick* ms = stick_de_direccion(dir_global);
-  //   if (ms == NULL || ms->socket < 0) {
-  //       log_error(logger, "Error: No se encontró MS para la dirección %u", dir_global);
-  //       return false;
-  //   }
-
-  //   uint32_t dir_local = dir_global - ms->base_global;
-
-  //   // 2. ENVIAR CABECERA Y DATOS AL MEMORY STICK
-  //   op_code cod = MSG_WRITE;
-  //   enviar_mensaje(ms->socket, &cod, sizeof(op_code));
-  //   enviar_mensaje(ms->socket, &dir_local, sizeof(uint32_t));
-  //   enviar_mensaje(ms->socket, &tamanio, sizeof(uint32_t));
-  //   enviar_mensaje(ms->socket, datos, tamanio);
-
-  //   // 3. ESPERAR CONFIRMACIÓN DEL MEMORY STICK
-  //   int size;
-  //   op_code* resp = recibir_mensaje(ms->socket, &size);
-  //   if (resp == NULL) {
-  //       log_error(logger, "Memory Stick se desconectó durante la escritura");
-  //       return false;
-  //   }
-
-  //   bool exito = (*resp == MSG_DONE || *resp == MSG_OK);
-  //   free(resp);
-
-  //   return exito;
-  if (datos == NULL || tamanio == 0) return false;
-
-  uint32_t restante = tamanio;
-  uint32_t cursor = dir_global;
-  uint8_t* origen = (uint8_t*) datos;
-
-  while (restante > 0) {
-    t_memory_stick* ms = stick_de_direccion(cursor);
-    if (ms == NULL || ms->socket < 0) {
-      log_error(logger, "## ERROR: No se encontró Memory Stick para la dirección física %u", cursor);
-      return false;
-    }
-
-    uint32_t offset_local = cursor - ms->base_global;
-    uint32_t espacio_en_stick = ms->tamanio - offset_local;
-    
-    // Escribimos solo hasta donde entra en el Memory Stick actual
-    uint32_t a_escribir = (restante < espacio_en_stick) ? restante : espacio_en_stick;
-
-    op_code orden = MSG_WRITE;
-    enviar_mensaje(ms->socket, &orden, sizeof(op_code));
-    
-    int dir_fisica = (int) offset_local;
-    enviar_mensaje(ms->socket, &dir_fisica, sizeof(int));
-    
-    int cant_bytes = (int) a_escribir;
-    enviar_mensaje(ms->socket, &cant_bytes, sizeof(int));
-    enviar_mensaje(ms->socket, origen, cant_bytes);
-
-    int size;
-    op_code* resp = recibir_mensaje(ms->socket, &size);
-    if (resp == NULL || (*resp != MSG_DONE && *resp != MSG_OK)) {
-      if (resp) free(resp);
-      log_error(logger, "## ERROR: El Memory Stick rechazó o falló la escritura.");
-      return false;
-    }
-    free(resp);
-
-    cursor += a_escribir;
-    origen += a_escribir;
-    restante -= a_escribir;
-  }
-
-  return true;
-
-}
-
-// CP3: lee `tamanio` bytes a partir de la dir global hacia `buffer_out`, partiendo
-// el pedido entre los Memory Sticks involucrados y consolidando el resultado.
-bool leer_memoria_fisica(uint32_t dir_global, uint32_t tamanio, void* buffer_out) {
-  uint32_t restante = tamanio;
-  uint32_t cursor = dir_global;
-  uint8_t* destino = buffer_out;
-
-  while (restante > 0) {
-    t_memory_stick* s = stick_de_direccion(cursor);
-    if (s == NULL) return false;
-
-    uint32_t offset_local = cursor - s->base_global;
-    uint32_t espacio_en_stick = s->tamanio - offset_local;
-    uint32_t a_leer = restante < espacio_en_stick ? restante : espacio_en_stick;
-
-    op_code orden = MSG_READ;
-    enviar_mensaje(s->socket, &orden, sizeof(op_code));
-    int dir_fisica = (int) offset_local;
-    enviar_mensaje(s->socket, &dir_fisica, sizeof(int));
-    int len = (int) a_leer;
-    enviar_mensaje(s->socket, &len, sizeof(int));
-
-    int size;
-    void* datos = recibir_mensaje(s->socket, &size);
-    if (datos == NULL) return false;
-    memcpy(destino, datos, a_leer);
-    free(datos);
-
-    cursor += a_leer;
-    destino += a_leer;
-    restante -= a_leer;
-  }
-  return true;
-}
-
-uint32_t obtener_cantidad_memory_sticks(void) {
-  return (uint32_t) list_size(administrador.memory_sticks);
-}
-
-static void destruir_memory_stick(void* elemento) {
-  t_memory_stick* stick = elemento;
-
-  free(stick->ip);
-  free(stick->puerto);
-  free(stick);
-}
-
-static void destruir_hueco(void* elemento) {
-  t_hueco* hueco = elemento;
-  free(hueco);
-}
-
-void destruir_administrador_memoria(void) {
-  list_destroy_and_destroy_elements(administrador.memory_sticks, destruir_memory_stick);
-  list_destroy_and_destroy_elements(administrador.huecos_libres, destruir_hueco);
-  administrador.memory_sticks = NULL;
-  administrador.huecos_libres = NULL;
-  administrador.memoria_total = 0;
-  administrador.proximo_id_stick = 0;
 }
 </file>
 
@@ -7306,6 +6911,417 @@ int main(int argc, char* argv[]) {
     config_destroy(config);
     log_destroy(logger);
     return EXIT_SUCCESS;
+}
+</file>
+
+<file path="kernel_memory/src/managers/memory_manager.c">
+#include "memory_manager.h"
+
+#include <stdlib.h>
+#include <commons/collections/list.h>
+#include <commons/log.h>
+#include "../estructuras.h"
+#include <string.h>
+#include <stdint.h>
+#include <utils/conexiones.h> // CP3: R/W físico a los Memory Sticks
+#include <utils/mensajes.h>
+#include "../../utils/src/utils/tipos.h"
+
+extern t_log*logger;
+static t_administrador_memoria administrador;
+
+// forward declarations de funciones static (se usan antes de definirse)
+static void registrar_hueco(uint32_t base, uint32_t tamanio);
+static void insertar_hueco_ordenado(t_hueco* nuevo_hueco);
+static void consolidar_huecos_contiguos(void);
+static void destruir_hueco(void* elemento);
+
+
+void inicializar_administrador_memoria(t_estrategia_asignacion estrategia) {
+  administrador.memory_sticks = list_create();
+  administrador.huecos_libres = list_create();
+  administrador.memoria_total = 0;
+  administrador.proximo_id_stick = 0;
+  administrador.estrategia = estrategia;
+}
+
+void conectar_memory_stick(
+    const char* ip,
+    const char* puerto,
+    uint32_t tamanio,
+    int socket
+) 
+{
+  uint32_t base = administrador.memoria_total;
+
+  t_memory_stick* stick = malloc(sizeof(t_memory_stick));
+
+  stick->id = administrador.proximo_id_stick++;
+  stick->ip = strdup(ip);
+  stick->puerto = strdup(puerto);
+  stick->base_global = base;
+  stick->tamanio = tamanio;
+  stick->socket = socket;
+
+  list_add(administrador.memory_sticks, stick);
+
+  administrador.memoria_total += tamanio;
+
+  registrar_hueco(base, tamanio);
+}
+
+bool obtener_info_memory_stick(
+    uint32_t indice,
+    t_info_memory_stick* info
+) {
+  if (info == NULL) {
+      return false;
+  }
+
+  if (indice >= (uint32_t) list_size(administrador.memory_sticks)) {
+      return false;
+  }
+
+  t_memory_stick* stick =
+      list_get(administrador.memory_sticks, indice);
+
+  info->ip = stick->ip;
+  info->puerto = stick->puerto;
+  info->base_global = stick->base_global;
+  info->tamanio = stick->tamanio;
+
+  return true;
+}
+
+static void registrar_hueco(uint32_t base, uint32_t tamanio) {
+  if (tamanio == 0) return;
+
+  t_hueco* nuevo_hueco = malloc(sizeof(t_hueco));
+  nuevo_hueco->base = base;
+  nuevo_hueco->tamanio = tamanio;
+
+  insertar_hueco_ordenado(nuevo_hueco);
+  consolidar_huecos_contiguos();
+}
+
+static void insertar_hueco_ordenado(t_hueco* nuevo_hueco) {
+  int posicion = 0;
+
+  while (posicion < list_size(administrador.huecos_libres)) {
+      t_hueco* hueco_actual = list_get(administrador.huecos_libres, posicion);
+
+      if (nuevo_hueco->base < hueco_actual->base) {
+          break;
+      }
+
+      posicion++;
+  }
+
+  list_add_in_index(administrador.huecos_libres, posicion, nuevo_hueco);
+}
+
+// static void consolidar_huecos_contiguos(void) {
+//   int i = 0;
+
+//   while (i < list_size(administrador.huecos_libres) - 1) {
+//       t_hueco* actual = list_get(administrador.huecos_libres, i);
+//       t_hueco* siguiente = list_get(administrador.huecos_libres, i + 1);
+
+//       uint32_t fin_actual = actual->base + actual->tamanio;
+
+//       if (fin_actual == siguiente->base) {
+//           actual->tamanio += siguiente->tamanio;
+
+//           t_hueco* eliminado = list_remove(administrador.huecos_libres, i + 1);
+//           free(eliminado);
+//       } else {
+//           i++;
+//       }
+//   }
+// }
+static void consolidar_huecos_contiguos(void) {
+  if (list_size(administrador.huecos_libres) < 2) return;
+
+  for (int i = 0; i < list_size(administrador.huecos_libres) - 1; i++) {
+    t_hueco* actual = list_get(administrador.huecos_libres, i);
+    t_hueco* siguiente = list_get(administrador.huecos_libres, i + 1);
+
+    if (actual->base + actual->tamanio == siguiente->base) {
+      actual->tamanio += siguiente->tamanio;
+      list_remove_element(administrador.huecos_libres, siguiente);
+      free(siguiente);
+      i--; // recomprobar el nuevo hueco unificado con el que le sigue
+    }
+  }
+}
+
+static t_hueco* buscar_best_fit(uint32_t tamanio) {
+  t_hueco* mejor_hueco = NULL;
+
+  for (int i = 0; i < list_size(administrador.huecos_libres); i++) {
+      t_hueco* hueco = list_get(administrador.huecos_libres, i);
+
+      if (hueco->tamanio >= tamanio) {
+          if (mejor_hueco == NULL || hueco->tamanio < mejor_hueco->tamanio) {
+              mejor_hueco = hueco;
+          }
+      }
+  }
+
+  return mejor_hueco;
+}
+
+static t_hueco* buscar_worst_fit(uint32_t tamanio){
+  t_hueco* peor_hueco = NULL;
+
+  for (int i = 0; i < list_size(administrador.huecos_libres); i++) {
+    t_hueco* hueco = list_get(administrador.huecos_libres, i);
+
+    if (hueco->tamanio >= tamanio) {
+      if (peor_hueco == NULL || hueco->tamanio > peor_hueco->tamanio) {
+        peor_hueco = hueco;
+      }
+    }
+  }
+  return peor_hueco;
+}
+
+static t_hueco* buscar_hueco_candidato(uint32_t tamanio) {
+  switch (administrador.estrategia) {
+    case BEST_FIT:
+      return buscar_best_fit(tamanio);
+
+    case WORST_FIT:
+      return buscar_worst_fit(tamanio);
+
+    default:
+      return NULL;
+  }
+}
+
+uint32_t reservar_espacio(uint32_t tamanio) {
+  if (tamanio == 0) {
+    return UINT32_MAX;
+  }
+
+  t_hueco* hueco = buscar_hueco_candidato(tamanio);
+
+  if (hueco == NULL) {
+    log_warning(logger, "## RESERVA FALLIDA: No hay hueco contiguo de %u bytes. Memoria libre total: %u bytes", tamanio, obtener_memoria_libre_total());
+    return UINT32_MAX;
+  }
+
+  uint32_t base_asignada = hueco->base;
+
+  hueco->base += tamanio;
+  hueco->tamanio -= tamanio;
+
+  if (hueco->tamanio == 0) {
+    list_remove_element(administrador.huecos_libres, hueco);
+    free(hueco);
+  }
+
+  return base_asignada;
+}
+
+bool hay_espacio_total(uint32_t tamanio)
+{
+  return obtener_memoria_libre_total() >= tamanio;
+}
+
+bool hay_hueco_contiguo(uint32_t tamanio) {
+  return buscar_hueco_candidato(tamanio) != NULL;
+}
+
+bool requiere_compactacion(uint32_t tamanio) {
+  return hay_espacio_total(tamanio) && !hay_hueco_contiguo(tamanio);
+}
+
+uint32_t obtener_memoria_total(void) {
+  return administrador.memoria_total;
+}
+
+uint32_t obtener_memoria_libre_total(void) {
+  uint32_t total_libre = 0;
+
+  for (int i = 0; i < list_size(administrador.huecos_libres); i++) {
+    t_hueco* hueco = list_get(administrador.huecos_libres, i);
+    log_info(logger, "hueco de tamaño de base %u : %u", hueco->base, hueco->tamanio);
+    total_libre += hueco->tamanio;
+  }
+
+  return total_libre;
+}
+
+void liberar_espacio(uint32_t base, uint32_t tamanio) {
+  registrar_hueco(base, tamanio);
+}
+
+static void limpiar_huecos(void) {
+  list_clean_and_destroy_elements(administrador.huecos_libres, destruir_hueco);
+}
+
+void reconstruir_huecos_desde(uint32_t base) {
+  limpiar_huecos();
+
+  if (base >= administrador.memoria_total) {
+    return;
+  }
+
+  uint32_t tamanio_libre = administrador.memoria_total - base;
+
+  registrar_hueco(base, tamanio_libre);
+}
+
+// CP3: devuelve el Memory Stick que contiene la dirección global dada (o NULL).
+static t_memory_stick* stick_de_direccion(uint32_t dir_global) {
+  for (int i = 0; i < list_size(administrador.memory_sticks); i++) {
+    t_memory_stick* s = list_get(administrador.memory_sticks, i);
+    if (dir_global >= s->base_global && dir_global < s->base_global + s->tamanio)
+      return s;
+  }
+  return NULL;
+}
+
+// CP3: escribe `tamanio` bytes desde `datos` a partir de la dir global, partiendo
+// el pedido entre los Memory Sticks involucrados (cada stick direcciona desde 0).
+bool escribir_memoria_fisica(uint32_t dir_global, uint32_t tamanio, void* datos) {
+  //  if (datos == NULL || tamanio == 0) return false;
+
+  //   // 1. Buscar a qué Memory Stick le corresponde la dirección global
+  //   t_memory_stick* ms = stick_de_direccion(dir_global);
+  //   if (ms == NULL || ms->socket < 0) {
+  //       log_error(logger, "Error: No se encontró MS para la dirección %u", dir_global);
+  //       return false;
+  //   }
+
+  //   uint32_t dir_local = dir_global - ms->base_global;
+
+  //   // 2. ENVIAR CABECERA Y DATOS AL MEMORY STICK
+  //   op_code cod = MSG_WRITE;
+  //   enviar_mensaje(ms->socket, &cod, sizeof(op_code));
+  //   enviar_mensaje(ms->socket, &dir_local, sizeof(uint32_t));
+  //   enviar_mensaje(ms->socket, &tamanio, sizeof(uint32_t));
+  //   enviar_mensaje(ms->socket, datos, tamanio);
+
+  //   // 3. ESPERAR CONFIRMACIÓN DEL MEMORY STICK
+  //   int size;
+  //   op_code* resp = recibir_mensaje(ms->socket, &size);
+  //   if (resp == NULL) {
+  //       log_error(logger, "Memory Stick se desconectó durante la escritura");
+  //       return false;
+  //   }
+
+  //   bool exito = (*resp == MSG_DONE || *resp == MSG_OK);
+  //   free(resp);
+
+  //   return exito;
+  if (datos == NULL || tamanio == 0) return false;
+
+  uint32_t restante = tamanio;
+  uint32_t cursor = dir_global;
+  uint8_t* origen = (uint8_t*) datos;
+
+  while (restante > 0) {
+    t_memory_stick* ms = stick_de_direccion(cursor);
+    if (ms == NULL || ms->socket < 0) {
+      log_error(logger, "## ERROR: No se encontró Memory Stick para la dirección física %u", cursor);
+      return false;
+    }
+
+    uint32_t offset_local = cursor - ms->base_global;
+    uint32_t espacio_en_stick = ms->tamanio - offset_local;
+    
+    // Escribimos solo hasta donde entra en el Memory Stick actual
+    uint32_t a_escribir = (restante < espacio_en_stick) ? restante : espacio_en_stick;
+
+    op_code orden = MSG_WRITE;
+    enviar_mensaje(ms->socket, &orden, sizeof(op_code));
+    
+    int dir_fisica = (int) offset_local;
+    enviar_mensaje(ms->socket, &dir_fisica, sizeof(int));
+    
+    int cant_bytes = (int) a_escribir;
+    enviar_mensaje(ms->socket, &cant_bytes, sizeof(int));
+    enviar_mensaje(ms->socket, origen, cant_bytes);
+
+    int size;
+    op_code* resp = recibir_mensaje(ms->socket, &size);
+    if (resp == NULL || (*resp != MSG_DONE && *resp != MSG_OK)) {
+      if (resp) free(resp);
+      log_error(logger, "## ERROR: El Memory Stick rechazó o falló la escritura.");
+      return false;
+    }
+    free(resp);
+
+    cursor += a_escribir;
+    origen += a_escribir;
+    restante -= a_escribir;
+  }
+
+  return true;
+
+}
+
+// CP3: lee `tamanio` bytes a partir de la dir global hacia `buffer_out`, partiendo
+// el pedido entre los Memory Sticks involucrados y consolidando el resultado.
+bool leer_memoria_fisica(uint32_t dir_global, uint32_t tamanio, void* buffer_out) {
+  uint32_t restante = tamanio;
+  uint32_t cursor = dir_global;
+  uint8_t* destino = buffer_out;
+
+  while (restante > 0) {
+    t_memory_stick* s = stick_de_direccion(cursor);
+    if (s == NULL) return false;
+
+    uint32_t offset_local = cursor - s->base_global;
+    uint32_t espacio_en_stick = s->tamanio - offset_local;
+    uint32_t a_leer = restante < espacio_en_stick ? restante : espacio_en_stick;
+
+    op_code orden = MSG_READ;
+    enviar_mensaje(s->socket, &orden, sizeof(op_code));
+    int dir_fisica = (int) offset_local;
+    enviar_mensaje(s->socket, &dir_fisica, sizeof(int));
+    int len = (int) a_leer;
+    enviar_mensaje(s->socket, &len, sizeof(int));
+
+    int size;
+    void* datos = recibir_mensaje(s->socket, &size);
+    if (datos == NULL) return false;
+    memcpy(destino, datos, a_leer);
+    free(datos);
+
+    cursor += a_leer;
+    destino += a_leer;
+    restante -= a_leer;
+  }
+  return true;
+}
+
+uint32_t obtener_cantidad_memory_sticks(void) {
+  return (uint32_t) list_size(administrador.memory_sticks);
+}
+
+static void destruir_memory_stick(void* elemento) {
+  t_memory_stick* stick = elemento;
+
+  free(stick->ip);
+  free(stick->puerto);
+  free(stick);
+}
+
+static void destruir_hueco(void* elemento) {
+  t_hueco* hueco = elemento;
+  free(hueco);
+}
+
+void destruir_administrador_memoria(void) {
+  list_destroy_and_destroy_elements(administrador.memory_sticks, destruir_memory_stick);
+  list_destroy_and_destroy_elements(administrador.huecos_libres, destruir_hueco);
+  administrador.memory_sticks = NULL;
+  administrador.huecos_libres = NULL;
+  administrador.memoria_total = 0;
+  administrador.proximo_id_stick = 0;
 }
 </file>
 
@@ -9856,396 +9872,6 @@ void* atender_stdout_ks(void* arg) {
 }
 </file>
 
-<file path="kernel_memory/src/handlers/handler_kernel_scheduler.c">
-#include "handler_kernel_scheduler.h"
-
-#include <stdlib.h>
-#include <commons/log.h>
-#include <commons/config.h>
-#include <commons/string.h>
-
-#include "../../utils/src/utils/mensajes.h"
-#include "../../utils/src/utils/conexiones.h"
-
-#include "../estructuras.h"
-#include "../managers/process_manager.h"
-#include "../managers/memory_manager.h"
-#include "../compactacion/service_compactacion.h"
-#include "../../utils/src/utils/tipos.h"
-
-extern t_log* logger;
-extern t_config*config;
-
-static int fd_kernel_scheduler = -1;
-
-char*completar_path(char*path){
-  char*prefijo = config_get_string_value(config, "SCRIPTS_BASEPATH");
-  char*path_completo = string_new();
-  
-  if (!string_starts_with(path,prefijo))
-  {
-    string_append(&path_completo, prefijo);
-    string_append(&path_completo , "/");
-  }
-  string_append(&path_completo,path);
-
-  return path_completo;
-}
-
-void atender_creacion_proceso(){
-  uint32_t*pid; char*path; int size;
-
-  pid = recibir_mensaje(fd_kernel_scheduler,&size);
-  if (!pid) { log_error(logger, "## ERROR: No se ha dado ningún PID.");}
-  log_info(logger, "PID Provisto: %d", *pid);
-
-  path = recibir_mensaje(fd_kernel_scheduler, &size);
-  if (!path) { log_error(logger, "## ERROR: NO se ha dado ningún path.");}
-  log_info(logger, "Path provisto: %s", path);
-
-  log_info(logger, "Verificando que el path se encuentre completo y rellenandolo en caso contrario...");
-  char*path_completo = completar_path(path);
-
-  if (path_completo == NULL)
-  {
-    log_error(logger, "## ERROR: Algo salió mal al completar el path.");
-  }
-  else
-  {
-    log_info(logger,"Se ha completado el path con exito o no necesitaba ser completado.");
-    log_info(logger, "El path completo es: %s", path_completo);
-    free(path);
-  }
-
-  log_info(logger, "Creando nuevo proceso. PID: %d", *pid);
-  bool exito = crear_proceso(*pid,path_completo);
-  op_code cod;
-  if (exito){
-    log_info(logger, "Proceso creado. PID: %d", *pid);
-    cod = MSG_OK;
-    
-  }
-  else{
-    log_error(logger, "El proceso no se pudo crear.");
-    cod = MSG_ERROR;
-  }
-
-  free(pid);
-  enviar_mensaje(fd_kernel_scheduler, &cod, sizeof(op_code));
-  
-  return;
-}
-
-static t_resultado_solicitud_desalojo solicitar_desalojo_por_compactacion(void)
-{
-    op_code mensaje = MSG_SOLICITAR_DESALOJO;
-    enviar_mensaje(fd_kernel_scheduler, &mensaje, sizeof(op_code));
-
-    int size;
-    op_code* respuesta = recibir_mensaje(fd_kernel_scheduler, &size);
-
-    if (respuesta == NULL || size != sizeof(op_code)) {
-        log_error(logger, "Error esperando confirmación de desalojo por compactación");
-        free(respuesta);
-        return DESALOJO_ERROR_SIN_RESPUESTA;
-    }
-
-    if (*respuesta != MSG_DESALOJO_REALIZADO) {
-        log_error(logger, "Respuesta inesperada ante desalojo por compactación: %d", *respuesta);
-        return DESALOJO_ERROR_RESPUESTA_INESPERADA;
-    }
-
-    free(respuesta);
-    return DESALOJO_OK;
-}
-
-static t_resultado_crear_segmento atender_creacion_segmento () {
-  uint32_t*pid, *id_segmento, *tamanio = NULL; int size;
-
-  
-  pid = recibir_mensaje(fd_kernel_scheduler, &size);
-  id_segmento = recibir_mensaje(fd_kernel_scheduler, &size);
-  tamanio = recibir_mensaje(fd_kernel_scheduler, &size);
-  if (pid == NULL || id_segmento == NULL || tamanio == NULL){
-    if (pid == NULL) free(pid);
-    if (id_segmento == NULL) free(id_segmento);
-    if (tamanio == NULL) free(tamanio);
-    return CREAR_SEGMENTO_ERROR;
-  }
-
-  t_resultado_crear_segmento resultado = crear_segmento(*pid, *id_segmento, *tamanio);
-
-  if (resultado == CREAR_SEGMENTO_REQUIERE_COMPACTACION) {
-    log_warning(logger, "Se requiere compactación para crear el segmento.");
-    t_resultado_solicitud_desalojo resultado_desalojo = solicitar_desalojo_por_compactacion();
-    if (resultado_desalojo == DESALOJO_OK){
-      ejecutar_compactacion();
-      resultado = crear_segmento(*pid, *id_segmento, *tamanio);
-    }
-    else {
-      log_error(logger, "## ERROR: OCURRIÓ UN ERROR EN EL DESALOJO.");
-      free(pid);free(id_segmento);free(tamanio);
-      return CREAR_SEGMENTO_REQUIERE_COMPACTACION_DESALOJO_FALLO;
-    }
-  }
-  log_info(logger, "El resultado de la operacion es %d", resultado);
-  free(pid);free(id_segmento);free(tamanio);
-  return resultado;
-}
-
-bool atender_destruccion_proceso(){
-    int size;
-    uint32_t*pid = recibir_mensaje(fd_kernel_scheduler, &size);
-  return destruir_proceso(*pid);
-}
-
-bool atender_destruccion_segmento(){
-  int size;
-  uint32_t*pid = recibir_mensaje(fd_kernel_scheduler, &size);
-  uint32_t *id_segmento = recibir_mensaje(fd_kernel_scheduler, &size);
-  return eliminar_segmento(*pid, *id_segmento);
-}
-
-void atender_kernel_scheduler(int fd) {
-    fd_kernel_scheduler = fd;
-
-    log_info(logger, "## Kernel Scheduler Conectado - FD del socket: %d", fd_kernel_scheduler);
-
-    op_code respuesta = MSG_OK;
-    enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
-
-    while (1) {
-      int size;
-      op_code* codigo_recibido = recibir_mensaje(fd_kernel_scheduler, &size);
-
-      if (codigo_recibido == NULL) break;
-
-
-      if (size != sizeof(op_code)) {
-        log_error(logger, "Mensaje inválido recibido de Kernel Scheduler");
-        free(codigo_recibido);
-        continue;
-      }
-      switch (*codigo_recibido) {
-        // cada case con su propio bloque y sus propias variables. Antes habia
-        // un pid_ptr/ok/resp declarados afuera del switch que quedaban shadowed
-        // (y sin usar) por los declarados dentro del case.
-        case MSG_DESUSPENDER_PROCESO: {
-          uint32_t* pid_ptr = recibir_mensaje(fd_kernel_scheduler, &size);
-          if (pid_ptr == NULL) {
-            log_error(logger, "## Error al recibir el PID a desuspender desde el Scheduler");
-            op_code resp = MSG_ERROR;
-            enviar_mensaje(fd_kernel_scheduler, &resp, sizeof(op_code));
-            break;
-          }
-          log_debug(logger, "Se ha recibido la orden de desuspender un proceso. PID: %d", *pid_ptr);
-          bool ok = desuspender_proceso(*pid_ptr);
-
-          op_code resp = ok ? MSG_OK : MSG_ERROR;
-
-          enviar_mensaje(fd_kernel_scheduler, &resp, sizeof(op_code));
-          free(pid_ptr);
-          break;
-        }
-
-        case MSG_SUSPENDER_PROCESO: {
-          uint32_t* pid_ptr = recibir_mensaje(fd_kernel_scheduler, &size);
-          if (pid_ptr == NULL) {
-            log_error(logger, "## Error al recibir el PID a suspender desde el Scheduler");
-            op_code resp = MSG_ERROR;
-            enviar_mensaje(fd_kernel_scheduler, &resp, sizeof(op_code));
-            break;
-          }
-          log_debug(logger, "Se ha recibido la orden de suspender un proceso. PID. %d", *pid_ptr);
-          bool ok = suspender_proceso(*pid_ptr);
-
-          op_code resp = ok ? MSG_OK : MSG_ERROR;
-
-          enviar_mensaje(fd_kernel_scheduler, &resp, sizeof(op_code));
-          free(pid_ptr);
-          break;
-        }
-          
-        case MSG_DONE:
-          respuesta = MSG_ERROR;
-          if (atender_destruccion_proceso()){
-            respuesta = MSG_OK;
-          };
-          log_error(logger, "Respuesta enviar: %d", respuesta);
-          enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
-          // TODO: recibir PID y llamar a destruir_proceso(pid)
-          break;
-
-        case MSG_MEM_ALLOC:
-          respuesta = MSG_OK;
-          t_resultado_crear_segmento resultado = atender_creacion_segmento();
-          if (resultado != CREAR_SEGMENTO_OK && resultado != CREAR_SEGMENTO_SIN_MEMORIA){
-            respuesta = MSG_ERROR;
-          }
-          if (resultado == CREAR_SEGMENTO_SIN_MEMORIA)
-          {
-            respuesta = MSG_MEM_ALLOC_SIN_MEMORIA;
-          }
-          log_info(logger, "Se le envía a KS el siguiente resultado de respuesta a MEM_ALLOC: %d", respuesta);
-          enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
-          // TODO:
-          // 1. recibir PID
-          // 2. recibir id_segmento
-          // 3. recibir tamanio
-          // 4. llamar a atender_creacion_segmento(pid, id_segmento, tamanio)
-          // 5. responder resultado al Kernel Scheduler
-          break;
-
-        case MSG_MEM_FREE:
-          respuesta = MSG_ERROR;
-          if (atender_destruccion_segmento()){
-            respuesta = MSG_OK;
-          }
-
-          enviar_mensaje(fd_kernel_scheduler,&respuesta,sizeof(op_code));
-          // TODO:
-          // 1. recibir PID
-          // 2. recibir id_segmento
-          // 3. llamar a eliminar_segmento(pid, id_segmento)
-          // 4. responder OK / ERROR
-          break;
-
-        case MSG_STDIN: {
-          /*
-          // CP3: escribir en memoria de usuario. KS envía: pid + dir_logica + tamanio + datos.
-          uint32_t* pid = recibir_mensaje(fd_kernel_scheduler, &size);
-          uint32_t* dir = recibir_mensaje(fd_kernel_scheduler, &size);
-          uint32_t* tam = recibir_mensaje(fd_kernel_scheduler, &size);
-          void* texto  = recibir_mensaje(fd_kernel_scheduler, &size);
-          
-
-          uint32_t dir_global;
-          int tr = traducir_direccion(*pid, *dir, *tam, &dir_global);
-
-          if (tr == TRADUCCION_SEG_FAULT) {
-            respuesta = MSG_SEG_FAULT;
-          } else if (tr == TRADUCCION_INEXISTENTE || !escribir_memoria_fisica(dir_global, *tam, texto)) {
-            respuesta = MSG_ERROR;
-          } else {
-            log_info(logger, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %.*s",
-                     *pid, dir_global, (int) *tam, (char*) texto);
-            respuesta = MSG_OK;
-          }
-          enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
-
-          free(pid); free(dir); free(tam); free(texto);
-          break;
-          */
-          uint32_t* pid = recibir_mensaje(fd_kernel_scheduler, &size);
-          uint32_t* dir = recibir_mensaje(fd_kernel_scheduler, &size);
-          uint32_t* tam = recibir_mensaje(fd_kernel_scheduler, &size);
-          char* texto   = recibir_mensaje(fd_kernel_scheduler, &size);
-
-          if (pid == NULL || dir == NULL || tam == NULL || texto == NULL) {
-              log_error(logger, "## Error al recibir datos de STDIN desde el Scheduler");
-              respuesta = MSG_ERROR;
-              enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
-              // un free por linea (antes -Wmisleading-indentation)
-              if (pid) free(pid);
-              if (dir) free(dir);
-              if (tam) free(tam);
-              if (texto) free(texto);
-              break;
-          }
-
-          uint32_t dir_global;
-          int tr = traducir_direccion(*pid, *dir, *tam, &dir_global);
-
-          if (tr == TRADUCCION_INEXISTENTE) {
-            log_warning(logger, "PID %u - Intento de STDIN en proceso suspendido. Auto-desuspendiendo...", *pid);
-            if (desuspender_proceso(*pid)) {
-              tr = traducir_direccion(*pid, *dir, *tam, &dir_global); // Reintentamos la traducción
-            }
-          }
-
-          if (tr == TRADUCCION_SEG_FAULT) {
-              respuesta = MSG_SEG_FAULT;
-          } else if (tr == TRADUCCION_INEXISTENTE) {
-              // Si el proceso estaba suspendido o el segmento no existe:
-              log_warning(logger, "PID %d - Traducción inexistente en STDIN (proceso suspendido/sin segmento)", *pid);
-              respuesta = MSG_ERROR;
-          } else {
-              bool ok_escritura = escribir_memoria_fisica(dir_global, *tam, texto);
-              if (!ok_escritura) {
-                  log_error(logger, "PID %d - Falló escritura física en STDIN", *pid);
-                  respuesta = MSG_ERROR;
-              } else {
-                  log_info(logger, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %.*s",
-                          *pid, dir_global, (int)*tam, texto);
-                  respuesta = MSG_OK;
-              }
-          }
-
-          // ¡OBLIGATORIO! Responder siempre al Scheduler para que no se quede bloqueado en recibir_mensaje
-          enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
-
-          free(pid); 
-          free(dir); 
-          free(tam); 
-          free(texto);
-          break;
-        }
-
-        case MSG_STDOUT: {
-          // CP3: leer de memoria de usuario. KS envía: pid + dir_logica + tamanio.
-          // Respondemos MSG_OK + los bytes leídos, o MSG_SEG_FAULT / MSG_ERROR.
-          uint32_t* pid = recibir_mensaje(fd_kernel_scheduler, &size);
-          uint32_t* dir = recibir_mensaje(fd_kernel_scheduler, &size);
-          uint32_t* tam = recibir_mensaje(fd_kernel_scheduler, &size);
-
-          uint32_t dir_global;
-          int tr = traducir_direccion(*pid, *dir, *tam, &dir_global);
-
-          if (tr == TRADUCCION_INEXISTENTE) {
-            log_warning(logger, "PID %u - Intento de STDIN en proceso suspendido. Auto-desuspendiendo...", *pid);
-            if (desuspender_proceso(*pid)) {
-              tr = traducir_direccion(*pid, *dir, *tam, &dir_global); // Reintentamos la traducción
-            }
-          }
-
-          if (tr == TRADUCCION_SEG_FAULT) {
-            respuesta = MSG_SEG_FAULT;
-            enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
-          } else if (tr == TRADUCCION_INEXISTENTE) {
-            respuesta = MSG_ERROR;
-            enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
-          } else {
-            void* buffer = malloc(*tam);
-            if (!leer_memoria_fisica(dir_global, *tam, buffer)) {
-              respuesta = MSG_ERROR;
-              enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
-            } else {
-              log_info(logger, "PID: %d - Acción: LEER - Dirección Física: %d - Valor: %.*s",
-                       *pid, dir_global, (int) *tam, (char*) buffer);
-              respuesta = MSG_OK;
-              enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
-              enviar_mensaje(fd_kernel_scheduler, buffer, (int) *tam);
-            }
-            free(buffer);
-          }
-
-          free(pid); free(dir); free(tam);
-          break;
-        }
-        case MSG_CREAR_PROCESO: {
-          atender_creacion_proceso();
-          break;
-        }
-
-        default:
-          log_warning(logger, "Código desconocido recibido de Kernel Scheduler: %d", *codigo_recibido);
-          break;
-      }
-      free(codigo_recibido);
-    }
-}
-</file>
-
 <file path="kernel_memory/src/managers/process_manager.c">
 #include "../estructuras.h"
 #include <stdlib.h>
@@ -11012,6 +10638,540 @@ bool actualizar_contexto(uint32_t p,t_contexto*contexto){
 }
 </file>
 
+<file path="cpu/src/cpu.h">
+#ifndef CPUS_H
+#define CPUS_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <commons/log.h>
+#include <commons/config.h>
+#include <utils/conexiones.h>
+#include <utils/mensajes.h>
+#include <stdint.h>
+#include <utils/tipos.h>
+#include <utils/serializacion.h>
+
+#define SEG_FAULT (-5)
+
+// OPCODES
+typedef enum {
+    OP_NOOP =100,
+    OP_SET =101,
+    OP_MOV_IN =102,
+    OP_MOV_OUT =103,
+    OP_SUM =104,
+    OP_SUB =105,
+    OP_JNZ =106,
+    OP_COPY_MEM =107,
+    OP_MUTEX_CREATE =108,
+    OP_MUTEX_LOCK =109,
+    OP_MUTEX_UNLOCK =110,
+    OP_SLEEP =111,
+    OP_STDIN =112,
+    OP_STDOUT =113,
+    OP_INVALID =114,
+    OP_MEM_ALLOC =115,
+    OP_MEM_FREE =116,
+    OP_INIT_PROC =117,
+    OP_EXIT =118,
+} operacion;
+
+// STRUCTS
+
+typedef struct {
+    uint32_t pid;
+    uint32_t pc;
+} t_fetch;
+typedef struct {
+    char* ip;
+    char* puerto;
+    uint32_t base_global;
+    uint32_t tamanio;
+} t_info_memory_stick_cpu;
+typedef struct {
+    uint32_t cantidad;
+    t_info_memory_stick_cpu memory_sticks[4];
+} t_mapa_memory_sticks_cpu;
+
+
+// CICLO DE INSTRUCCION
+char* fetch(int conexion_servidor,uint32_t pid, t_registros* cpu, t_log* logger_cpu);
+operacion decode(char* instruccion);
+int execute(operacion codigo, char* instruccion, t_registros* cpu, int fd_ks, int fd_km, int fd_ms, uint32_t pid, t_list* tabla_segmentos, t_log* logger_cpu,t_mapa_memory_sticks_cpu* mapa,int fd_ms_agregados[3], t_contexto* contexto);
+int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto, uint32_t pid, t_log* logger_cpu);
+int hay_mensaje_completo(int fd, t_log* logger_cpu);
+void atender_interrupcion_en_espera (t_interrupcion* interrupcion_entrante, uint32_t pid,int fd_ks,int fd_km,t_contexto* contexto,t_log* logger_cpu);
+
+// MMU
+int memory_management_unit(uint32_t direccion_logica, uint32_t tamanio_acceso, t_list* tabla_segmentos, t_log* logger_cpu);
+void* lectura_ms(uint32_t direccion_global,uint32_t tamanio_lectura,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3], t_log* logger_cpu);
+void escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio_escritura,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3], t_log* logger_cpu);
+
+// DEFINICIONES
+extern uint32_t segment_max_size;
+extern int ms_conectados;
+extern int fd_ms_agregados[3];
+extern t_interrupcion* interrupcion_entrante;
+extern bool interrupcion_en_espera;
+
+// MANEJO DE INFORMACION
+t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu);
+void destruir_mapa_memory_sticks(t_mapa_memory_sticks_cpu* mapa);
+int conectar_memory_sticks_faltantes(t_mapa_memory_sticks_cpu* mapa,t_log* logger_cpu, int identificador_cpu);
+int actualizar_conexiones_ms(t_info_memory_stick_cpu* info_ms,t_log* logger_cpu, int identificador_cpu);
+int buscar_indice_ms(uint32_t direccion_global,t_mapa_memory_sticks_cpu* mapa);
+int obtener_fd_ms(uint32_t indice_ms,int fd_ms,int fd_ms_agregados[3]);
+
+void escribir_en_buffer(void* buffer,uint32_t* desplazamiento,const void* dato,uint32_t tamanio);
+t_list* deserializar_tabla_segmentos(void* buffer, int tamanio_buffer);
+
+void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km,t_log* logger_cpu);
+void manejar_seg_fault(int fd_ks, uint32_t pid, t_log* logger_cpu, int fd_km);
+
+// CONTEXTOS
+void enviar_contexto(t_contexto* contexto, int fd_km, t_log* logger_cpu);
+void destruir_contexto(t_contexto* contexto);
+void guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* logger_cpu); 
+
+
+// OPERACIONES CON REGISTROS
+uint32_t obtener_valor(char* posicion, t_registros* registro);
+void escribir_registro(char* posicion,t_registros* registro,uint32_t valor);
+uint32_t tamanio_registro(char* nombre_registro);
+
+// INSTRUCCIONES
+void set(char* instruccion, t_registros* registro);
+void sum(char* instruccion, t_registros* registro);
+void sub(char* instruccion, t_registros* registro);
+int mov_in(char* instruccion,t_registros* registros,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3],t_list* tabla_segmentos, t_log* logger_cpu, uint32_t pid);
+int mov_out(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3], t_log* logger_cpu, uint32_t pid);
+void jnz(char* instruccion, t_registros* registro);
+int copy_mem(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_mapa_memory_sticks_cpu* mapa_ms,int fd_ms, int fd_ms_agregados[3],uint32_t pid,t_log* logger_cpu);
+void noop(t_registros* registro);
+
+// SYSCALLS
+void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid, t_log* logger_cpu);
+int syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
+int syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
+int syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
+int syscall_sleep(char* instruccion, int fd_ks, int fd_km, uint32_t pid, t_registros* cpu, t_contexto* contexto, t_log* logger_cpu);
+int syscall_stdin(char* instruccion, t_registros* registros, int fd_ks, int fd_km, uint32_t pid, t_contexto* contexto, t_log* logger_cpu);
+int syscall_stdout(char* instruccion,t_registros* registro, int fd_ks, int fd_km, uint32_t pid, t_contexto* contexto, t_log* logger_cpu);
+void syscall_mem_alloc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid, t_log* logger_cpu);
+void syscall_mem_free(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid, t_log* logger_cpu);
+void syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log* logger_cpu);
+
+#endif
+</file>
+
+<file path="kernel_memory/src/handlers/handler_kernel_scheduler.c">
+#include "handler_kernel_scheduler.h"
+
+#include <stdlib.h>
+#include <commons/log.h>
+#include <commons/config.h>
+#include <commons/string.h>
+
+#include "../../utils/src/utils/mensajes.h"
+#include "../../utils/src/utils/conexiones.h"
+
+#include "../estructuras.h"
+#include "../managers/process_manager.h"
+#include "../managers/memory_manager.h"
+#include "../compactacion/service_compactacion.h"
+#include "../../utils/src/utils/tipos.h"
+
+extern t_log* logger;
+extern t_config*config;
+
+static int fd_kernel_scheduler = -1;
+
+char*completar_path(char*path){
+  char*prefijo = config_get_string_value(config, "SCRIPTS_BASEPATH");
+  char*path_completo = string_new();
+  
+  if (!string_starts_with(path,prefijo))
+  {
+    string_append(&path_completo, prefijo);
+    string_append(&path_completo , "/");
+  }
+  string_append(&path_completo,path);
+
+  return path_completo;
+}
+
+void atender_creacion_proceso(){
+  uint32_t*pid; char*path; int size;
+
+  pid = recibir_mensaje(fd_kernel_scheduler,&size);
+  if (!pid) { log_error(logger, "## ERROR: No se ha dado ningún PID.");}
+  log_info(logger, "PID Provisto: %d", *pid);
+
+  path = recibir_mensaje(fd_kernel_scheduler, &size);
+  if (!path) { log_error(logger, "## ERROR: NO se ha dado ningún path.");}
+  log_info(logger, "Path provisto: %s", path);
+
+  log_info(logger, "Verificando que el path se encuentre completo y rellenandolo en caso contrario...");
+  char*path_completo = completar_path(path);
+
+  if (path_completo == NULL)
+  {
+    log_error(logger, "## ERROR: Algo salió mal al completar el path.");
+  }
+  else
+  {
+    log_info(logger,"Se ha completado el path con exito o no necesitaba ser completado.");
+    log_info(logger, "El path completo es: %s", path_completo);
+    free(path);
+  }
+
+  log_info(logger, "Creando nuevo proceso. PID: %d", *pid);
+  bool exito = crear_proceso(*pid,path_completo);
+  op_code cod;
+  if (exito){
+    log_info(logger, "Proceso creado. PID: %d", *pid);
+    cod = MSG_OK;
+    
+  }
+  else{
+    log_error(logger, "El proceso no se pudo crear.");
+    cod = MSG_ERROR;
+  }
+
+  free(pid);
+  enviar_mensaje(fd_kernel_scheduler, &cod, sizeof(op_code));
+  
+  return;
+}
+
+static t_resultado_solicitud_desalojo solicitar_desalojo_por_compactacion(void)
+{
+    op_code mensaje = MSG_SOLICITAR_DESALOJO;
+    enviar_mensaje(fd_kernel_scheduler, &mensaje, sizeof(op_code));
+
+    int size;
+    op_code* respuesta = recibir_mensaje(fd_kernel_scheduler, &size);
+
+    if (respuesta == NULL || size != sizeof(op_code)) {
+        log_error(logger, "Error esperando confirmación de desalojo por compactación");
+        free(respuesta);
+        return DESALOJO_ERROR_SIN_RESPUESTA;
+    }
+
+    if (*respuesta != MSG_DESALOJO_REALIZADO) {
+        log_error(logger, "Respuesta inesperada ante desalojo por compactación: %d", *respuesta);
+        return DESALOJO_ERROR_RESPUESTA_INESPERADA;
+    }
+
+    free(respuesta);
+    return DESALOJO_OK;
+}
+
+static t_resultado_crear_segmento atender_creacion_segmento () {
+  uint32_t*pid, *id_segmento, *tamanio = NULL; int size;
+
+  
+  pid = recibir_mensaje(fd_kernel_scheduler, &size);
+  id_segmento = recibir_mensaje(fd_kernel_scheduler, &size);
+  tamanio = recibir_mensaje(fd_kernel_scheduler, &size);
+  if (pid == NULL || id_segmento == NULL || tamanio == NULL){
+    if (pid == NULL) free(pid);
+    if (id_segmento == NULL) free(id_segmento);
+    if (tamanio == NULL) free(tamanio);
+    return CREAR_SEGMENTO_ERROR;
+  }
+
+  t_resultado_crear_segmento resultado = crear_segmento(*pid, *id_segmento, *tamanio);
+
+  if (resultado == CREAR_SEGMENTO_REQUIERE_COMPACTACION) {
+    log_warning(logger, "Se requiere compactación para crear el segmento.");
+    t_resultado_solicitud_desalojo resultado_desalojo = solicitar_desalojo_por_compactacion();
+    if (resultado_desalojo == DESALOJO_OK){
+      ejecutar_compactacion();
+      resultado = crear_segmento(*pid, *id_segmento, *tamanio);
+    }
+    else {
+      log_error(logger, "## ERROR: OCURRIÓ UN ERROR EN EL DESALOJO.");
+      free(pid);free(id_segmento);free(tamanio);
+      return CREAR_SEGMENTO_REQUIERE_COMPACTACION_DESALOJO_FALLO;
+    }
+  }
+  log_info(logger, "El resultado de la operacion es %d", resultado);
+  free(pid);free(id_segmento);free(tamanio);
+  return resultado;
+}
+
+bool atender_destruccion_proceso(){
+    int size;
+    uint32_t*pid = recibir_mensaje(fd_kernel_scheduler, &size);
+  return destruir_proceso(*pid);
+}
+
+bool atender_destruccion_segmento(){
+  int size;
+  uint32_t*pid = recibir_mensaje(fd_kernel_scheduler, &size);
+  uint32_t *id_segmento = recibir_mensaje(fd_kernel_scheduler, &size);
+  return eliminar_segmento(*pid, *id_segmento);
+}
+
+void atender_kernel_scheduler(int fd) {
+    fd_kernel_scheduler = fd;
+
+    log_info(logger, "## Kernel Scheduler Conectado - FD del socket: %d", fd_kernel_scheduler);
+
+    op_code respuesta = MSG_OK;
+    enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
+
+    while (1) {
+      int size;
+      op_code* codigo_recibido = recibir_mensaje(fd_kernel_scheduler, &size);
+
+      if (codigo_recibido == NULL) break;
+
+
+      if (size != sizeof(op_code)) {
+        log_error(logger, "Mensaje inválido recibido de Kernel Scheduler");
+        free(codigo_recibido);
+        continue;
+      }
+      switch (*codigo_recibido) {
+        // cada case con su propio bloque y sus propias variables. Antes habia
+        // un pid_ptr/ok/resp declarados afuera del switch que quedaban shadowed
+        // (y sin usar) por los declarados dentro del case.
+        case MSG_DESUSPENDER_PROCESO: {
+          uint32_t* pid_ptr = recibir_mensaje(fd_kernel_scheduler, &size);
+          if (pid_ptr == NULL) {
+            log_error(logger, "## Error al recibir el PID a desuspender desde el Scheduler");
+            op_code resp = MSG_ERROR;
+            enviar_mensaje(fd_kernel_scheduler, &resp, sizeof(op_code));
+            break;
+          }
+          log_debug(logger, "Se ha recibido la orden de desuspender un proceso. PID: %d", *pid_ptr);
+          bool ok = desuspender_proceso(*pid_ptr);
+
+          op_code resp = ok ? MSG_OK : MSG_ERROR;
+
+          enviar_mensaje(fd_kernel_scheduler, &resp, sizeof(op_code));
+          free(pid_ptr);
+          break;
+        }
+
+        case MSG_SUSPENDER_PROCESO: {
+          uint32_t* pid_ptr = recibir_mensaje(fd_kernel_scheduler, &size);
+          if (pid_ptr == NULL) {
+            log_error(logger, "## Error al recibir el PID a suspender desde el Scheduler");
+            op_code resp = MSG_ERROR;
+            enviar_mensaje(fd_kernel_scheduler, &resp, sizeof(op_code));
+            break;
+          }
+          log_debug(logger, "Se ha recibido la orden de suspender un proceso. PID. %d", *pid_ptr);
+          bool ok = suspender_proceso(*pid_ptr);
+
+          op_code resp = ok ? MSG_OK : MSG_ERROR;
+
+          enviar_mensaje(fd_kernel_scheduler, &resp, sizeof(op_code));
+          free(pid_ptr);
+          break;
+        }
+          
+        case MSG_DONE:
+          respuesta = MSG_ERROR;
+          if (atender_destruccion_proceso()){
+            respuesta = MSG_OK;
+          };
+          log_error(logger, "Respuesta enviar: %d", respuesta);
+          enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
+          // TODO: recibir PID y llamar a destruir_proceso(pid)
+          break;
+
+        case MSG_MEM_ALLOC:{
+          // respuesta = MSG_OK;
+          // t_resultado_crear_segmento resultado = atender_creacion_segmento();
+          // if (resultado != CREAR_SEGMENTO_OK && resultado != CREAR_SEGMENTO_SIN_MEMORIA){
+          //   respuesta = MSG_ERROR;
+          // }
+          // if (resultado == CREAR_SEGMENTO_SIN_MEMORIA)
+          // {
+          //   respuesta = MSG_MEM_ALLOC_SIN_MEMORIA;
+          // }
+          // log_info(logger, "Se le envía a KS el siguiente resultado de respuesta a MEM_ALLOC: %d", respuesta);
+          // enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
+          // // TODO:
+          // // 1. recibir PID
+          // // 2. recibir id_segmento
+          // // 3. recibir tamanio
+          // // 4. llamar a atender_creacion_segmento(pid, id_segmento, tamanio)
+          // // 5. responder resultado al Kernel Scheduler
+          // break;
+
+          t_resultado_crear_segmento resultado = atender_creacion_segmento();
+          
+          if (resultado == CREAR_SEGMENTO_OK) {
+            respuesta = MSG_OK;
+          } else if (resultado == CREAR_SEGMENTO_SIN_MEMORIA) {
+            respuesta = MSG_MEM_ALLOC_SIN_MEMORIA;
+          } else {
+            log_error(logger, "## ERROR en MEM_ALLOC: Código de fallo %d", resultado);
+            respuesta = MSG_ERROR;
+          }
+          
+          log_info(logger, "Respuesta enviada a KS por MEM_ALLOC: %d", respuesta);
+          enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
+          break;}
+      
+
+        case MSG_MEM_FREE:
+          respuesta = MSG_ERROR;
+          if (atender_destruccion_segmento()){
+            respuesta = MSG_OK;
+          }
+
+          enviar_mensaje(fd_kernel_scheduler,&respuesta,sizeof(op_code));
+          // TODO:
+          // 1. recibir PID
+          // 2. recibir id_segmento
+          // 3. llamar a eliminar_segmento(pid, id_segmento)
+          // 4. responder OK / ERROR
+          break;
+
+        case MSG_STDIN: {
+          /*
+          // CP3: escribir en memoria de usuario. KS envía: pid + dir_logica + tamanio + datos.
+          uint32_t* pid = recibir_mensaje(fd_kernel_scheduler, &size);
+          uint32_t* dir = recibir_mensaje(fd_kernel_scheduler, &size);
+          uint32_t* tam = recibir_mensaje(fd_kernel_scheduler, &size);
+          void* texto  = recibir_mensaje(fd_kernel_scheduler, &size);
+          
+
+          uint32_t dir_global;
+          int tr = traducir_direccion(*pid, *dir, *tam, &dir_global);
+
+          if (tr == TRADUCCION_SEG_FAULT) {
+            respuesta = MSG_SEG_FAULT;
+          } else if (tr == TRADUCCION_INEXISTENTE || !escribir_memoria_fisica(dir_global, *tam, texto)) {
+            respuesta = MSG_ERROR;
+          } else {
+            log_info(logger, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %.*s",
+                     *pid, dir_global, (int) *tam, (char*) texto);
+            respuesta = MSG_OK;
+          }
+          enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
+
+          free(pid); free(dir); free(tam); free(texto);
+          break;
+          */
+          uint32_t* pid = recibir_mensaje(fd_kernel_scheduler, &size);
+          uint32_t* dir = recibir_mensaje(fd_kernel_scheduler, &size);
+          uint32_t* tam = recibir_mensaje(fd_kernel_scheduler, &size);
+          char* texto   = recibir_mensaje(fd_kernel_scheduler, &size);
+
+          if (pid == NULL || dir == NULL || tam == NULL || texto == NULL) {
+              log_error(logger, "## Error al recibir datos de STDIN desde el Scheduler");
+              respuesta = MSG_ERROR;
+              enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
+              // un free por linea (antes -Wmisleading-indentation)
+              if (pid) free(pid);
+              if (dir) free(dir);
+              if (tam) free(tam);
+              if (texto) free(texto);
+              break;
+          }
+
+          uint32_t dir_global;
+          int tr = traducir_direccion(*pid, *dir, *tam, &dir_global);
+
+          if (tr == TRADUCCION_INEXISTENTE) {
+            log_warning(logger, "PID %u - Intento de STDIN en proceso suspendido. Auto-desuspendiendo...", *pid);
+            if (desuspender_proceso(*pid)) {
+              tr = traducir_direccion(*pid, *dir, *tam, &dir_global); // Reintentamos la traducción
+            }
+          }
+
+          if (tr == TRADUCCION_SEG_FAULT) {
+              respuesta = MSG_SEG_FAULT;
+          } else if (tr == TRADUCCION_INEXISTENTE) {
+              // Si el proceso estaba suspendido o el segmento no existe:
+              log_warning(logger, "PID %d - Traducción inexistente en STDIN (proceso suspendido/sin segmento)", *pid);
+              respuesta = MSG_ERROR;
+          } else {
+              bool ok_escritura = escribir_memoria_fisica(dir_global, *tam, texto);
+              if (!ok_escritura) {
+                  log_error(logger, "PID %d - Falló escritura física en STDIN", *pid);
+                  respuesta = MSG_ERROR;
+              } else {
+                  log_info(logger, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %.*s",
+                          *pid, dir_global, (int)*tam, texto);
+                  respuesta = MSG_OK;
+              }
+          }
+
+          // ¡OBLIGATORIO! Responder siempre al Scheduler para que no se quede bloqueado en recibir_mensaje
+          enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
+
+          free(pid); 
+          free(dir); 
+          free(tam); 
+          free(texto);
+          break;
+        }
+
+        case MSG_STDOUT: {
+          // CP3: leer de memoria de usuario. KS envía: pid + dir_logica + tamanio.
+          // Respondemos MSG_OK + los bytes leídos, o MSG_SEG_FAULT / MSG_ERROR.
+          uint32_t* pid = recibir_mensaje(fd_kernel_scheduler, &size);
+          uint32_t* dir = recibir_mensaje(fd_kernel_scheduler, &size);
+          uint32_t* tam = recibir_mensaje(fd_kernel_scheduler, &size);
+
+          uint32_t dir_global;
+          int tr = traducir_direccion(*pid, *dir, *tam, &dir_global);
+
+          if (tr == TRADUCCION_INEXISTENTE) {
+            log_warning(logger, "PID %u - Intento de STDIN en proceso suspendido. Auto-desuspendiendo...", *pid);
+            if (desuspender_proceso(*pid)) {
+              tr = traducir_direccion(*pid, *dir, *tam, &dir_global); // Reintentamos la traducción
+            }
+          }
+
+          if (tr == TRADUCCION_SEG_FAULT) {
+            respuesta = MSG_SEG_FAULT;
+            enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
+          } else if (tr == TRADUCCION_INEXISTENTE) {
+            respuesta = MSG_ERROR;
+            enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
+          } else {
+            void* buffer = malloc(*tam);
+            if (!leer_memoria_fisica(dir_global, *tam, buffer)) {
+              respuesta = MSG_ERROR;
+              enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
+            } else {
+              log_info(logger, "PID: %d - Acción: LEER - Dirección Física: %d - Valor: %.*s",
+                       *pid, dir_global, (int) *tam, (char*) buffer);
+              respuesta = MSG_OK;
+              enviar_mensaje(fd_kernel_scheduler, &respuesta, sizeof(op_code));
+              enviar_mensaje(fd_kernel_scheduler, buffer, (int) *tam);
+            }
+            free(buffer);
+          }
+
+          free(pid); free(dir); free(tam);
+          break;
+        }
+        case MSG_CREAR_PROCESO: {
+          atender_creacion_proceso();
+          break;
+        }
+
+        default:
+          log_warning(logger, "Código desconocido recibido de Kernel Scheduler: %d", *codigo_recibido);
+          break;
+      }
+      free(codigo_recibido);
+    }
+}
+</file>
+
 <file path="cpu/src/set_de_instrucciones.c">
 #include <stdint.h>
 #include <stdio.h>
@@ -11131,7 +11291,7 @@ void noop(t_registros* registros) {
 }
 
 // INIT_PROC
-void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid, t_log* logger_cpu) {
+void syscall_init_proc(char* instruccion, t_registros* registros, int fd_ks, uint32_t pid, t_log* logger_cpu) {
     char archivo[256];
     int prioridad;
     sscanf(instruccion, "%*s %255s %d", archivo, &prioridad);
@@ -11150,14 +11310,44 @@ void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint
         log_error(logger_cpu, "Error al recibir respuesta en INIT PROC");
         exit(EXIT_FAILURE);
     }
-    if (*respuesta != MSG_OK) {
-        log_error(logger_cpu, "En INIT PROC se recibio una respuesta distinta a la esperada: %d", *respuesta);
-        free(respuesta);
-        exit(EXIT_FAILURE);
-    }
 
+    if (*respuesta == MSG_INTERRUPT) {
+        log_info(logger_cpu,"## Interrupcion recibida");
+        int size_interrupcion = 0;
+        interrupcion_entrante = recibir_mensaje(fd_ks, &size_interrupcion);
+
+        if (interrupcion_entrante == NULL) {
+            log_error(logger_cpu,"Se recibió MSG_INTERRUPT pero no llegó la estructura t_interrupt");
+            exit(EXIT_FAILURE);
+        }
+        if (size_interrupcion != sizeof(t_interrupcion)) {
+            log_error(logger_cpu,"Tamaño inválido para t_interrupt. Recibido: %d - Esperado: %zu",size_interrupcion,sizeof(t_interrupcion));
+            free(interrupcion_entrante);
+            exit(EXIT_FAILURE);
+        }
+
+        log_warning(logger_cpu,"===== INTERRUPCIÓN RECIBIDA DURANTE INIT_PROC =====");
+        log_warning(logger_cpu,"PID de la interrupción: %u",interrupcion_entrante->pid);
+        log_warning(logger_cpu,"Motivo de la interrupción: %d",interrupcion_entrante->motivo);
+        log_warning(logger_cpu,"===============================================");
+        interrupcion_en_espera = true;
+
+        op_code* nueva_respuesta = recibir_mensaje(fd_ks, &size);
+        if (*nueva_respuesta == MSG_OK) {
+            registros->pc++;
+        } else {
+            log_warning(logger_cpu, "INIT_PROC recibio error. Hubo deficit de memoria");
+        }
+    free(nueva_respuesta);
     free(respuesta);
-    registro->pc++;
+    return;
+    }
+    if (*respuesta == MSG_OK) {
+        registros->pc++;
+    } else {
+        log_warning(logger_cpu, "INIT_PROC recibio error. Hubo deficit de memoria");
+    }
+    free(respuesta);
 }
 
 // MOV_IN
@@ -11554,134 +11744,6 @@ int syscall_sleep(char* instruccion, int fd_ks, int fd_km, uint32_t pid, t_regis
 
     return 2; // bloqueado por IO -> la CPU se libera
 }
-</file>
-
-<file path="cpu/src/cpu.h">
-#ifndef CPUS_H
-#define CPUS_H
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <commons/log.h>
-#include <commons/config.h>
-#include <utils/conexiones.h>
-#include <utils/mensajes.h>
-#include <stdint.h>
-#include <utils/tipos.h>
-#include <utils/serializacion.h>
-
-#define SEG_FAULT (-5)
-
-// OPCODES
-typedef enum {
-    OP_NOOP =100,
-    OP_SET =101,
-    OP_MOV_IN =102,
-    OP_MOV_OUT =103,
-    OP_SUM =104,
-    OP_SUB =105,
-    OP_JNZ =106,
-    OP_COPY_MEM =107,
-    OP_MUTEX_CREATE =108,
-    OP_MUTEX_LOCK =109,
-    OP_MUTEX_UNLOCK =110,
-    OP_SLEEP =111,
-    OP_STDIN =112,
-    OP_STDOUT =113,
-    OP_INVALID =114,
-    OP_MEM_ALLOC =115,
-    OP_MEM_FREE =116,
-    OP_INIT_PROC =117,
-    OP_EXIT =118,
-} operacion;
-
-// STRUCTS
-
-typedef struct {
-    uint32_t pid;
-    uint32_t pc;
-} t_fetch;
-typedef struct {
-    char* ip;
-    char* puerto;
-    uint32_t base_global;
-    uint32_t tamanio;
-} t_info_memory_stick_cpu;
-typedef struct {
-    uint32_t cantidad;
-    t_info_memory_stick_cpu memory_sticks[4];
-} t_mapa_memory_sticks_cpu;
-
-
-// CICLO DE INSTRUCCION
-char* fetch(int conexion_servidor,uint32_t pid, t_registros* cpu, t_log* logger_cpu);
-operacion decode(char* instruccion);
-int execute(operacion codigo, char* instruccion, t_registros* cpu, int fd_ks, int fd_km, int fd_ms, uint32_t pid, t_list* tabla_segmentos, t_log* logger_cpu,t_mapa_memory_sticks_cpu* mapa,int fd_ms_agregados[3], t_contexto* contexto);
-int atender_interrupcion(int fd_ks,int fd_km,t_contexto* contexto, uint32_t pid, t_log* logger_cpu);
-int hay_mensaje_completo(int fd, t_log* logger_cpu);
-void atender_interrupcion_en_espera (t_interrupcion* interrupcion_entrante, uint32_t pid,int fd_ks,int fd_km,t_contexto* contexto,t_log* logger_cpu);
-
-// MMU
-int memory_management_unit(uint32_t direccion_logica, uint32_t tamanio_acceso, t_list* tabla_segmentos, t_log* logger_cpu);
-void* lectura_ms(uint32_t direccion_global,uint32_t tamanio_lectura,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3], t_log* logger_cpu);
-void escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio_escritura,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3], t_log* logger_cpu);
-
-// DEFINICIONES
-extern uint32_t segment_max_size;
-extern int ms_conectados;
-extern int fd_ms_agregados[3];
-extern t_interrupcion* interrupcion_entrante;
-extern bool interrupcion_en_espera;
-
-// MANEJO DE INFORMACION
-t_mapa_memory_sticks_cpu* recibir_mapa(int fd_km, t_log* logger_cpu);
-void destruir_mapa_memory_sticks(t_mapa_memory_sticks_cpu* mapa);
-int conectar_memory_sticks_faltantes(t_mapa_memory_sticks_cpu* mapa,t_log* logger_cpu, int identificador_cpu);
-int actualizar_conexiones_ms(t_info_memory_stick_cpu* info_ms,t_log* logger_cpu, int identificador_cpu);
-int buscar_indice_ms(uint32_t direccion_global,t_mapa_memory_sticks_cpu* mapa);
-int obtener_fd_ms(uint32_t indice_ms,int fd_ms,int fd_ms_agregados[3]);
-
-void escribir_en_buffer(void* buffer,uint32_t* desplazamiento,const void* dato,uint32_t tamanio);
-t_list* deserializar_tabla_segmentos(void* buffer, int tamanio_buffer);
-
-void actualizar_tabla_segmentos(t_contexto* contexto,int fd_km,t_log* logger_cpu);
-void manejar_seg_fault(int fd_ks, uint32_t pid, t_log* logger_cpu, int fd_km);
-
-// CONTEXTOS
-void enviar_contexto(t_contexto* contexto, int fd_km, t_log* logger_cpu);
-void destruir_contexto(t_contexto* contexto);
-void guardar_contexto_km(int fd_km, t_contexto* contexto, uint32_t pid, t_log* logger_cpu); 
-
-
-// OPERACIONES CON REGISTROS
-uint32_t obtener_valor(char* posicion, t_registros* registro);
-void escribir_registro(char* posicion,t_registros* registro,uint32_t valor);
-uint32_t tamanio_registro(char* nombre_registro);
-
-// INSTRUCCIONES
-void set(char* instruccion, t_registros* registro);
-void sum(char* instruccion, t_registros* registro);
-void sub(char* instruccion, t_registros* registro);
-int mov_in(char* instruccion,t_registros* registros,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3],t_list* tabla_segmentos, t_log* logger_cpu, uint32_t pid);
-int mov_out(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_mapa_memory_sticks_cpu* mapa,int fd_ms,int fd_ms_agregados[3], t_log* logger_cpu, uint32_t pid);
-void jnz(char* instruccion, t_registros* registro);
-int copy_mem(char* instruccion,t_registros* registros,t_list* tabla_segmentos,t_mapa_memory_sticks_cpu* mapa_ms,int fd_ms, int fd_ms_agregados[3],uint32_t pid,t_log* logger_cpu);
-void noop(t_registros* registro);
-
-// SYSCALLS
-void syscall_init_proc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid, t_log* logger_cpu);
-int syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
-int syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
-int syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu);
-int syscall_sleep(char* instruccion, int fd_ks, int fd_km, uint32_t pid, t_registros* cpu, t_contexto* contexto, t_log* logger_cpu);
-int syscall_stdin(char* instruccion, t_registros* registros, int fd_ks, int fd_km, uint32_t pid, t_contexto* contexto, t_log* logger_cpu);
-int syscall_stdout(char* instruccion,t_registros* registro, int fd_ks, int fd_km, uint32_t pid, t_contexto* contexto, t_log* logger_cpu);
-void syscall_mem_alloc(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid, t_log* logger_cpu);
-void syscall_mem_free(char* instruccion, t_registros* registro, int fd_ks, uint32_t pid, t_log* logger_cpu);
-void syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_log* logger_cpu);
-
-#endif
 </file>
 
 <file path="cpu/src/cpu.c">
