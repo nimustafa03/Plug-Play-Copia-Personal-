@@ -171,11 +171,12 @@ bool suspender_proceso(uint32_t pid)
     list_add(administrador.segmentos_guardados_en_swap,seg_swap);
 
     log_info(logger, "Se ha guardado un segmento en la swap. ID: %d, BLOQUE EN SWAP: %d.", segmento->id_segmento, nro_bloque);
+    log_debug(logger, "Se liberará memoria. La memoria libre antes de la liberación es %u",obtener_memoria_libre_total());
     liberar_espacio(segmento->base,segmento->tamanio);
     destruir_segmento(segmento);
     log_info(logger, "Se ha eliminado el segmento de la RAM.");
     free(buffer_segmento);
-    
+    log_debug(logger, "La memoria libre total luego de la suspensión es: %u", obtener_memoria_libre_total());
   }
   return true;
 }
@@ -323,6 +324,7 @@ char*devolver_instruccion(uint32_t pc,char*lista_instrucciones){
   return instruccion;
 }
 
+
 void*manejar_proceso(void*arg){
   t_args_proceso*args = (t_args_proceso*) arg;
   uint32_t pid_local = args->proceso->pid;
@@ -383,8 +385,8 @@ void*manejar_proceso(void*arg){
       interrumpido_local = true;
       }
     free(codigo);
-    log_info(logger, "La tabla de segmentos del proceso PID %d es la siguiente.", pid_local);
-    imprimir_lista_segmentos(pid_local);
+    // log_info(logger, "La tabla de segmentos del proceso PID %d es la siguiente.", pid_local);
+    // imprimir_lista_segmentos(pid_local);
   }
 
   log_info(logger, "## PID: %d - Saliendo del ciclo de FETCH", pid_local);
@@ -397,6 +399,7 @@ void*manejar_proceso(void*arg){
   pthread_cond_signal(&condicion_recibir_proceso); // NICO M: Esto sirve para que volvamos a aceptar pedidos de iniciar nuevos procesos.
   return NULL;
 }
+
 
 bool inicializar_proceso(uint32_t pid, int fd_cpu) {
   
@@ -525,7 +528,7 @@ t_resultado_crear_segmento crear_segmento(uint32_t pid, uint32_t id_segmento, ui
 
   log_info(logger, "El segmento se ha creado satisfactoriamente y ha sido agregado a la tabla de segmentos.");
   list_add(proceso->contexto->tabla_segmentos, segmento);
-
+  imprimir_lista_segmentos(pid);
   return CREAR_SEGMENTO_OK;
 }
 
@@ -747,7 +750,7 @@ bool actualizar_contexto(uint32_t p,t_contexto*contexto){
     t_proceso_memoria *proceso = dictionary_get(administrador.procesos_por_pid, key);
     free(key); // <--- Liberación indispensable para evitar fugas de memoria
 
-    if (proceso == NULL) {
+    if (proceso == NULL || proceso->contexto == NULL) {
         log_warning(logger, "## WARNING: El PID %u ya no existe en el diccionario (fue destruido por el Scheduler).", p);
         return false;
     }
@@ -756,8 +759,13 @@ bool actualizar_contexto(uint32_t p,t_contexto*contexto){
     if (proceso->contexto != NULL && proceso->contexto != contexto) {
         // destruir_contexto(proceso->contexto); // Activar si la CPU devuelve un contexto totalmente nuevo malloc'eado
     }
+    proceso->contexto->registros = contexto->registros;
+    proceso->contexto->proximo_a_detener = contexto->proximo_a_detener;
 
-    proceso->contexto = contexto;
+    if (contexto->tabla_segmentos != NULL) {
+        list_destroy_and_destroy_elements(contexto->tabla_segmentos, free);
+    }
+    free(contexto);
+
     return true;
-
 }
