@@ -521,6 +521,7 @@ int syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* 
     if (ok == NULL)
         return -1;
     if (*ok != MSG_OK) {
+        log_warning(logger_cpu, "MUTEX LOCK recibio un %d durante la ejecucion.", *ok);
         free(ok);
         return -1;
     }
@@ -544,6 +545,7 @@ int syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros
     if (ok == NULL)
         return -1;
     if (*ok != MSG_OK) {
+        log_warning(logger_cpu, "MUTEX UNLOCK recibio un %d durante la ejecucion.", *ok);
         free(ok);
         return -1;
     }
