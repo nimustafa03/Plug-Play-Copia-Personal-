@@ -507,7 +507,7 @@ int syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid, t_registros
 }
 
 // MUTEX_LOCK
-int syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu) {
+int syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu, t_log* logger_cpu) {
     char nombre[64];
     sscanf(instruccion, "MUTEX_LOCK %s", nombre);
 
@@ -531,7 +531,7 @@ int syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* 
 }
 
 // MUTEX_UNLOCK
-int syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu) {
+int syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu, t_log* logger_cpu) {
     char nombre[64];
     sscanf(instruccion, "MUTEX_UNLOCK %s", nombre);
 

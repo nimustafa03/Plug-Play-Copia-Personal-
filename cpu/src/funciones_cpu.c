@@ -117,14 +117,14 @@ int execute(operacion codigo, char* instruccion, t_registros* registros, int fd_
             }
             break;
         case OP_MUTEX_LOCK:
-            int comprobacion_m_lock = syscall_mutex_lock(instruccion, fd_ks, pid, registros); 
+            int comprobacion_m_lock = syscall_mutex_lock(instruccion, fd_ks, pid, registros, logger_cpu); 
             if (comprobacion_m_lock == -1){
                 log_error(logger_cpu, "ERROR - MUTEX_LOCK devolvio -1");
                 exit(EXIT_FAILURE);
             }
             break;
         case OP_MUTEX_UNLOCK:
-            int comprobacion_m_unlock = syscall_mutex_unlock(instruccion, fd_ks, pid, registros);
+            int comprobacion_m_unlock = syscall_mutex_unlock(instruccion, fd_ks, pid, registros, logger_cpu);
             if (comprobacion_m_unlock == -1){
                 log_error(logger_cpu, "ERROR - MUTEX_UNLOCK devolvio -1");
                 exit(EXIT_FAILURE);
