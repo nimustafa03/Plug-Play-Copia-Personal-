@@ -507,7 +507,7 @@ int syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid, t_registros
 }
 
 // MUTEX_LOCK
-int syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu, t_log* logger_cpu) {
+int syscall_mutex_lock(char* instruccion, int fd_ks, int fd_km, uint32_t pid, t_registros* cpu, t_contexto* contexto, t_log* logger_cpu) {
     char nombre[64];
     sscanf(instruccion, "MUTEX_LOCK %s", nombre);
 
@@ -516,12 +516,27 @@ int syscall_mutex_lock(char* instruccion, int fd_ks, uint32_t pid, t_registros* 
     enviar_mensaje(fd_ks, nombre, strlen(nombre) + 1);
     enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
 
-    int size; 
+    int size;
     op_code* ok = recibir_mensaje(fd_ks, &size);
-    log_warning(logger_cpu, "LA RESPUESTA QUE LLEGO ES: %d", *ok);
-    if (ok == NULL){
+    // FIX: chequear NULL ANTES de desreferenciar. El log_warning de abajo hacia
+    // *ok con ok posiblemente NULL.
+    if (ok == NULL) {
         log_warning(logger_cpu, "MUTEX LOCK devolvio NULL.");
-        return -1;}
+        return -1;
+    }
+
+    // FIX: el mutex estaba tomado -> el proceso queda BLOCK en KS. Avanzamos el PC
+    // (para no re-ejecutar el MUTEX_LOCK al ser re-despachado, que provocaria que
+    // el proceso se bloquee esperando un mutex del que ya es dueño), guardamos el
+    // contexto en KM y cortamos el ciclo de instruccion. Mismo modelo que SLEEP.
+    if (*ok == MSG_BLOQUEADO) {
+        free(ok);
+        log_info(logger_cpu, "## PID: %d - Bloqueado por MUTEX_LOCK %s, se libera la CPU", pid, nombre);
+        cpu->pc++;
+        guardar_contexto_km(fd_km, contexto, pid, logger_cpu);
+        return 2;
+    }
+
     if (*ok != MSG_OK) {
         log_warning(logger_cpu, "MUTEX LOCK recibio un %d durante la ejecucion.", *ok);
         free(ok);
