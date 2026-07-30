@@ -484,7 +484,7 @@ void syscall_exit(int fd_km, int fd_ks, t_contexto* contexto, uint32_t pid, t_lo
 }
 
 // MUTEX_CREATE
-int syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu) {
+int syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid, t_registros* registros) {
     char nombre[64];
     sscanf(instruccion, "MUTEX_CREATE %s", nombre);
 
@@ -502,12 +502,12 @@ int syscall_mutex_create(char* instruccion, int fd_ks, uint32_t pid, t_registros
         return -1;
     }
     free(ok);
-    cpu->pc++;
+    registros->pc++;
     return 0;
 }
 
 // MUTEX_LOCK
-int syscall_mutex_lock(char* instruccion, int fd_ks, int fd_km, uint32_t pid, t_registros* cpu, t_contexto* contexto, t_log* logger_cpu) {
+int syscall_mutex_lock(char* instruccion, int fd_ks, int fd_km, uint32_t pid, t_registros* registros, t_contexto* contexto, t_log* logger_cpu) {
     char nombre[64];
     sscanf(instruccion, "MUTEX_LOCK %s", nombre);
 
@@ -516,39 +516,63 @@ int syscall_mutex_lock(char* instruccion, int fd_ks, int fd_km, uint32_t pid, t_
     enviar_mensaje(fd_ks, nombre, strlen(nombre) + 1);
     enviar_mensaje(fd_ks, &pid, sizeof(uint32_t));
 
-    int size;
-    op_code* ok = recibir_mensaje(fd_ks, &size);
-    // FIX: chequear NULL ANTES de desreferenciar. El log_warning de abajo hacia
-    // *ok con ok posiblemente NULL.
-    if (ok == NULL) {
-        log_warning(logger_cpu, "MUTEX LOCK devolvio NULL.");
+    while (1) {
+        int size = 0;
+        op_code* respuesta = recibir_mensaje(fd_ks, &size);
+
+        if (respuesta == NULL) {
+            log_error(logger_cpu,"MUTEX_LOCK devolvió NULL para el PID %u",pid);
+            return -1;
+        }
+
+        if (*respuesta == MSG_INTERRUPT) {
+            free(respuesta);
+
+            int size_interrupcion = 0;
+            t_interrupcion* nueva_interrupcion = recibir_mensaje(fd_ks, &size_interrupcion);
+            if (nueva_interrupcion == NULL) {
+                log_error(logger_cpu,"Se recibió MSG_INTERRUPT pero no llegó t_interrupcion");
+                return -1;
+            }
+            if (size_interrupcion != sizeof(t_interrupcion)) {
+                log_error(logger_cpu,"Tamaño inválido para t_interrupcion. ""Recibido: %d - Esperado: %zu",size_interrupcion,sizeof(t_interrupcion));
+                free(nueva_interrupcion);
+                return -1;
+            }
+
+            interrupcion_entrante = nueva_interrupcion;
+            interrupcion_en_espera = true;
+
+            log_warning(logger_cpu,"===== INTERRUPCIÓN RECIBIDA DURANTE MUTEX_LOCK =====");
+            log_warning(logger_cpu,"PID de la interrupción: %u",interrupcion_entrante->pid);
+            log_warning(logger_cpu,"Motivo de la interrupción: %d",interrupcion_entrante->motivo);
+            log_warning(logger_cpu,"===================================================");
+            continue;
+        }
+
+        if (*respuesta == MSG_OK) {
+            free(respuesta);
+            registros->pc++;
+            log_debug(logger_cpu,"## PID: %u - MUTEX_LOCK %s ejecutado correctamente",pid,nombre);
+            return 0;
+        }
+
+        if (*respuesta == MSG_BLOQUEADO) {
+            free(respuesta);
+            registros->pc++;
+            log_debug(logger_cpu,"## PID: %u - Bloqueado por MUTEX_LOCK %s. ""Se libera la CPU",pid,nombre);
+            guardar_contexto_km(fd_km,contexto,pid,logger_cpu);
+            return 2;
+        }
+
+        log_error(logger_cpu,"MUTEX_LOCK recibió una respuesta inesperada: %d",*respuesta);
+        free(respuesta);
         return -1;
     }
-
-    // FIX: el mutex estaba tomado -> el proceso queda BLOCK en KS. Avanzamos el PC
-    // (para no re-ejecutar el MUTEX_LOCK al ser re-despachado, que provocaria que
-    // el proceso se bloquee esperando un mutex del que ya es dueño), guardamos el
-    // contexto en KM y cortamos el ciclo de instruccion. Mismo modelo que SLEEP.
-    if (*ok == MSG_BLOQUEADO) {
-        free(ok);
-        log_info(logger_cpu, "## PID: %d - Bloqueado por MUTEX_LOCK %s, se libera la CPU", pid, nombre);
-        cpu->pc++;
-        guardar_contexto_km(fd_km, contexto, pid, logger_cpu);
-        return 2;
-    }
-
-    if (*ok != MSG_OK) {
-        log_warning(logger_cpu, "MUTEX LOCK recibio un %d durante la ejecucion.", *ok);
-        free(ok);
-        return -1;
-    }
-    free(ok);
-    cpu->pc++;
-    return 0;
 }
 
 // MUTEX_UNLOCK
-int syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros* cpu, t_log* logger_cpu) {
+int syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros* registros, t_log* logger_cpu) {
     char nombre[64];
     sscanf(instruccion, "MUTEX_UNLOCK %s", nombre);
 
@@ -561,14 +585,45 @@ int syscall_mutex_unlock(char* instruccion, int fd_ks, uint32_t pid, t_registros
     op_code* ok = recibir_mensaje(fd_ks, &size);
     if (ok == NULL)
         return -1;
+    if (*ok == MSG_INTERRUPT) {
+        log_info(logger_cpu,"## Interrupcion recibida");
+        int size_interrupcion = 0;
+        interrupcion_entrante = recibir_mensaje(fd_ks, &size_interrupcion);
+
+        if (interrupcion_entrante == NULL) {
+            log_error(logger_cpu,"Se recibió MSG_INTERRUPT pero no llegó la estructura t_interrupt");
+            exit(EXIT_FAILURE);
+        }
+        if (size_interrupcion != sizeof(t_interrupcion)) {
+            log_error(logger_cpu,"Tamaño inválido para t_interrupt. Recibido: %d - Esperado: %zu",size_interrupcion,sizeof(t_interrupcion));
+            free(interrupcion_entrante);
+            exit(EXIT_FAILURE);
+        }
+
+        log_warning(logger_cpu,"===== INTERRUPCIÓN RECIBIDA DURANTE MUTEX UNLOCK =====");
+        log_warning(logger_cpu,"PID de la interrupción: %u",interrupcion_entrante->pid);
+        log_warning(logger_cpu,"Motivo de la interrupción: %d",interrupcion_entrante->motivo);
+        log_warning(logger_cpu,"===============================================");
+        interrupcion_en_espera = true;
+
+        op_code* nueva_respuesta = recibir_mensaje(fd_ks, &size);
+        if (*nueva_respuesta == MSG_OK) {
+            registros->pc++;
+        } else {
+            log_error(logger_cpu, "MUTEX UNLOCK esta recibiendo mensajes inesperados");
+            exit(EXIT_FAILURE);
+        }
+        free(nueva_respuesta);
+        free(ok);
+        return 0;
+    }
     if (*ok != MSG_OK) {
         log_warning(logger_cpu, "MUTEX UNLOCK recibio un %d durante la ejecucion.", *ok);
         free(ok);
         return -1;
     }
-
     free(ok);
-    cpu->pc++;
+    registros->pc++;
     return 0;
 }
 
