@@ -929,7 +929,28 @@ void atender_cpu_ks(int fd_cpu) {
         op_code* codigo = recibir_mensaje(fd_cpu, &size);
         if (codigo == NULL) {
             log_warning(logger_ks, "CPU FD:%d desconectada", fd_cpu);
-            liberar_conexion_cpu(fd_cpu); // CP3
+            liberar_conexion_cpu(fd_cpu);
+
+            pthread_mutex_lock(&mutex_listas);
+            for (int i = 0; i < list_size(listaCPUsLibres); i++) {
+                int* ptr = list_get(listaCPUsLibres, i);
+                if (ptr && *ptr == fd_cpu) {
+                    list_remove(listaCPUsLibres, i);
+                    free(ptr);
+                    break;
+                }
+            }
+
+            for (int i = 0; i < list_size(listaProcesosExec); i++) {
+                Proceso* p = list_get(listaProcesosExec, i);
+                if (p && p->fd_cpu == fd_cpu) {
+                    log_warning(logger_ks, "Proceso PID %d estaba ejecutando en CPU FD %d desconectada. Volviendo a READY...", p->id_proceso, fd_cpu);
+                    p->fd_cpu = -1;
+                    procesoAReady(p);
+                    break;
+                }
+            }
+            pthread_mutex_unlock(&mutex_listas);
             break;
         }
         // DEBUG: deserializacion - opcode recibido de la CPU
