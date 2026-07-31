@@ -117,8 +117,8 @@ void liberar_cpu(int fd_cpu); // CP3: marca la CPU como libre (bloqueo por IO)
 void enviar_interrupcion_cpu(int fd_cpu, uint32_t pid, int motivo); // MSG_INTERRUPT + t_interrupcion, atómico
 
 void inicializarListasProcesos();
-void* iniciar_planificador_largo_plazo();
-void* iniciar_planificador_corto_plazo();
+void* iniciar_planificador_largo_plazo(void* arg);
+void* iniciar_planificador_corto_plazo(void* arg);
 void actualizarEstadoProceso(Proceso* proceso, estado_proceso nuevoEstado);  // faltaba la declaración
 void crear_proceso_inicial(char* path); // funcion nueva
 void procesoAReady (Proceso* p); // faltaban las declaraciones de los helpers

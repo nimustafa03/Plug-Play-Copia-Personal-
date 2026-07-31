@@ -15,81 +15,55 @@
 
 extern t_log*logger;
 extern t_config*config;
-static int socket_cpu = -1;
+static t_list* lista_cpus_conectadas = NULL;
+static pthread_mutex_t mutex_cpus_conectadas = PTHREAD_MUTEX_INITIALIZER;
 
-static pthread_mutex_t mutex_envios_cpu = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t mutex_recibir_procesos = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t condicion_recibir_proceso = PTHREAD_COND_INITIALIZER;
-bool listo_para_recibir = false;
-
-uint32_t recibir_pid(){
+uint32_t recibir_pid(int fd_cpu){
     int size;
-    uint32_t*pid = recibir_mensaje(socket_cpu,&size);
-    return *pid;
+    uint32_t* pid = recibir_mensaje(fd_cpu, &size);
+    if (pid == NULL) return 0;
+    uint32_t val = *pid;
+    free(pid);
+    return val;
 }
 
-
-t_contexto *recibir_contexto(){
+t_contexto *recibir_contexto(int fd_cpu){
     int size;
-    t_contexto*contexto;
-    void*buffer = recibir_mensaje(socket_cpu, &size);
-    contexto = deserializar_contexto(buffer, size,logger);
+    void* buffer = recibir_mensaje(fd_cpu, &size);
+    if (buffer == NULL) return NULL;
+    t_contexto* contexto = deserializar_contexto(buffer, size, logger);
+    free(buffer);
     return contexto;
 }
 
-/*void atender_mensaje_cpu(){
-    int size;
-    op_code*codigo;
-    while(1){
-        log_info(logger, "Kernel Memory está esperando nuevos procesos...");
-        codigo = recibir_mensaje(socket_cpu,&size);
-        if (*codigo == MSG_INIT_CPU){
-            log_info(logger, "Se ha recibido un nuevo pedido de iniciar proceso.");
-            notificar_mapa_memory_sticks_a_cpu();
-            log_info(logger, "Mapa enviado. Esperando PID");
-            inicializar_proceso(recibir_pid(), socket_cpu);
-            free(codigo);
-            
-            pthread_mutex_lock(&mutex_recibir_procesos);
-            listo_para_recibir = false;
-            while(!listo_para_recibir){
-                log_info(logger, "Bloqueando recepcion de mensajes...");
-                pthread_cond_wait(&condicion_recibir_proceso, &mutex_recibir_procesos);
-                log_info(logger, "Despertando rececpión de procesos...");
-            }
-            pthread_mutex_unlock(&mutex_recibir_procesos);
-        }
-    }
-}*/
-
-void atender_mensaje_cpu(void) {
+void atender_mensaje_cpu(int fd_cpu) {
     while (1) {
         int size = 0;
 
         log_info(
             logger,
-            "Kernel Memory está esperando nuevos procesos..."
+            "Kernel Memory está esperando mensajes de CPU FD %d...",
+            fd_cpu
         );
 
-        op_code* codigo =
-            recibir_mensaje(socket_cpu, &size);
+        op_code* codigo = recibir_mensaje(fd_cpu, &size);
 
         if (codigo == NULL) {
             log_warning(
                 logger,
-                "La CPU cerró la conexión"
+                "La CPU FD %d cerró la conexión",
+                fd_cpu
             );
-
             break;
         }
 
         if (size != sizeof(op_code)) {
             log_error(
                 logger,
-                "Código inválido recibido: tamaño=%d",
+                "Código inválido recibido de CPU FD %d: tamaño=%d",
+                fd_cpu,
                 size
             );
-
             free(codigo);
             continue;
         }
@@ -98,63 +72,40 @@ void atender_mensaje_cpu(void) {
             case MSG_INIT_CPU: {
                 log_info(
                     logger,
-                    "Se recibió un pedido para iniciar un proceso"
+                    "Se recibió un pedido para iniciar un proceso en CPU FD %d",
+                    fd_cpu
                 );
 
-                pthread_mutex_lock(&mutex_recibir_procesos);
-                listo_para_recibir = false;
-                pthread_mutex_unlock(&mutex_recibir_procesos);
-
-                notificar_mapa_memory_sticks_a_cpu();
+                notificar_mapa_memory_sticks_a_cpu(fd_cpu);
 
                 log_info(
                     logger,
-                    "Mapa enviado. Esperando PID"
+                    "Mapa enviado a CPU FD %d. Esperando PID",
+                    fd_cpu
                 );
 
-                uint32_t pid = recibir_pid();
+                uint32_t pid = recibir_pid(fd_cpu);
 
-                inicializar_proceso(pid, socket_cpu);
-
-                pthread_mutex_lock(&mutex_recibir_procesos);
-
-                while (!listo_para_recibir) {
-                    log_info(
-                        logger,
-                        "Bloqueando recepción de mensajes..."
-                    );
-
-                    pthread_cond_wait(
-                        &condicion_recibir_proceso,
-                        &mutex_recibir_procesos
-                    );
-                }
-
-                pthread_mutex_unlock(&mutex_recibir_procesos);
-
-                log_info(
-                    logger,
-                    "Recepción de mensajes habilitada"
-                );
-
+                inicializar_proceso(pid, fd_cpu);
                 break;
             }
 
             case MSG_INTERRUPT: {
-                log_info(logger, "INTERRUPCION RECIBIDA.");
-                uint32_t pid = recibir_pid();
-                t_contexto*contexto = recibir_contexto();
-                actualizar_contexto(pid, contexto);
-                pthread_mutex_lock(&mutex_envios_cpu);
-                enviar_confirmacion_a_CPU(socket_cpu,true);
-                pthread_mutex_unlock(&mutex_envios_cpu);
+                log_info(logger, "INTERRUPCION RECIBIDA de CPU FD %d.", fd_cpu);
+                uint32_t pid = recibir_pid(fd_cpu);
+                t_contexto* contexto = recibir_contexto(fd_cpu);
+                if (contexto != NULL) {
+                    actualizar_contexto(pid, contexto);
+                }
+                enviar_confirmacion_a_CPU(fd_cpu, true);
                 break;
             }
 
             default:
                 log_warning(
                     logger,
-                    "Código desconocido recibido de CPU: %d",
+                    "Código desconocido recibido de CPU FD %d: %d",
+                    fd_cpu,
                     *codigo
                 );
                 break;
@@ -164,44 +115,50 @@ void atender_mensaje_cpu(void) {
     }
 }
 
-
-void atender_cpu(int nuevo_socket_cpu){
-    socket_cpu = nuevo_socket_cpu;
+void atender_cpu(int fd_cpu){
+    pthread_mutex_lock(&mutex_cpus_conectadas);
+    if (lista_cpus_conectadas == NULL) {
+        lista_cpus_conectadas = list_create();
+    }
+    int* ptr_fd = malloc(sizeof(int));
+    *ptr_fd = fd_cpu;
+    list_add(lista_cpus_conectadas, ptr_fd);
+    pthread_mutex_unlock(&mutex_cpus_conectadas);
 
     int size;
+    int* ptr_id_cpu = recibir_mensaje(fd_cpu, &size);
 
-    int* ptr_id_cpu =
-        recibir_mensaje(socket_cpu, &size); //  codigo init
-
-    log_info(
-        logger,
-        "## CPU %d Conectada",
-        *ptr_id_cpu
-    );
+    if (ptr_id_cpu != NULL) {
+        log_info(
+            logger,
+            "## CPU %d Conectada en FD %d",
+            *ptr_id_cpu,
+            fd_cpu
+        );
+        free(ptr_id_cpu);
+    } else {
+        log_warning(logger, "## CPU en FD %d se desconectó durante handshake", fd_cpu);
+    }
 
     op_code ok = MSG_OK;
+    enviar_mensaje(fd_cpu, &ok, sizeof(op_code));
 
-    enviar_mensaje(
-        socket_cpu,
-        &ok,
-        sizeof(op_code)
-    );
+    uint32_t max_size = get_segment_max_size();
+    enviar_mensaje(fd_cpu, &max_size, sizeof(uint32_t));
 
-    uint32_t max_size = get_segment_max_size(); // obtenemos el valor max de seg a traves del getter q creamos en kernel_memory.h
-    // enviar el tamaño máximo de segmento (config)
-    enviar_mensaje(
-        socket_cpu,
-        &max_size,
-        sizeof(uint32_t)
-    );
+    log_info(logger, "Atendiendo CPU en FD %d...", fd_cpu);
+    atender_mensaje_cpu(fd_cpu);
 
-
-    free(ptr_id_cpu);
-
-    /* notificar_mapa_memory_sticks_a_cpu(); */
-    log_info(logger, "Atendiendo CPU...");
-    atender_mensaje_cpu();
-    
+    pthread_mutex_lock(&mutex_cpus_conectadas);
+    for (int i = 0; i < list_size(lista_cpus_conectadas); i++) {
+        int* elem = list_get(lista_cpus_conectadas, i);
+        if (elem && *elem == fd_cpu) {
+            list_remove(lista_cpus_conectadas, i);
+            free(elem);
+            break;
+        }
+    }
+    pthread_mutex_unlock(&mutex_cpus_conectadas);
     return;
 }
 
@@ -329,116 +286,88 @@ static void* serializar_mapa_memory_sticks(
 
 
 
-bool cpu_esta_conectada(void) {
-    return socket_cpu != -1;
-}
-
-bool notificar_segmentos_a_cpu(t_contexto*proceso){
-    if (!cpu_esta_conectada()){
+bool notificar_segmentos_a_cpu(int fd_cpu, t_contexto* proceso){
+    if (fd_cpu <= 0){
         log_warning(
             logger,
-            "No se pudo enviar los segmentos: CPU no conectada."
+            "No se pudo enviar los segmentos: FD invalido."
         );
         return false;
     }
     op_code codigo;
-    // serializar_segmentos() espera int* (ver utils/serializacion.h); usar
-    // uint32_t* rompia -Wpointer-sign.
     int tamanio_buffer = 0;
 
     if (list_size(proceso->tabla_segmentos) == 0)
     {
         log_info(logger, "La tabla de segmentos se encuentra vacía. Esto es normal si el proceso recien se creo.");
         codigo = MSG_TABLA_SEGMENTOS_VACIA;
-        enviar_mensaje(socket_cpu, &codigo, sizeof(op_code));
+        enviar_mensaje(fd_cpu, &codigo, sizeof(op_code));
         return true;
     }
 
-    void*buffer =
-        serializar_segmentos(
-            proceso->tabla_segmentos,
-            &tamanio_buffer,
-            logger
-        );
+    void* buffer = serializar_segmentos(
+        proceso->tabla_segmentos,
+        &tamanio_buffer,
+        logger
+    );
     
     if (buffer == NULL) {
         log_error(
             logger,
             "## ERROR: No se pudo serializar la tabla de segmentos."
         );
-
         return false;
     }
 
-    pthread_mutex_lock(&mutex_envios_cpu);
-
     codigo = MSG_TABLA_SEGMENTOS_NO_VACIA;
-
-    enviar_mensaje(
-        socket_cpu,
-        &codigo,
-        sizeof(op_code)
-    );
-
-    enviar_mensaje(
-        socket_cpu,
-        buffer,
-        (int) tamanio_buffer
-    );
-
-    pthread_mutex_unlock(&mutex_envios_cpu);
-
+    enviar_mensaje(fd_cpu, &codigo, sizeof(op_code));
+    enviar_mensaje(fd_cpu, buffer, (int) tamanio_buffer);
     free(buffer);
 
     return true;
 }
 
-bool notificar_mapa_memory_sticks_a_cpu(void) {
-    if (!cpu_esta_conectada()) {
+bool notificar_mapa_memory_sticks_a_cpu(int fd_cpu) {
+    if (fd_cpu <= 0) {
         log_warning(
             logger,
-            "No se pudo enviar el mapa de Memory Sticks: CPU no conectada"
+            "No se pudo enviar el mapa de Memory Sticks: FD invalido"
         );
-
         return false;
     }
 
     uint32_t tamanio_buffer = 0;
-
-    void* buffer =
-        serializar_mapa_memory_sticks(
-            &tamanio_buffer
-        );
+    void* buffer = serializar_mapa_memory_sticks(&tamanio_buffer);
 
     if (buffer == NULL) {
         log_error(
             logger,
             "No se pudo serializar el mapa de Memory Sticks"
         );
-
         return false;
     }
 
     op_code codigo = MSG_ACTUALIZAR_MEMORY_STICKS;
-
-    pthread_mutex_lock(&mutex_envios_cpu);
-
-    enviar_mensaje(
-        socket_cpu,
-        &codigo,
-        sizeof(op_code)
-    );
-
-    enviar_mensaje(
-        socket_cpu,
-        buffer,
-        (int) tamanio_buffer
-    );
-
-    pthread_mutex_unlock(&mutex_envios_cpu);
-
+    enviar_mensaje(fd_cpu, &codigo, sizeof(op_code));
+    enviar_mensaje(fd_cpu, buffer, (int) tamanio_buffer);
     free(buffer);
 
+    return true;
+}
+
+bool notificar_mapa_memory_sticks_a_todas_las_cpus(void) {
+    pthread_mutex_lock(&mutex_cpus_conectadas);
+    if (lista_cpus_conectadas == NULL) {
+        pthread_mutex_unlock(&mutex_cpus_conectadas);
+        return true;
+    }
+    for (int i = 0; i < list_size(lista_cpus_conectadas); i++) {
+        int* fd_ptr = list_get(lista_cpus_conectadas, i);
+        if (fd_ptr && *fd_ptr > 0) {
+            notificar_mapa_memory_sticks_a_cpu(*fd_ptr);
+        }
+    }
+    pthread_mutex_unlock(&mutex_cpus_conectadas);
     return true;
 }
 
@@ -447,7 +376,7 @@ void enviar_contexto_ejecucion_a_cpu(int fd_cpu, t_contexto*contexto){
     void*buffer = serializar_contexto(contexto,&tamanio_buffer,logger);
     if (buffer==NULL)
     {
-    log_error(logger, "## ERROR: Ha ocurrido un error al serializar el contexto inicial.");
+        log_error(logger, "## ERROR: Ha ocurrido un error al serializar el contexto inicial.");
     }
     enviar_mensaje(fd_cpu, buffer, tamanio_buffer);
     free(buffer);
@@ -466,8 +395,10 @@ void enviar_proxima_instruccion_a_cpu(int fd_cpu, char*proxima_instruccion){
 
 op_code*esperar_pedido_de_instruccion(int fd_cpu){
     int size;
-    log_info(logger, "Esperando codigo de cpu...");
+    log_info(logger, "Esperando codigo de cpu FD %d...", fd_cpu);
     op_code*codigo = recibir_mensaje(fd_cpu, &size);
+    if (codigo == NULL) return NULL;
+
     if (*codigo == MSG_FETCH_CPU){
         log_info(logger, "FETCH RECIBIDO.");
         usleep(config_get_int_value(config,"INSTRUCTION_DELAY")*1000);
@@ -475,10 +406,12 @@ op_code*esperar_pedido_de_instruccion(int fd_cpu){
     }
     if (*codigo == MSG_INTERRUPT || *codigo == MSG_EXIT_CPU){
         log_info(logger, "INTERRUPCION O EXIT RECIBIDO.");
-        uint32_t pid = recibir_pid();
-        t_contexto*contexto = recibir_contexto();
-        actualizar_contexto(pid, contexto);
-        enviar_confirmacion_a_CPU(socket_cpu,true);
+        uint32_t pid = recibir_pid(fd_cpu);
+        t_contexto*contexto = recibir_contexto(fd_cpu);
+        if (contexto != NULL) {
+            actualizar_contexto(pid, contexto);
+        }
+        enviar_confirmacion_a_CPU(fd_cpu, true);
         return codigo;
     }
     if (*codigo == MSG_SEG_FAULT){
@@ -492,5 +425,8 @@ op_code*esperar_pedido_de_instruccion(int fd_cpu){
 uint32_t recibir_pc(int fd_cpu){
     int size;
     uint32_t * pc = recibir_mensaje(fd_cpu, &size);
-    return *pc;
+    if (pc == NULL) return 0;
+    uint32_t val = *pc;
+    free(pc);
+    return val;
 }

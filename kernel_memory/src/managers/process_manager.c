@@ -21,8 +21,7 @@ static t_administrador_procesos administrador;
 
 extern t_log*logger;
 extern t_config* config; // CP3: para leer SEGMENT_MAX_SIZE en la traducción
-extern pthread_cond_t condicion_recibir_proceso;
-extern bool listo_para_recibir;
+
 
 // CP3: traduce (pid, dir_logica) a dirección física global. Retorna:
 //   TRADUCCION_OK        y deja la dir global en *dir_global_out
@@ -375,7 +374,7 @@ void*manejar_proceso(void*arg){
 
         proceso_actual = obtener_proceso(pid_local);
 
-        if (proceso_actual->contexto != NULL) {notificar_segmentos_a_cpu(proceso_actual->contexto);}
+        if (proceso_actual->contexto != NULL) {notificar_segmentos_a_cpu(fd_cpu, proceso_actual->contexto);}
         free(proxima_instruccion);
       } 
     }
@@ -393,10 +392,6 @@ void*manejar_proceso(void*arg){
   
   log_info(logger, "Liberando memoria...");
   free(args);
-
-  log_info(logger,"Reactivando recepción de procesos.");
-  listo_para_recibir = true;
-  pthread_cond_signal(&condicion_recibir_proceso); // NICO M: Esto sirve para que volvamos a aceptar pedidos de iniciar nuevos procesos.
   return NULL;
 }
 
@@ -415,7 +410,8 @@ bool inicializar_proceso(uint32_t pid, int fd_cpu) {
         logger,
         "No se encontró el proceso con PID %u",
         pid
-  );
+    );
+    free(key);
     return false;
   }
   if (proceso->contexto == NULL) {
@@ -423,26 +419,20 @@ bool inicializar_proceso(uint32_t pid, int fd_cpu) {
           logger,
           "El proceso con PID %u no tiene contexto",
           pid
-    );
-    return false;
+      );
+      free(key);
+      return false;
   }
 
-  t_args_proceso*args = malloc(sizeof(t_args_proceso));
+  log_info(logger, "Se va a enviar contexto a CPU en FD %d", fd_cpu);
+  enviar_contexto_ejecucion_a_cpu(fd_cpu, proceso->contexto);
+  log_info(logger, "Se envió contexto a CPU en FD %d", fd_cpu);
+
+  t_args_proceso* args = malloc(sizeof(t_args_proceso));
   args->fd_cpu = fd_cpu;
   args->proceso = proceso;
 
-  pthread_t nuevo_proceso;
-  if (pthread_create(&nuevo_proceso, NULL, manejar_proceso,args) == 0){
-    pthread_detach(nuevo_proceso); 
-  }
-  // free(args);
-
-  log_info(logger, "Proceso creado");
-  
-  log_info(logger, "Se va a enviar contexto");
-
-  enviar_contexto_ejecucion_a_cpu(fd_cpu, proceso->contexto);
-  log_info(logger, "se envio contexto");
+  manejar_proceso(args);
 
   free(key);
   return true;
