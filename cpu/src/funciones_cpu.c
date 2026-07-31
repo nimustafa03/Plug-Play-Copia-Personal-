@@ -582,8 +582,7 @@ void escritura_ms(uint32_t direccion_global,void* buffer_origen,uint32_t tamanio
 
         op_code* respuesta = recibir_mensaje(fd_actual,&tamanio_respuesta);
         if (respuesta == NULL){
-            log_error(logger_cpu,"Error de respuesta en ESCRITURA");
-            exit(EXIT_FAILURE);
+            log_error(logger_cpu,"MEMORIA CORRUPTA");
         }
         if (tamanio_respuesta != sizeof(op_code) ||*respuesta != MSG_DONE) {
             log_error(logger_cpu,"Error de tamanio en ESCRITURA");

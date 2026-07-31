@@ -194,8 +194,7 @@ int mov_in(char* instruccion, t_registros* registros, t_mapa_memory_sticks_cpu* 
 
     void* datos = lectura_ms(direccion_fisica, tamanio, mapa, fd_ms, fd_ms_agregados, logger_cpu);
     if (datos == NULL) {
-        log_error(logger_cpu, "LECTURA devolvio NULL");
-        exit(EXIT_FAILURE);
+        log_error(logger_cpu, "MEMORIA CORRUPTA");
     }
     uint32_t valor = 0;
 
