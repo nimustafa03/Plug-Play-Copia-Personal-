@@ -7,6 +7,7 @@
 #include "../../utils/src/utils/mensajes.h"
 #include "../managers/memory_manager.h"
 #include "../handlers/handler_cpu.h"
+#include "../handlers/handler_kernel_scheduler.h"
 
 extern t_log* logger;
 
@@ -180,4 +181,15 @@ void atender_memory_stick(int fd_memory_stick) {
 
     free(memory_stick_ip);
     free(memory_stick_puerto);
+
+    while (1) {
+        int size_msg;
+        op_code* codigo = recibir_mensaje(fd_memory_stick, &size_msg);
+        if (codigo == NULL) {
+            log_error(logger, "## Memory Stick FD:%d desconectada! Corrupción de memoria detectada.", fd_memory_stick);
+            notificar_memoria_corrupta_a_ks();
+            break;
+        }
+        free(codigo);
+    }
 }

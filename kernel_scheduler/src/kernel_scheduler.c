@@ -21,6 +21,8 @@
 #include <semaphore.h>       // para sem_post en atender_cliente_ks
 #include <commons/log.h>
 #include <commons/config.h>
+#include <unistd.h>
+#include <sys/socket.h>
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
 #include "funciones_ks.h"    // trae también gestor_ks.h 
@@ -92,7 +94,27 @@ void* loop_aceptar_clientes(void* arg) {
     }
     return NULL;
 }
- 
+
+void* hilo_monitor_km(void* arg) {
+    while (1) {
+        usleep(100000);
+        if (fd_km <= 0) break;
+
+        op_code cod;
+        ssize_t res = recv(fd_km, &cod, sizeof(op_code), MSG_PEEK | MSG_DONTWAIT);
+        if (res == 0) {
+            log_error(logger_ks, "## Conexión con Kernel Memory perdida. Se dispara BSOD.");
+            bsod();
+            break;
+        } else if (res > 0 && cod == MSG_MEMORIA_CORRUPTA) {
+            log_error(logger_ks, "## Notificación MSG_MEMORIA_CORRUPTA recibida de KM. Se dispara BSOD.");
+            bsod();
+            break;
+        }
+    }
+    return NULL;
+}
+
 int main(int argc, char* argv[]) {
  
     // cambiamos < 2 por < 3 porque ahora argv[2] (path proceso inicial) es obligatorio
@@ -145,6 +167,10 @@ int main(int argc, char* argv[]) {
     // DEBUG: heap
     log_debug(logger_ks, "[DBG][main] free(respuesta=%p)", (void*)respuesta);
     free(respuesta); 
+
+    pthread_t threadMonitorKM;
+    pthread_create(&threadMonitorKM, NULL, hilo_monitor_km, NULL);
+    pthread_detach(threadMonitorKM);
 
     fd_servidor_ks = iniciar_servidor(ks_port);
     log_info(logger_ks, "Servidor KS listo en puerto %s", ks_port);
