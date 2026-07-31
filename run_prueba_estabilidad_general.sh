@@ -33,7 +33,7 @@ pkill -9 -f "bin/swap" || true
 pkill -9 -f "bin/io" || true
 sleep 1
 
-SCRIPT_ESTABILIDAD="${1:-pruebas/PLANI_PRE_3.prc}"
+SCRIPT_ESTABILIDAD="${1:-PLANI_PRE_3.prc}"
 
 echo ""
 echo "========================================="
@@ -47,7 +47,7 @@ PID_KM=$!
 sleep 1
 
 # 2. Kernel Scheduler
-echo "[2/7] Iniciando Kernel Scheduler con script: $SCRIPT_ESTABILIDAD..."
+echo "[2/7] Iniciando Kernel Scheduler con proceso inicial: $SCRIPT_ESTABILIDAD..."
 ./kernel_scheduler/bin/kernel_scheduler config/pruebaBase/KernelScheduler.config "$SCRIPT_ESTABILIDAD" &
 PID_KS=$!
 sleep 1
