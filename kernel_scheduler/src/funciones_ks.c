@@ -1850,9 +1850,22 @@ void bsod() {
         if (todas[l] != NULL) {
             for (int i = 0; i < list_size(todas[l]); i++) {
                 Proceso* p = list_get(todas[l], i);
-                if (p != NULL) {
+                if (p != NULL && p->estado != EXIT) {
                     log_info(logger_ks, "## (%d) finalizó su ejecución con motivo de BSOD", p->id_proceso);
                     p->estado = EXIT;
+                }
+            }
+        }
+    }
+    if (colasMultinivel != NULL) {
+        for (int c = 0; c < cantidadColas; c++) {
+            if (colasMultinivel[c] != NULL) {
+                for (int i = 0; i < list_size(colasMultinivel[c]); i++) {
+                    Proceso* p = list_get(colasMultinivel[c], i);
+                    if (p != NULL && p->estado != EXIT) {
+                        log_info(logger_ks, "## (%d) finalizó su ejecución con motivo de BSOD", p->id_proceso);
+                        p->estado = EXIT;
+                    }
                 }
             }
         }

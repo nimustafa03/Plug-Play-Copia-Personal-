@@ -22,6 +22,7 @@
 #include <commons/log.h>
 #include <commons/config.h>
 #include <unistd.h>
+#include <errno.h>
 #include <sys/socket.h>
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
@@ -103,9 +104,21 @@ void* hilo_monitor_km(void* arg) {
         op_code cod = 0;
         ssize_t res = recv(fd_km, &cod, sizeof(op_code), MSG_PEEK | MSG_DONTWAIT);
         if (res == 0) {
-            log_warning(logger_ks, "## Detectada corrupción de memoria / Desconexión de Kernel Memory. Disparando BSOD...");
+            log_warning(logger_ks, "## Detectada desconexión de Kernel Memory (socket cerrado). Disparando BSOD...");
             bsod();
             break;
+        } else if (res > 0) {
+            if (cod == MSG_MEMORIA_CORRUPTA) {
+                log_warning(logger_ks, "## Recibida notificación MSG_MEMORIA_CORRUPTA de Kernel Memory. Disparando BSOD...");
+                bsod();
+                break;
+            }
+        } else {
+            if (errno != EAGAIN && errno != EWOULDBLOCK) {
+                log_warning(logger_ks, "## Error en la conexión con Kernel Memory. Disparando BSOD...");
+                bsod();
+                break;
+            }
         }
     }
     return NULL;
