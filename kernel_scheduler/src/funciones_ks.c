@@ -1567,7 +1567,9 @@ bool km_mem_alloc(uint32_t pid, uint32_t id_segmento, uint32_t tamanio) {
         if (*resp == MSG_SOLICITAR_DESALOJO) {
             free(resp);
             hubo_compactacion = true;
+            pthread_mutex_unlock(&mutex_km);
             manejar_solicitud_desalojo(pid); // desaloja CPUs y responde MSG_DESALOJO_REALIZADO
+            pthread_mutex_lock(&mutex_km);
             continue;                        // seguimos esperando el resultado del MEM_ALLOC
         }
         ok = (*resp == MSG_OK);
@@ -1716,7 +1718,9 @@ void manejar_solicitud_desalojo(uint32_t pid_issuer) {
     op_code ok = MSG_DESALOJO_REALIZADO;
     // DEBUG: serializacion
     log_debug(logger_ks, "[DBG][manejar_solicitud_desalojo] envío MSG_DESALOJO_REALIZADO a KM fd=%d y SALIDA", fd_km);
+    pthread_mutex_lock(&mutex_km);
     enviar_mensaje(fd_km, &ok, sizeof(op_code));
+    pthread_mutex_unlock(&mutex_km);
     // en_compactacion se apaga en km_mem_alloc al recibir la respuesta final
 }
 

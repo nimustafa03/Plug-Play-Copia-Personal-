@@ -158,7 +158,7 @@ void syscall_init_proc(char* instruccion, t_registros* registros, int fd_ks, uin
         interrupcion_en_espera = true;
 
         op_code* nueva_respuesta = recibir_mensaje(fd_ks, &size);
-        if (*nueva_respuesta == MSG_OK) {
+        if (nueva_respuesta != NULL && *nueva_respuesta == MSG_OK) {
             registros->pc++;
         } else {
             log_warning(logger_cpu, "INIT_PROC recibio error. Hubo deficit de memoria");
