@@ -1,6 +1,8 @@
 #!/bin/bash
 # ==============================================================================
 #  Ejecutor de TODAS LAS PRUEBAS (Secuencial)
+#  Incluye: Base (Parte 1 y 2), Corto Plazo, Memoria, Mediano Plazo,
+#           Herencia de Prioridades y Estabilidad General (Multi-CPU en caliente).
 # ==============================================================================
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -48,6 +50,11 @@ hacer_pausa
 # 6. Prueba Herencia de Prioridades
 echo ">>> 6. PRUEBA HERENCIA DE PRIORIDADES (PHP.prc)"
 ./run_prueba_herencia_prioridades.sh || true
+hacer_pausa
+
+# 7. Prueba Estabilidad General (Agregado dinámico de CPU en caliente)
+echo ">>> 7. PRUEBA ESTABILIDAD GENERAL (Multi-CPU en caliente)"
+./run_prueba_estabilidad_general.sh || true
 
 echo ""
 echo "================================================================="
