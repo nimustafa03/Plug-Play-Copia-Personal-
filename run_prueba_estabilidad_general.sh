@@ -7,6 +7,10 @@
 
 set -e
 
+export C_INCLUDE_PATH=/tmp/so-commons-library/src:${C_INCLUDE_PATH}
+export LIBRARY_PATH=/tmp/so-commons-library/src/build:${LIBRARY_PATH}
+export LD_LIBRARY_PATH=/tmp/so-commons-library/src/build:${LD_LIBRARY_PATH}
+
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_DIR"
 
