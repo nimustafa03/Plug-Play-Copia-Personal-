@@ -1,6 +1,7 @@
 #include "handler_kernel_scheduler.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <commons/log.h>
@@ -32,16 +33,37 @@ void notificar_memoria_corrupta_a_ks(void) {
 }
 
 char*completar_path(char*path){
+  if (access(path, F_OK) == 0) {
+    return string_duplicate(path);
+  }
+
   char*prefijo = config_get_string_value(config, "SCRIPTS_BASEPATH");
   char*path_completo = string_new();
   
-  if (!string_starts_with(path,prefijo))
-  {
+  if (prefijo != NULL && strlen(prefijo) > 0 && !string_starts_with(path, prefijo)) {
     string_append(&path_completo, prefijo);
-    string_append(&path_completo , "/");
+    string_append(&path_completo, "/");
+    string_append(&path_completo, path);
+    if (access(path_completo, F_OK) == 0) {
+      return path_completo;
+    }
+    free(path_completo);
+    path_completo = string_new();
   }
-  string_append(&path_completo,path);
 
+  string_append(&path_completo, "pruebas/");
+  string_append(&path_completo, path);
+  if (access(path_completo, F_OK) == 0) {
+    return path_completo;
+  }
+
+  free(path_completo);
+  path_completo = string_new();
+  if (prefijo != NULL && strlen(prefijo) > 0) {
+    string_append(&path_completo, prefijo);
+    string_append(&path_completo, "/");
+  }
+  string_append(&path_completo, path);
   return path_completo;
 }
 
