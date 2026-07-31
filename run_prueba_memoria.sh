@@ -1,6 +1,7 @@
 #!/bin/bash
 # ==============================================================================
 #  Prueba Memoria (PDF Pág. 7)
+#  Orden: KM -> KS -> MS -> IO -> SWAP -> CPU
 # ==============================================================================
 
 set -e
@@ -38,16 +39,16 @@ echo "========================================="
 echo "  INICIANDO PRUEBA MEMORIA ($SCRIPT_MEM)"
 echo "========================================="
 
-# 1. SWAP
-echo "[1/6] Iniciando SWAP..."
-./swap/bin/swap swap/swap.config &
-PID_SWAP=$!
-sleep 1
-
-# 2. Kernel Memory
-echo "[2/6] Iniciando Kernel Memory..."
+# 1. Kernel Memory
+echo "[1/6] Iniciando Kernel Memory..."
 ./kernel_memory/bin/kernel_memory config/prueba_memoria/KernelMemory.config &
 PID_KM=$!
+sleep 1
+
+# 2. Kernel Scheduler
+echo "[2/6] Iniciando Kernel Scheduler con script: $SCRIPT_MEM..."
+./kernel_scheduler/bin/kernel_scheduler config/prueba_memoria/KernelScheduler.config "$SCRIPT_MEM" &
+PID_KS=$!
 sleep 1
 
 # 3. Memory Sticks (16, 32, 64, 128 bytes)
@@ -62,26 +63,27 @@ PID_MS3=$!
 PID_MS4=$!
 sleep 1
 
-# 4. Kernel Scheduler
-echo "[4/6] Iniciando Kernel Scheduler con script: $SCRIPT_MEM..."
-./kernel_scheduler/bin/kernel_scheduler config/prueba_memoria/KernelScheduler.config "$SCRIPT_MEM" &
-PID_KS=$!
-sleep 1
-
-# 5. CPU 1
-echo "[5/6] Iniciando CPU 1..."
-./cpu/bin/cpu cpu/cpu.config 1 &
-PID_CPU1=$!
-sleep 1
-
-# 6. IO
-echo "[6/6] Iniciando módulos IO (STDIN, STDOUT, SLEEP)..."
+# 4. IO
+echo "[4/6] Iniciando módulos IO (STDIN, STDOUT, SLEEP)..."
 ./io/bin/io io/io.config STDIN &
 PID_IO1=$!
 ./io/bin/io io/io.config STDOUT &
 PID_IO2=$!
 ./io/bin/io io/io.config SLEEP &
 PID_IO3=$!
+sleep 1
+
+# 5. SWAP
+echo "[5/6] Iniciando SWAP..."
+./swap/bin/swap swap/swap.config &
+PID_SWAP=$!
+sleep 1
+
+# 6. CPU 1
+echo "[6/6] Iniciando CPU 1..."
+./cpu/bin/cpu cpu/cpu.config 1 &
+PID_CPU1=$!
+sleep 1
 
 echo ""
 echo "========================================="
@@ -92,7 +94,7 @@ echo "Presione CTRL+C para finalizar todos los módulos..."
 cleanup() {
     echo ""
     echo "Cerrando todos los módulos..."
-    kill $PID_SWAP $PID_KM $PID_MS1 $PID_MS2 $PID_MS3 $PID_MS4 $PID_KS $PID_CPU1 $PID_IO1 $PID_IO2 $PID_IO3 2>/dev/null || true
+    kill $PID_KM $PID_KS $PID_MS1 $PID_MS2 $PID_MS3 $PID_MS4 $PID_IO1 $PID_IO2 $PID_IO3 $PID_SWAP $PID_CPU1 2>/dev/null || true
     pkill -9 -f "bin/" 2>/dev/null || true
     echo "Prueba finalizada."
 }
