@@ -19,6 +19,14 @@ extern t_config*config;
 
 static int fd_kernel_scheduler = -1;
 
+void notificar_memoria_corrupta_a_ks(void) {
+    if (fd_kernel_scheduler != -1) {
+        log_error(logger, "## Notificando a Kernel Scheduler sobre corrupción de memoria (MSG_MEMORIA_CORRUPTA)");
+        op_code msg = MSG_MEMORIA_CORRUPTA;
+        enviar_mensaje(fd_kernel_scheduler, &msg, sizeof(op_code));
+    }
+}
+
 char*completar_path(char*path){
   char*prefijo = config_get_string_value(config, "SCRIPTS_BASEPATH");
   char*path_completo = string_new();
