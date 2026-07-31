@@ -176,7 +176,7 @@ void atender_memory_stick(int fd_memory_stick) {
     op_code ok = MSG_OK;
     enviar_mensaje(fd_memory_stick, &ok, sizeof(op_code));
 
-    notificar_mapa_memory_sticks_a_cpu();
+    notificar_mapa_memory_sticks_a_todas_las_cpus();
 
     free(memory_stick_ip);
     free(memory_stick_puerto);

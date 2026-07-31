@@ -282,7 +282,7 @@ void procesoASuspReady(Proceso* proceso){
   log_info(logger_ks, "Proceso %d agregado a lista SUSP READY", proceso->id_proceso);
 }
 
-void* iniciar_planificador_largo_plazo () {
+void* iniciar_planificador_largo_plazo (void* arg) {
   log_info(logger_ks, "Planificador de Largo Plazo iniciado.");
   while (1) {
 
@@ -423,7 +423,7 @@ Proceso* seleccionar_proceso_a_ejecutar(char* algoritmo, int* nivel_out) {
 }
 
 // Planif. Corto plazo: implementa FIFO, RR y CMN
-void* iniciar_planificador_corto_plazo() {
+void* iniciar_planificador_corto_plazo(void* arg) {
   log_info(logger_ks, "Planificador de Corto Plazo iniciado.");
  
   char* algoritmo = config_get_string_value(config, "PLANIFICATION_ALGORITHM");
