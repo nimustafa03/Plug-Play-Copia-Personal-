@@ -102,7 +102,7 @@ void* hilo_monitor_km(void* arg) {
 
         op_code cod = 0;
         ssize_t res = recv(fd_km, &cod, sizeof(op_code), MSG_PEEK | MSG_DONTWAIT);
-        if (res == 0 || (res > 0 && cod == MSG_MEMORIA_CORRUPTA)) {
+        if (res == 0) {
             log_warning(logger_ks, "## Detectada corrupción de memoria / Desconexión de Kernel Memory. Disparando BSOD...");
             bsod();
             break;
