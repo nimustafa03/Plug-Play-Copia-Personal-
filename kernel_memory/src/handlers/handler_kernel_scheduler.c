@@ -1,6 +1,8 @@
 #include "handler_kernel_scheduler.h"
 
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/socket.h>
 #include <commons/log.h>
 #include <commons/config.h>
 #include <commons/string.h>
@@ -23,7 +25,9 @@ void notificar_memoria_corrupta_a_ks(void) {
     if (fd_kernel_scheduler != -1) {
         log_error(logger, "## Notificando a Kernel Scheduler sobre corrupción de memoria (MSG_MEMORIA_CORRUPTA)");
         op_code msg = MSG_MEMORIA_CORRUPTA;
-        enviar_mensaje(fd_kernel_scheduler, &msg, sizeof(op_code));
+        send(fd_kernel_scheduler, &msg, sizeof(op_code), 0);
+        close(fd_kernel_scheduler);
+        fd_kernel_scheduler = -1;
     }
 }
 

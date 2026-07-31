@@ -97,17 +97,13 @@ void* loop_aceptar_clientes(void* arg) {
 
 void* hilo_monitor_km(void* arg) {
     while (1) {
-        usleep(100000);
+        usleep(50000);
         if (fd_km <= 0) break;
 
-        op_code cod;
+        op_code cod = 0;
         ssize_t res = recv(fd_km, &cod, sizeof(op_code), MSG_PEEK | MSG_DONTWAIT);
-        if (res == 0) {
-            log_error(logger_ks, "## Conexión con Kernel Memory perdida. Se dispara BSOD.");
-            bsod();
-            break;
-        } else if (res > 0 && cod == MSG_MEMORIA_CORRUPTA) {
-            log_error(logger_ks, "## Notificación MSG_MEMORIA_CORRUPTA recibida de KM. Se dispara BSOD.");
+        if (res == 0 || (res > 0 && cod == MSG_MEMORIA_CORRUPTA)) {
+            log_warning(logger_ks, "## Detectada corrupción de memoria / Desconexión de Kernel Memory. Disparando BSOD...");
             bsod();
             break;
         }
