@@ -288,7 +288,10 @@ bool crear_proceso(uint32_t pid, char*path){
   log_info(logger, "Generando lista de instrucciones...");
   proceso->lista_instrucciones = generar_lista_instrucciones(path);
   if(!proceso->lista_instrucciones){
-    log_error(logger, "## ERROR: No se pudo crear la lista de instrucciones.");
+    log_error(logger, "## ERROR: No se pudo crear la lista de instrucciones para %s.", path);
+    free(key);
+    free(proceso);
+    return false;
   }
   
   log_info(logger, "Creando contexto inicial...");
