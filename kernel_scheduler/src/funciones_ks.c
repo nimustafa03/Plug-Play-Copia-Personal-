@@ -715,10 +715,33 @@ void mutex_create(char* nombre) {
 // Debe llamarse con mutex_listas YA tomado.
 void cambiar_prioridad(Proceso* proceso, int nueva_prioridad) {
   if (proceso->prioridad == nueva_prioridad) return;
+  int prio_vieja = proceso->prioridad;
   log_info(logger_ks, "## %d Cambio de prioridad: %d - %d",
-           proceso->id_proceso, proceso->prioridad, nueva_prioridad);
-  proceso->prioridad = nueva_prioridad;
+           proceso->id_proceso, prio_vieja, nueva_prioridad);
+
+  char* algoritmo = config_get_string_value(config, "PLANIFICATION_ALGORITHM");
+  if (strcmp(algoritmo, "CMN") == 0 && proceso->estado == READY) {
+      if (prio_vieja >= 0 && prio_vieja < cantidadColas) {
+          t_list* cola_vieja = colasMultinivel[prio_vieja];
+          for (int i = 0; i < list_size(cola_vieja); i++) {
+              Proceso* p = list_get(cola_vieja, i);
+              if (p && p->id_proceso == proceso->id_proceso) {
+                  list_remove(cola_vieja, i);
+                  break;
+              }
+          }
+      }
+      proceso->prioridad = nueva_prioridad;
+      if (nueva_prioridad >= 0 && nueva_prioridad < cantidadColas) {
+          list_add(colasMultinivel[nueva_prioridad], proceso);
+          log_info(logger_ks, "proceso %d movido a cola CMN de prioridad %d", proceso->id_proceso, nueva_prioridad);
+          desalojar_por_prioridad(proceso);
+      }
+  } else {
+      proceso->prioridad = nueva_prioridad;
+  }
 }
+
 
 int mutex_lock(char* nombre, Proceso* proceso) {
   // DEBUG: frontera de funcion - PUNTERO CRUDO antes de desreferenciar.
