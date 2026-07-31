@@ -1807,23 +1807,33 @@ void intentar_desuspender_procesos() {
 // termina el KS. NOTA: KM todavía no envía MSG_MEMORIA_CORRUPTA, así que esto no
 // se dispara aún; queda listo para cuando KM lo emita.
 void bsod() {
-    log_error(logger_ks, "## Se detectó corrupción de memoria - Blue Screen of Death (BSOD)");
+    static bool bsod_ejecutado = false;
+    if (bsod_ejecutado) return;
+    bsod_ejecutado = true;
+
+    log_error(logger_ks, "## SE DETECTÓ CORRUPCIÓN DE MEMORIA - INICIANDO BSOD (Blue Screen of Death)");
+    log_warning(logger_ks, "## Finalizando todos los procesos y cerrando Kernel Scheduler...");
 
     t_list* todas[] = {
         listaProcesosNew, listaProcesosReady, listaProcesosExec,
         listaProcesosBlock, listaProcesosSuspBlock, listaProcesosSuspReady
     };
     pthread_mutex_lock(&mutex_listas);
-    for (int l = 0; l < 6; l++)
-        for (int i = 0; i < list_size(todas[l]); i++) {
-            Proceso* p = list_get(todas[l], i);
-            log_info(logger_ks, "## (%d) finalizó su ejecución con motivo de BSOD", p->id_proceso);
+    for (int l = 0; l < 6; l++) {
+        if (todas[l] != NULL) {
+            for (int i = 0; i < list_size(todas[l]); i++) {
+                Proceso* p = list_get(todas[l], i);
+                if (p != NULL) {
+                    log_info(logger_ks, "## (%d) finalizó su ejecución con motivo de BSOD", p->id_proceso);
+                    p->estado = EXIT;
+                }
+            }
         }
+    }
     pthread_mutex_unlock(&mutex_listas);
 
-    log_destroy(logger_ks);
-    config_destroy(config);
-    exit(EXIT_FAILURE);
+    log_error(logger_ks, "## Kernel Scheduler finalizado por Blue Screen of Death (BSOD).");
+    exit(EXIT_SUCCESS);
 }
 
 // ---------------------- IO: STDIN / STDOUT ----------------------
