@@ -1,6 +1,8 @@
 #include "handler_memory_stick.h"
 
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/socket.h>
 #include <commons/log.h>
 #include <commons/log.h>
 #include "../../utils/src/utils/conexiones.h"
@@ -183,13 +185,13 @@ void atender_memory_stick(int fd_memory_stick) {
     free(memory_stick_puerto);
 
     while (1) {
-        int size_msg;
-        op_code* codigo = recibir_mensaje(fd_memory_stick, &size_msg);
-        if (codigo == NULL) {
+        char dummy;
+        ssize_t res = recv(fd_memory_stick, &dummy, 1, MSG_PEEK | MSG_DONTWAIT);
+        if (res == 0) {
             log_error(logger, "## Memory Stick FD:%d desconectada! Corrupción de memoria detectada.", fd_memory_stick);
             notificar_memoria_corrupta_a_ks();
             break;
         }
-        free(codigo);
+        usleep(50000);
     }
 }

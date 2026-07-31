@@ -136,7 +136,7 @@ int main(int argc, char* argv[]) {
                 log_info(logger, "## PID: %d - Ingrese %d caracteres:" , pid, cant_carac);
                 
                 // logica: leer, recortar o rellenar 
-                char* buffer_leido = malloc(cant_carac + 2); // buffer dinamico basado en la cantidad exacta de caracteres + 2 para considerar el salto de linea y el fin de cadena
+                char* buffer_leido = calloc(1, cant_carac + 2); // buffer dinamico basado en la cantidad exacta de caracteres + 2 para considerar el salto de linea y el fin de cadena
                 if (fgets(buffer_leido, cant_carac + 2, stdin) != NULL){
                     buffer_leido[strcspn(buffer_leido, "\n")] = '\0';
                 }; 
