@@ -32,7 +32,7 @@ pkill -9 -f "bin/swap" || true
 pkill -9 -f "bin/io" || true
 sleep 1
 
-SCRIPT_PMP="pruebas/PMP.prc"
+SCRIPT_PMP="PMP.prc"
 
 echo ""
 echo "========================================="
@@ -46,7 +46,7 @@ PID_KM=$!
 sleep 1
 
 # 2. Kernel Scheduler
-echo "[2/6] Iniciando Kernel Scheduler con script: $SCRIPT_PMP..."
+echo "[2/6] Iniciando Kernel Scheduler con proceso inicial: $SCRIPT_PMP..."
 ./kernel_scheduler/bin/kernel_scheduler config/prueba_mediano_plazo/KS.config "$SCRIPT_PMP" &
 PID_KS=$!
 sleep 1

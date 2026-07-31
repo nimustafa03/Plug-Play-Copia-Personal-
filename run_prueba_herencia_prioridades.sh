@@ -32,7 +32,7 @@ pkill -9 -f "bin/swap" || true
 pkill -9 -f "bin/io" || true
 sleep 1
 
-SCRIPT_PHP="pruebas/PHP.prc"
+SCRIPT_PHP="PHP.prc"
 
 echo ""
 echo "========================================="
@@ -46,7 +46,7 @@ PID_KM=$!
 sleep 1
 
 # 2. Kernel Scheduler
-echo "[2/6] Iniciando Kernel Scheduler con script: $SCRIPT_PHP..."
+echo "[2/6] Iniciando Kernel Scheduler con proceso inicial: $SCRIPT_PHP..."
 ./kernel_scheduler/bin/kernel_scheduler config/prueba_herencia_prioridades/KernelScheduler.config "$SCRIPT_PHP" &
 PID_KS=$!
 sleep 1

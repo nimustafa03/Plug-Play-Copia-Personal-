@@ -32,7 +32,7 @@ pkill -9 -f "bin/swap" || true
 pkill -9 -f "bin/io" || true
 sleep 1
 
-SCRIPT_INICIAL="${1:-pruebas/PLANI_PRE_0.prc}"
+SCRIPT_INICIAL="${1:-PLANI_PRE_0.prc}"
 
 echo ""
 echo "========================================="
@@ -46,7 +46,7 @@ PID_KM=$!
 sleep 1
 
 # 2. Kernel Scheduler
-echo "[2/6] Iniciando Kernel Scheduler con script: $SCRIPT_INICIAL..."
+echo "[2/6] Iniciando Kernel Scheduler con proceso inicial: $SCRIPT_INICIAL..."
 ./kernel_scheduler/bin/kernel_scheduler config/pruebaBase/KernelScheduler.config "$SCRIPT_INICIAL" &
 PID_KS=$!
 sleep 1

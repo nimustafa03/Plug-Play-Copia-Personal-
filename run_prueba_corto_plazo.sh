@@ -32,7 +32,7 @@ pkill -9 -f "bin/swap" || true
 pkill -9 -f "bin/io" || true
 sleep 1
 
-SCRIPT_PCP="pruebas/PCP.prc"
+SCRIPT_PCP="PCP.prc"
 
 echo ""
 echo "========================================="
@@ -46,7 +46,7 @@ PID_KM=$!
 sleep 1
 
 # 2. Kernel Scheduler
-echo "[2/6] Iniciando Kernel Scheduler con script: $SCRIPT_PCP..."
+echo "[2/6] Iniciando Kernel Scheduler con proceso inicial: $SCRIPT_PCP..."
 ./kernel_scheduler/bin/kernel_scheduler config/prueba_corto_plazo/KernelScheduler.config "$SCRIPT_PCP" &
 PID_KS=$!
 sleep 1
