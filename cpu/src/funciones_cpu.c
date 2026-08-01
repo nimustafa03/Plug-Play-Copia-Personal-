@@ -418,8 +418,13 @@ int conectar_memory_sticks_faltantes(t_mapa_memory_sticks_cpu* mapa,t_log* logge
 
         int nuevo_fd = actualizar_conexiones_ms(nuevo_ms, logger_cpu, identificador_cpu);
         if (nuevo_fd == -1) {
-            log_warning(logger_cpu,"No se pudo conectar al MS %u: %s:%s",i,nuevo_ms->ip,nuevo_ms->puerto);
-            return -1;
+            log_warning(logger_cpu, "No se pudo conectar inmediatamente al MS %u: %s:%s. Reintentando...", i, nuevo_ms->ip, nuevo_ms->puerto);
+            usleep(1000000);
+            nuevo_fd = actualizar_conexiones_ms(nuevo_ms, logger_cpu, identificador_cpu);
+            if (nuevo_fd == -1) {
+                log_error(logger_cpu, "Error al conectar al MS %u: %s:%s", i, nuevo_ms->ip, nuevo_ms->puerto);
+                return -1;
+            }
         }
         fd_ms_agregados[i-1] = nuevo_fd;
         ms_conectados++;
