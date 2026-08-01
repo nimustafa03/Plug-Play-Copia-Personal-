@@ -59,10 +59,13 @@ sleep 1
 echo "[3/6] Iniciando Memory Sticks (MS1:16b, MS2:32b, MS3:64b, MS4:128b)..."
 ./memory_stick/bin/memory_stick config/prueba_memoria/MemoryStick_1.config 16 &
 PID_MS1=$!
+sleep 1
 ./memory_stick/bin/memory_stick config/prueba_memoria/MemoryStick_2.config 32 &
 PID_MS2=$!
+sleep 1
 ./memory_stick/bin/memory_stick config/prueba_memoria/MemoryStick_3.config 64 &
 PID_MS3=$!
+sleep 1
 ./memory_stick/bin/memory_stick config/prueba_memoria/MemoryStick_4.config 128 &
 PID_MS4=$!
 sleep 1
