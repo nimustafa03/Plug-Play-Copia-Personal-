@@ -59,6 +59,7 @@ sleep 1
 echo "[3/6] Iniciando Memory Sticks (MS1:16b, MS2:16b)..."
 ./memory_stick/bin/memory_stick config/prueba_herencia_prioridades/MemoryStick_1.config 16 &
 PID_MS1=$!
+sleep 1
 ./memory_stick/bin/memory_stick config/prueba_herencia_prioridades/MemoryStick_2.config 16 &
 PID_MS2=$!
 sleep 1
